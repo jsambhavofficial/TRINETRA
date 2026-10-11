@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "AEGIS — Living Spatial Intelligence & Operational Twin Architecture",
+    "output": ".archify/aegis-architecture/aegis-tech-architecture.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "citizen_clients",
+      "type": "external",
+      "label": "Citizens & Field Crews",
+      "sublabel": "Mobile Web · Field Sensors",
+      "pos": [40, 260],
+      "size": [160, 70]
+    },
+    {
+      "id": "cesium_tiles",
+      "type": "external",
+      "label": "Cesium Ion 3D Tiles",
+      "sublabel": "Global 3D Buildings & Terrain",
+      "pos": [40, 60],
+      "size": [160, 70]
+    },
+    {
+      "id": "mapbox_api",
+      "type": "external",
+      "label": "Mapbox Aerial & Satellite",
+      "sublabel": "Satellite v12 · Dark v11",
+      "pos": [270, 60],
+      "size": [180, 70]
+    },
+    {
+      "id": "spatial_layer",
+      "type": "frontend",
+      "label": "AEGIS Spatial Canvas",
+      "sublabel": "CesiumJS 3D + Mapbox GL 3.32",
+      "tag": "components/spatial",
+      "pos": [520, 60],
+      "size": [180, 75]
+    },
+    {
+      "id": "nextjs_web",
+      "type": "frontend",
+      "label": "AEGIS Next.js 15 Web App",
+      "sublabel": "React 19 · Zustand · Tailwind",
+      "tag": "apps/web",
+      "pos": [260, 250],
+      "size": [180, 95]
+    },
+    {
+      "id": "voice_engine",
+      "type": "frontend",
+      "label": "Voice Command Center",
+      "sublabel": "Web Speech API · TTS Synthesis",
+      "tag": "components/modals",
+      "pos": [510, 255],
+      "size": [170, 80]
+    },
+    {
+      "id": "rbac_guard",
+      "type": "security",
+      "label": "Commander RBAC Gate",
+      "sublabel": "L4 Chief Incident Commander Auth",
+      "tag": "services/api/app/auth",
+      "pos": [750, 60],
+      "size": [180, 75]
+    },
+    {
+      "id": "fastapi_core",
+      "type": "backend",
+      "label": "AEGIS Core FastAPI Gateway",
+      "sublabel": "Uvicorn · Pydantic v2 · 13 Routers",
+      "tag": "services/api/app",
+      "pos": [740, 240],
+      "size": [190, 110]
+    },
+    {
+      "id": "multimodal_ai",
+      "type": "backend",
+      "label": "Multimodal Perception AI",
+      "sublabel": "YOLOv8 · Grounding DINO · Whisper",
+      "tag": "services/api/app/services",
+      "pos": [450, 460],
+      "size": [180, 80]
+    },
+    {
+      "id": "fusion_engine",
+      "type": "backend",
+      "label": "Evidence Fusion Engine",
+      "sublabel": "H3 Hexcells · Spatial/Temporal Match",
+      "tag": "services/api/app/services",
+      "pos": [700, 460],
+      "size": [180, 80]
+    },
+    {
+      "id": "sim_engine",
+      "type": "backend",
+      "label": "What-If Simulation Engine",
+      "sublabel": "Runoff Model · Causal Impact Graph",
+      "tag": "services/api/app/services",
+      "pos": [950, 460],
+      "size": [180, 80]
+    },
+    {
+      "id": "websocket_hub",
+      "type": "backend",
+      "label": "Real-time Event Hub",
+      "sublabel": "WebSocket Broadcast · Telemetry",
+      "tag": "services/api/app/services",
+      "pos": [990, 60],
+      "size": [170, 75]
+    },
+    {
+      "id": "postgres_db",
+      "type": "database",
+      "label": "PostgreSQL 16 + PostGIS",
+      "sublabel": "SQLAlchemy 2 Async · Spatial Index",
+      "pos": [1000, 230],
+      "size": [175, 80]
+    },
+    {
+      "id": "redis_cache",
+      "type": "database",
+      "label": "Redis 7 & MinIO S3",
+      "sublabel": "Telemetry Cache · Evidence Blobs",
+      "pos": [1000, 335],
+      "size": [175, 75]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Frontend Operational Surface (Docker: aegis-web)",
+      "wraps": [
+        "nextjs_web",
+        "spatial_layer",
+        "voice_engine"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Intelligence & Decision Kernel (Docker: aegis-api)",
+      "wraps": [
+        "fastapi_core",
+        "rbac_guard",
+        "multimodal_ai",
+        "fusion_engine",
+        "sim_engine",
+        "websocket_hub"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_citizen_web",
+      "from": "citizen_clients",
+      "to": "nextjs_web",
+      "label": "Ingest",
+      "variant": "emphasis"
+    },
+    {
+      "id": "conn_web_spatial",
+      "from": "nextjs_web",
+      "to": "spatial_layer",
+      "label": "Twin Sync",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "conn_spatial_cesium",
+      "from": "spatial_layer",
+      "to": "cesium_tiles",
+      "label": "3D Tiles",
+      "variant": "dashed"
+    },
+    {
+      "id": "conn_spatial_mapbox",
+      "from": "spatial_layer",
+      "to": "mapbox_api",
+      "label": "Satellite",
+      "variant": "dashed"
+    },
+    {
+      "id": "conn_web_voice",
+      "from": "nextjs_web",
+      "to": "voice_engine",
+      "label": "Voice Tool",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "conn_web_api",
+      "from": "nextjs_web",
+      "to": "fastapi_core",
+      "label": "REST /api/v1",
+      "variant": "emphasis"
+    },
+    {
+      "id": "conn_api_rbac",
+      "from": "fastapi_core",
+      "to": "rbac_guard",
+      "label": "Token Gate",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "conn_api_wshub",
+      "from": "fastapi_core",
+      "to": "websocket_hub",
+      "label": "Broadcast",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "conn_api_ai",
+      "from": "fastapi_core",
+      "to": "multimodal_ai",
+      "label": "AI Pipeline",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "conn_ai_fusion",
+      "from": "multimodal_ai",
+      "to": "fusion_engine",
+      "label": "H3 Fusion",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "conn_fusion_sim",
+      "from": "fusion_engine",
+      "to": "sim_engine",
+      "label": "Sim State",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "conn_api_db",
+      "from": "fastapi_core",
+      "to": "postgres_db",
+      "label": "PostGIS SQL",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "conn_api_redis",
+      "from": "fastapi_core",
+      "to": "redis_cache",
+      "label": "Blobs & Cache",
+      "fromSide": "right",
+      "toSide": "left"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Dual Spatial Engine (CesiumJS + Mapbox GL)",
+      "items": [
+        "CesiumJS 1.121: 3D Photogrammetry, extruded buildings, camera fly-to, hazard halos",
+        "Mapbox GL 3.32: Satellite Streets v12 high-res aerial imagery + Dark v11 vector basemap",
+        "Dynamic mode switcher ([Map] [Satellite] [3D Living Twin] [Heatmap])",
+        "Interactive incident, ambulance, and hospital entity markers with live telemetry tracking"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Multimodal AI & Evidence Fusion",
+      "items": [
+        "Ingests citizen photos, 4K traffic video, Hindi voice dispatches, and SCADA sensor telemetry",
+        "YOLOv8 + Grounding DINO vision perception and Whisper ASR audio transcription",
+        "H3 Uber Hexcell spatial indexing + cosine vector semantic matching",
+        "Bayesian corroboration scoring and multi-observation candidate fusion"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Contextual Intelligence & What-If Simulation",
+      "items": [
+        "Network topology causal impact solver (road severances, hospital ingress cuts)",
+        "Hydrological stormwater runoff model (50mm/hr cloudburst simulation)",
+        "Automated emergency rerouting (Road R14 clear corridor with ETA calculation)",
+        "Autonomous response plan generation, Commander authorization, and closed-loop verification"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Mission Control & Architecture Standards",
+      "items": [
+        "Next.js 15 App Router + React 19 + TypeScript 5.6 + Tailwind CSS",
+        "FastAPI Python 3.11 asynchronous microservices with Pydantic v2 schemas",
+        "PostgreSQL 16 + PostGIS spatial geometry tables with SQLAlchemy 2 asyncio",
+        "Web Speech API audio synthesis with live natural language voice tool dispatch"
+      ]
+    }
+  ]
+}

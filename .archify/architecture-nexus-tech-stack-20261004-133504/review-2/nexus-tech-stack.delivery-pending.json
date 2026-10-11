@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "command": "deliver",
+  "status": "pending",
+  "receiptId": "0172aaa3-51ac-4b4d-b462-fe027c699a2c",
+  "input": "C:\\Users\\user\\Desktop\\New folder\\.archify\\architecture-nexus-tech-stack-20261004-133504\\candidate.json",
+  "output": "C:\\Users\\user\\Desktop\\New folder\\.archify\\architecture-nexus-tech-stack-20261004-133504\\review-2\\nexus-tech-stack.html"
+}

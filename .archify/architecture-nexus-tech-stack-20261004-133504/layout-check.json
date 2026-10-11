@@ -1,0 +1,629 @@
+{
+  "ok": true,
+  "diagram_type": "architecture",
+  "layout": {
+    "mode": "free"
+  },
+  "viewBox": [
+    1300,
+    738
+  ],
+  "components": [
+    {
+      "id": "citizens",
+      "type": "external",
+      "label": "Citizens & Operators",
+      "x": 40,
+      "y": 290,
+      "width": 150,
+      "height": 64,
+      "pos": [
+        40,
+        290
+      ]
+    },
+    {
+      "id": "cdn",
+      "type": "external",
+      "label": "Cesium CDN + Tiles",
+      "x": 40,
+      "y": 60,
+      "width": 140,
+      "height": 75,
+      "pos": [
+        40,
+        60
+      ]
+    },
+    {
+      "id": "spatial",
+      "type": "frontend",
+      "label": "CesiumJS 3D + Mapbox",
+      "x": 280,
+      "y": 60,
+      "width": 160,
+      "height": 75,
+      "pos": [
+        280,
+        60
+      ]
+    },
+    {
+      "id": "webapp",
+      "type": "frontend",
+      "label": "Next.js 15 Web App",
+      "x": 250,
+      "y": 270,
+      "width": 180,
+      "height": 90,
+      "pos": [
+        250,
+        270
+      ]
+    },
+    {
+      "id": "rbac",
+      "type": "security",
+      "label": "RBAC Permission Gate",
+      "x": 615,
+      "y": 60,
+      "width": 170,
+      "height": 70,
+      "pos": [
+        615,
+        60
+      ]
+    },
+    {
+      "id": "redis",
+      "type": "database",
+      "label": "Redis 7",
+      "x": 890,
+      "y": 60,
+      "width": 150,
+      "height": 64,
+      "pos": [
+        890,
+        60
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "FastAPI Service",
+      "x": 600,
+      "y": 250,
+      "width": 200,
+      "height": 110,
+      "pos": [
+        600,
+        250
+      ]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL 16 + PostGIS",
+      "x": 960,
+      "y": 270,
+      "width": 190,
+      "height": 80,
+      "pos": [
+        960,
+        270
+      ]
+    },
+    {
+      "id": "wshub",
+      "type": "backend",
+      "label": "Event Hub & Job Worker",
+      "x": 480,
+      "y": 470,
+      "width": 170,
+      "height": 75,
+      "pos": [
+        480,
+        470
+      ]
+    },
+    {
+      "id": "fusion",
+      "type": "backend",
+      "label": "Fusion & AI Engine",
+      "x": 608,
+      "y": 575,
+      "width": 170,
+      "height": 75,
+      "pos": [
+        608,
+        575
+      ]
+    },
+    {
+      "id": "storage",
+      "type": "cloud",
+      "label": "Object Storage",
+      "x": 890,
+      "y": 470,
+      "width": 170,
+      "height": 75,
+      "pos": [
+        890,
+        470
+      ]
+    },
+    {
+      "id": "sqlite",
+      "type": "database",
+      "label": "SQLite (dev fallback)",
+      "x": 1100,
+      "y": 470,
+      "width": 160,
+      "height": 70,
+      "pos": [
+        1100,
+        470
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "docker-compose: nexus-web (node:22-alpine)",
+      "x": 220,
+      "y": 30,
+      "width": 250,
+      "height": 350,
+      "wraps": [
+        "webapp",
+        "spatial"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "docker-compose: nexus-api (python:3.11-slim)",
+      "x": 450,
+      "y": 18,
+      "width": 380,
+      "height": 652,
+      "wraps": [
+        "api",
+        "rbac",
+        "fusion",
+        "wshub"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "citizens",
+      "to": "webapp",
+      "label": "HTTPS",
+      "variant": "emphasis",
+      "route": "auto",
+      "points": [
+        [
+          190,
+          322
+        ],
+        [
+          250,
+          322
+        ]
+      ],
+      "labelAt": [
+        220,
+        312
+      ]
+    },
+    {
+      "from": "webapp",
+      "to": "spatial",
+      "label": "3D render",
+      "variant": "default",
+      "route": "auto",
+      "points": [
+        [
+          340,
+          270
+        ],
+        [
+          340,
+          202.5
+        ],
+        [
+          360,
+          202.5
+        ],
+        [
+          360,
+          135
+        ]
+      ],
+      "labelAt": [
+        350,
+        193
+      ]
+    },
+    {
+      "from": "spatial",
+      "to": "cdn",
+      "label": "loads tiles",
+      "variant": "dashed",
+      "route": "auto",
+      "points": [
+        [
+          280,
+          97.5
+        ],
+        [
+          180,
+          97.5
+        ]
+      ],
+      "labelAt": [
+        230,
+        88
+      ]
+    },
+    {
+      "from": "webapp",
+      "to": "api",
+      "label": "REST fetch /api/v1",
+      "variant": "emphasis",
+      "route": "auto",
+      "points": [
+        [
+          430,
+          315
+        ],
+        [
+          600,
+          315
+        ]
+      ],
+      "labelAt": [
+        515,
+        305
+      ]
+    },
+    {
+      "from": "wshub",
+      "to": "webapp",
+      "label": "live events",
+      "variant": "default",
+      "route": "auto",
+      "points": [
+        [
+          480,
+          507.5
+        ],
+        [
+          340,
+          507.5
+        ],
+        [
+          340,
+          360
+        ]
+      ],
+      "labelAt": [
+        340,
+        424
+      ]
+    },
+    {
+      "from": "api",
+      "to": "rbac",
+      "label": "RBAC authorize",
+      "variant": "security",
+      "route": "auto",
+      "points": [
+        [
+          693,
+          250
+        ],
+        [
+          693,
+          130
+        ]
+      ],
+      "labelAt": [
+        648,
+        193
+      ]
+    },
+    {
+      "from": "api",
+      "to": "redis",
+      "label": "REDIS_URL health",
+      "variant": "dashed",
+      "route": "auto",
+      "points": [
+        [
+          707,
+          250
+        ],
+        [
+          707,
+          187
+        ],
+        [
+          965,
+          187
+        ],
+        [
+          965,
+          124
+        ]
+      ],
+      "labelAt": [
+        836,
+        177
+      ]
+    },
+    {
+      "from": "api",
+      "to": "postgres",
+      "label": "SQLAlchemy async",
+      "variant": "default",
+      "route": "auto",
+      "points": [
+        [
+          800,
+          305
+        ],
+        [
+          960,
+          305
+        ]
+      ],
+      "labelAt": [
+        880,
+        295
+      ]
+    },
+    {
+      "from": "api",
+      "to": "wshub",
+      "label": "job events",
+      "variant": "default",
+      "route": "auto",
+      "points": [
+        [
+          679,
+          360
+        ],
+        [
+          679,
+          415
+        ],
+        [
+          565,
+          415
+        ],
+        [
+          565,
+          470
+        ]
+      ],
+      "labelAt": [
+        622,
+        405
+      ]
+    },
+    {
+      "from": "api",
+      "to": "fusion",
+      "label": "evidence fusion",
+      "variant": "default",
+      "route": "auto",
+      "points": [
+        [
+          693,
+          360
+        ],
+        [
+          693,
+          575
+        ]
+      ],
+      "labelAt": [
+        740,
+        471
+      ]
+    },
+    {
+      "from": "api",
+      "to": "storage",
+      "label": "evidence blobs",
+      "variant": "default",
+      "route": "auto",
+      "points": [
+        [
+          707,
+          360
+        ],
+        [
+          707,
+          415
+        ],
+        [
+          975,
+          415
+        ],
+        [
+          975,
+          470
+        ]
+      ],
+      "labelAt": [
+        841,
+        405
+      ]
+    },
+    {
+      "from": "api",
+      "to": "sqlite",
+      "label": "dev fallback",
+      "variant": "dashed",
+      "route": "auto",
+      "points": [
+        [
+          721,
+          360
+        ],
+        [
+          721,
+          384
+        ],
+        [
+          1180,
+          384
+        ],
+        [
+          1180,
+          470
+        ]
+      ],
+      "labelAt": [
+        951,
+        374
+      ]
+    }
+  ],
+  "labels": [
+    {
+      "text": "HTTPS",
+      "x": 203,
+      "y": 302,
+      "width": 34,
+      "height": 14,
+      "labelAt": [
+        220,
+        312
+      ]
+    },
+    {
+      "text": "3D render",
+      "x": 323,
+      "y": 183,
+      "width": 53,
+      "height": 14,
+      "labelAt": [
+        350,
+        193
+      ]
+    },
+    {
+      "text": "loads tiles",
+      "x": 199,
+      "y": 78,
+      "width": 63,
+      "height": 14,
+      "labelAt": [
+        230,
+        88
+      ]
+    },
+    {
+      "text": "REST fetch /api/v1",
+      "x": 467,
+      "y": 295,
+      "width": 96,
+      "height": 14,
+      "labelAt": [
+        515,
+        305
+      ]
+    },
+    {
+      "text": "live events",
+      "x": 309,
+      "y": 414,
+      "width": 63,
+      "height": 14,
+      "labelAt": [
+        340,
+        424
+      ]
+    },
+    {
+      "text": "RBAC authorize",
+      "x": 610,
+      "y": 183,
+      "width": 77,
+      "height": 14,
+      "labelAt": [
+        648,
+        193
+      ]
+    },
+    {
+      "text": "REDIS_URL health",
+      "x": 793,
+      "y": 167,
+      "width": 87,
+      "height": 14,
+      "labelAt": [
+        836,
+        177
+      ]
+    },
+    {
+      "text": "SQLAlchemy async",
+      "x": 837,
+      "y": 285,
+      "width": 87,
+      "height": 14,
+      "labelAt": [
+        880,
+        295
+      ]
+    },
+    {
+      "text": "job events",
+      "x": 593,
+      "y": 395,
+      "width": 58,
+      "height": 14,
+      "labelAt": [
+        622,
+        405
+      ]
+    },
+    {
+      "text": "evidence fusion",
+      "x": 699,
+      "y": 461,
+      "width": 82,
+      "height": 14,
+      "labelAt": [
+        740,
+        471
+      ]
+    },
+    {
+      "text": "evidence blobs",
+      "x": 802,
+      "y": 395,
+      "width": 77,
+      "height": 14,
+      "labelAt": [
+        841,
+        405
+      ]
+    },
+    {
+      "text": "dev fallback",
+      "x": 917,
+      "y": 364,
+      "width": 68,
+      "height": 14,
+      "labelAt": [
+        951,
+        374
+      ]
+    }
+  ]
+}

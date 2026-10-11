@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "running",
+  "type": "architecture",
+  "quality": "showcase",
+  "startedAt": "2026-10-04T08:44:39.282Z",
+  "specification": {
+    "path": "C:\\Users\\user\\Desktop\\New folder\\.archify\\architecture-nexus-tech-stack-20261004-133504\\candidate.json",
+    "sha256": "2f3a14dda1c4a9b2da921ae3749b1d397614d62e701e9f737428db276779d046",
+    "bytes": 7905
+  },
+  "artifact": {
+    "path": "C:\\Users\\user\\Desktop\\New folder\\.archify\\architecture-nexus-tech-stack-20261004-133504\\review-2\\nexus-tech-stack.html"
+  },
+  "stages": {},
+  "diagnostics": [],
+  "evidence": {
+    "receipt": "C:\\Users\\user\\Desktop\\New folder\\.archify\\architecture-nexus-tech-stack-20261004-133504\\review-2\\nexus-tech-stack.finalize.json",
+    "summaryReceipt": "C:\\Users\\user\\Desktop\\New folder\\.archify\\architecture-nexus-tech-stack-20261004-133504\\review-2\\nexus-tech-stack.finalize-summary.json"
+  },
+  "visualReview": "not-requested"
+}

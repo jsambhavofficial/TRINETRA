@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\user\\Desktop\\New folder\\.archify\\architecture-nexus-tech-stack-20261004-133504\\candidate.json",
+    "sha256": "cd0eae4126609dedb39b53d32a8ed05e30d61087f2ffd3553f2bda2832801b6c",
+    "bytes": 7981
+  },
+  "artifact": {
+    "path": "C:\\Users\\user\\Desktop\\New folder\\.archify\\architecture-nexus-tech-stack-20261004-133504\\nexus-tech-stack.html",
+    "sha256": "77d30f1eada673338a24cba24dd72dbacb77858875c9d38edc0a710e1610c4df",
+    "bytes": 773755
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\user\\Desktop\\New folder\\.archify\\architecture-nexus-tech-stack-20261004-133504\\nexus-tech-stack.finalize.json",
+    "summaryReceipt": "C:\\Users\\user\\Desktop\\New folder\\.archify\\architecture-nexus-tech-stack-20261004-133504\\nexus-tech-stack.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\user\\Desktop\\New folder\\.archify\\architecture-nexus-tech-stack-20261004-133504\\nexus-tech-stack.browser-check.json"
+  },
+  "update": {
+    "status": "unavailable",
+    "installedVersion": null,
+    "availableVersion": null,
+    "releaseNotes": null,
+    "checkedAt": null,
+    "source": null,
+    "noticeRequired": false,
+    "noticeText": null,
+    "reason": "timeout"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 62998,
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "resolvedCrossovers": 2,
+      "routesOverSuggestedBends": 1
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [
+        {
+          "left": {
+            "id": "evidence-fusion",
+            "from": "api",
+            "to": "fusion",
+            "label": "evidence fusion",
+            "collectionIndex": 9,
+            "artifactIndex": 10
+          },
+          "right": {
+            "id": "sqlite-fallback",
+            "from": "api",
+            "to": "sqlite",
+            "label": "dev fallback",
+            "collectionIndex": 11,
+            "artifactIndex": 12
+          },
+          "point": [
+            721,
+            415
+          ],
+          "sharedNode": "api"
+        },
+        {
+          "left": {
+            "id": "store-blobs",
+            "from": "api",
+            "to": "storage",
+            "label": "evidence blobs",
+            "collectionIndex": 10,
+            "artifactIndex": 11
+          },
+          "right": {
+            "id": "sqlite-fallback",
+            "from": "api",
+            "to": "sqlite",
+            "label": "dev fallback",
+            "collectionIndex": 11,
+            "artifactIndex": 12
+          },
+          "point": [
+            721,
+            384
+          ],
+          "sharedNode": "api"
+        }
+      ],
+      "detours": [
+        {
+          "relationship": {
+            "id": "tile-assets",
+            "from": "spatial",
+            "to": "cdn",
+            "label": "loads tiles",
+            "collectionIndex": 2,
+            "artifactIndex": 3
+          },
+          "bends": 4,
+          "stretch": 1.303
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "api → fusion and api → sqlite cross next to api: move node fusion or sqlite so the two reach api from different sides (for example one level with it, one directly above or below it).",
+      "api → storage and api → sqlite cross next to api: move node storage or sqlite so the two reach api from different sides (for example one level with it, one directly above or below it).",
+      "spatial → cdn needs 4 bends: move node spatial or cdn so they share a row or column with matching centers, or sit diagonally with a clear corner."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "0172aaa3-51ac-4b4d-b462-fe027c699a2c",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\Users\\user\\Desktop\\New folder\\.archify\\architecture-nexus-tech-stack-20261004-133504\\candidate.json",
+  "output": "C:\\Users\\user\\Desktop\\New folder\\.archify\\architecture-nexus-tech-stack-20261004-133504\\review-2\\nexus-tech-stack.html",
+  "specification": {
+    "sha256": "2f3a14dda1c4a9b2da921ae3749b1d397614d62e701e9f737428db276779d046",
+    "bytes": 7905
+  },
+  "artifact": {
+    "sha256": "d9d149a55021b689ccbb1c514b8da6fd9651c6efddc43bf58d323f18c4a1419c",
+    "bytes": 773347
+  }
+}
