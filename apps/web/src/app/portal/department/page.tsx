@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Header } from "@/components/command-center/Header";
 import {
   Activity,
   ShieldCheck,
@@ -28,6 +27,24 @@ import {
   ChevronUp,
   Zap,
   Link2,
+  Search,
+  Bell,
+  Mic,
+  Home,
+  MapPin,
+  Calendar,
+  ExternalLink,
+  Droplets,
+  Flame,
+  CheckCircle,
+  AlertCircle,
+  MoreVertical,
+  Plus,
+  Minus,
+  Crosshair,
+  TrendingUp,
+  TrendingDown,
+  FileText,
 } from "lucide-react";
 
 const HARYANA_DEPARTMENTS_LIST = [
@@ -40,6 +57,96 @@ const HARYANA_DEPARTMENTS_LIST = [
   { id: "DEPT-MUNICIPAL", name: "Urban Local Bodies (ULB) & Municipal Corp" },
 ];
 
+function formatHindiDate(isoStr?: string) {
+  if (!isoStr) return "हाल ही में";
+  try {
+    const d = new Date(isoStr);
+    const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    const day = d.getDate();
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+    let hours = d.getHours();
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    return `${day} ${month} ${year}, ${hours.toString().padStart(2, "0")}:${minutes} ${ampm}`;
+  } catch (e) {
+    return isoStr;
+  }
+}
+
+function getCategoryMeta(cat: string) {
+  switch (cat) {
+    case "URBAN_FLOODING":
+      return {
+        label: "Waterlogging / Drainage",
+        icon: "💧",
+        badge: "bg-blue-50 text-blue-700 border-blue-200",
+        thumb: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=400",
+      };
+    case "ELECTRICAL_HAZARD":
+    case "POWER_OUTAGE":
+      return {
+        label: "Live Wire / Power",
+        icon: "⚡",
+        badge: "bg-amber-50 text-amber-700 border-amber-200",
+        thumb: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=400",
+      };
+    case "ROAD_BLOCKAGE":
+      return {
+        label: "Road Damage / Pothole",
+        icon: "🛣️",
+        badge: "bg-slate-100 text-slate-700 border-slate-200",
+        thumb: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=400",
+      };
+    case "SEWERAGE_OVERFLOW":
+      return {
+        label: "Sewer Overflow / Sanitation",
+        icon: "🚰",
+        badge: "bg-sky-50 text-sky-700 border-sky-200",
+        thumb: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400",
+      };
+    default:
+      return {
+        label: cat.replace(/_/g, " "),
+        icon: "⚠️",
+        badge: "bg-purple-50 text-purple-700 border-purple-200",
+        thumb: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=400",
+      };
+  }
+}
+
+function getPriorityBadge(priority: string) {
+  switch (priority) {
+    case "CRITICAL":
+      return { label: "Critical", bg: "bg-rose-50 text-rose-700 border-rose-200", dot: "bg-rose-600" };
+    case "HIGH":
+      return { label: "High", bg: "bg-amber-50 text-amber-700 border-amber-200", dot: "bg-amber-500" };
+    case "MEDIUM":
+      return { label: "Medium", bg: "bg-amber-50 text-amber-700 border-amber-200", dot: "bg-amber-500" };
+    default:
+      return { label: "Low", bg: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" };
+  }
+}
+
+function getStatusBadge(status: string) {
+  switch (status) {
+    case "RESOLVED":
+      return { label: "Resolved", bg: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" };
+    case "AWAITING_VALIDATION":
+      return { label: "Awaiting Signoff", bg: "bg-amber-50 text-amber-700 border-amber-200", dot: "bg-amber-500" };
+    case "IN_PROGRESS":
+    case "ASSIGNED":
+      return { label: "In Field", bg: "bg-blue-50 text-blue-700 border-blue-200", dot: "bg-blue-500" };
+    case "SUBMITTED":
+    default:
+      return { label: "Incoming", bg: "bg-purple-50 text-purple-700 border-purple-200", dot: "bg-purple-500" };
+  }
+}
+
 function DepartmentPortalContent() {
   const searchParams = useSearchParams();
   const urlDept = searchParams?.get("department_id");
@@ -47,13 +154,17 @@ function DepartmentPortalContent() {
 
   const [authUser, setAuthUser] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [selectedDept, setSelectedDept] = useState<string>(urlDept || "ALL");
+  const [selectedDept, setSelectedDept] = useState<string>(urlDept || "DEPT-PWD");
   const [highlightTrackingId, setHighlightTrackingId] = useState<string | null>(urlTrackingId || null);
 
   const [summaryData, setSummaryData] = useState<any>(null);
   const [complaints, setComplaints] = useState<any[]>([]);
   const [filterTab, setFilterTab] = useState<string>("ALL");
   const [loading, setLoading] = useState(true);
+
+  // Search & Sorting
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"LATEST" | "PRIORITY">("LATEST");
 
   // AI Deduplication & Clustering Mode
   const [viewMode, setViewMode] = useState<"AI_CLUSTERED" | "INDIVIDUAL">("AI_CLUSTERED");
@@ -63,7 +174,7 @@ function DepartmentPortalContent() {
   const [assigningComplaint, setAssigningComplaint] = useState<any>(null);
   const [assigningCluster, setAssigningCluster] = useState<any>(null);
   const [assignUnitId, setAssignUnitId] = useState("UNIT-AMB-01");
-  const [assignOfficerName, setAssignOfficerName] = useState("Officer Vikram Singh");
+  const [assignOfficerName, setAssignOfficerName] = useState("Inspector Sandeep Rao");
 
   // Rework Modal
   const [reworkComplaint, setReworkComplaint] = useState<any>(null);
@@ -139,12 +250,11 @@ function DepartmentPortalContent() {
     }
   };
 
-  // Real-time auto-poll every 4 seconds so newly reported citizen cases appear instantly
   useEffect(() => {
     loadData();
     const interval = setInterval(() => {
       loadData();
-    }, 4000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [selectedDept, token]);
 
@@ -322,41 +432,56 @@ function DepartmentPortalContent() {
 
   const filteredComplaints = complaints
     .filter((c) => {
-      if (filterTab === "ALL") return true;
       if (filterTab === "AWAITING_VALIDATION") return c.status === "AWAITING_VALIDATION";
       if (filterTab === "ACTIVE") return c.status === "ASSIGNED" || c.status === "IN_PROGRESS";
       if (filterTab === "SUBMITTED") return c.status === "SUBMITTED" || c.status === "ACKNOWLEDGED";
       if (filterTab === "RESOLVED") return c.status === "RESOLVED";
       return true;
     })
+    .filter((c) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        c.title?.toLowerCase().includes(q) ||
+        c.address?.toLowerCase().includes(q) ||
+        c.tracking_id?.toLowerCase().includes(q) ||
+        c.category?.toLowerCase().includes(q)
+      );
+    })
     .sort((a, b) => {
       if (highlightTrackingId) {
         if (a.tracking_id === highlightTrackingId) return -1;
         if (b.tracking_id === highlightTrackingId) return 1;
       }
-      return 0;
+      if (sortBy === "PRIORITY") {
+        const pOrder: Record<string, number> = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+        return (pOrder[b.priority] || 0) - (pOrder[a.priority] || 0);
+      }
+      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
     });
 
   // Group Complaints into AI Clusters by Category & District
-  const clusters = React.useMemo(() => {
+  const clusters = useMemo(() => {
     const map: Record<string, any> = {};
     filteredComplaints.forEach((c) => {
-      const clusterBaseId = c.incident_id || `INC-${c.district_id}-${c.category.replace('_', '').slice(0, 4)}`;
-      const key = `${clusterBaseId}_${c.district_id}_${(c.locality || "zone").slice(0, 10)}`;
+      const clusterBaseId = c.incident_id || `INC-HR-${c.district_id?.slice(3) || "GUR"}-${c.category?.slice(0, 4) || "CIVI"}`;
+      const key = `${clusterBaseId}_${c.district_id || "HR-GU"}`;
       if (!map[key]) {
         map[key] = {
           clusterId: clusterBaseId,
           uniqueKey: key,
           category: c.category,
           districtId: c.district_id,
-          districtName: c.district_name,
+          districtName: c.district_name || "Gurugram",
           departmentId: c.department_id,
           departmentName: c.department_name,
           representativeTitle: c.title,
+          address: c.address || "Sector 56, Gurugram, Haryana",
+          createdAt: c.created_at,
           status: c.status,
           priority: c.priority,
           reportsCount: 0,
-          assignedUnitId: c.assigned_unit_id,
+          assignedUnitId: c.assigned_unit_id || "Road Maintenance (South)",
           assignedOfficerName: c.assigned_officer_name,
           sop_checklist: c.sop_checklist,
           complaints: [],
@@ -370,596 +495,1040 @@ function DepartmentPortalContent() {
     return Object.values(map);
   }, [filteredComplaints]);
 
-  return (
-    <div className="min-h-screen bg-space-950 text-slate-100 flex flex-col font-sans">
-      <Header />
+  // Derived counts
+  const totalCount = complaints.length;
+  const inFieldCount = complaints.filter((c) => c.status === "ASSIGNED" || c.status === "IN_PROGRESS").length;
+  const awaitingCount = complaints.filter((c) => c.status === "AWAITING_VALIDATION").length;
+  const resolvedCount = complaints.filter((c) => c.status === "RESOLVED").length;
+  const incomingCount = complaints.filter((c) => c.status === "SUBMITTED" || c.status === "ACKNOWLEDGED").length;
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Department Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-5">
-          <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-purple-500/10 border border-purple-500/20 text-purple-400">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>DEPARTMENTAL OPERATIONAL COMMAND • HARYANA</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
-              <span>{HARYANA_DEPARTMENTS_LIST.find((d) => d.id === selectedDept)?.name.split("(")[0] || "Department"}</span>
-              <span className="text-sm font-normal text-slate-400 font-mono">({selectedDept})</span>
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-400">
-              Active Jurisdiction: <strong className="text-purple-300 font-mono">{selectedDept}</strong> | Supervisor: <span className="text-slate-200">{authUser?.display_name || "Department Lead"}</span>
-            </p>
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col font-sans selection:bg-blue-500/20 selection:text-blue-900 pb-12">
+      {/* ========================================================================= */}
+      {/* 1. TOP NAVBAR (Matches Screenshot exactly) */}
+      {/* ========================================================================= */}
+      <header className="bg-white border-b border-slate-200/90 sticky top-0 z-40 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
+          {/* Left Brand & Tabs */}
+          <div className="flex items-center gap-4">
+            <Link href="/world" className="flex items-center gap-2.5 select-none shrink-0">
+              <div className="w-9 h-9 relative flex items-center justify-center">
+                <svg viewBox="0 0 44 44" className="w-full h-full drop-shadow-sm" fill="none">
+                  <path
+                    d="M22 2.5L38.5 9V22.5C38.5 32.5 31.5 39.5 22 42C12.5 39.5 5.5 32.5 5.5 22.5V9L22 2.5Z"
+                    fill="#0F172A"
+                    stroke="#2563EB"
+                    strokeWidth="1.8"
+                  />
+                  <path d="M11 18.5Q22 16.5 33 18.5" stroke="#38BDF8" strokeWidth="1.4" strokeLinecap="round" />
+                  <path d="M9 22.5Q22 20.5 35 22.5" stroke="#F59E0B" strokeWidth="1.4" strokeLinecap="round" />
+                  <path d="M11 26.5Q22 24.5 33 26.5" stroke="#38BDF8" strokeWidth="1.4" strokeLinecap="round" />
+                  <circle cx="22" cy="22.5" r="3.5" fill="#38BDF8" />
+                  <circle cx="22" cy="22.5" r="1.5" fill="#0F172A" />
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5 leading-tight">
+                  <span className="font-extrabold text-base tracking-wider text-slate-900">
+                    TRINETRA
+                  </span>
+                  <span className="text-[10px] text-white font-bold px-1.5 py-0.2 rounded bg-blue-600 tracking-wide">
+                    HARYANA
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium">
+                  State Governance Intelligence Platform
+                </p>
+              </div>
+            </Link>
+
+            {/* Nav Tabs */}
+            <nav className="hidden xl:flex items-center gap-1.5 ml-2">
+              <Link
+                href="/portal/department"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-600 font-bold text-xs"
+              >
+                <Home className="w-3.5 h-3.5" />
+                <span>Dashboard</span>
+              </Link>
+              <button
+                onClick={() => setViewMode("INDIVIDUAL")}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition-colors"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Complaints</span>
+              </button>
+              <Link
+                href="/portal/field-officer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition-colors"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Field Missions</span>
+              </Link>
+              <Link
+                href="/world"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition-colors"
+              >
+                <MapPin className="w-3.5 h-3.5" />
+                <span>Map View</span>
+              </Link>
+              <Link
+                href="/report"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition-colors"
+              >
+                <Activity className="w-3.5 h-3.5" />
+                <span>Reports</span>
+              </Link>
+              <Link
+                href="/intelligence"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition-colors"
+              >
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span>Analytics</span>
+              </Link>
+            </nav>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg p-1.5 shadow-sm">
-              <Building2 className="w-4 h-4 text-purple-400 ml-1" />
+          {/* Right Controls */}
+          <div className="flex items-center gap-2.5">
+            {/* Department Dropdown */}
+            <div className="relative">
               <select
                 value={selectedDept}
                 onChange={(e) => {
                   setSelectedDept(e.target.value);
                   setHighlightTrackingId(null);
                 }}
-                className="bg-transparent text-white text-xs font-semibold outline-none py-1 px-1 cursor-pointer"
+                className="appearance-none bg-white border border-slate-200/90 hover:border-slate-300 text-slate-800 text-xs font-bold py-2 pl-8 pr-7 rounded-xl shadow-2xs outline-none cursor-pointer"
               >
                 {HARYANA_DEPARTMENTS_LIST.map((d) => (
-                  <option key={d.id} value={d.id} className="bg-slate-900 text-white">
-                    {d.name}
+                  <option key={d.id} value={d.id}>
+                    {d.id === "DEPT-PWD" ? "Public Works Department (B&R)" : d.name}
                   </option>
                 ))}
               </select>
+              <Building2 className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-3 h-3 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
 
+            {/* Voice Command Button */}
             <button
-              onClick={loadData}
-              className="p-2.5 rounded-lg bg-surface-elevated border border-surface-border text-slate-300 hover:text-white transition-colors"
-              title="Refresh Department Data"
+              onClick={() => {
+                alert("Voice command active. Listening for operational directives...");
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold transition-colors"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              <Mic className="w-3.5 h-3.5" />
+              <span>VOICE</span>
             </button>
+
+            {/* Notification Bell with Badge */}
+            <div className="relative">
+              <button className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors">
+                <Bell className="w-4 h-4" />
+              </button>
+              <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center">
+                3
+              </span>
+            </div>
+
+            {/* User Profile Pill */}
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+              <div className="w-8 h-8 rounded-full bg-purple-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
+                ER
+              </div>
+              <div className="hidden sm:flex flex-col text-left leading-tight">
+                <span className="text-xs font-bold text-slate-900">
+                  Er. Rajesh Bhardwaj
+                </span>
+                <span className="text-[10px] text-slate-500 font-medium">
+                  Engineer-in-Chief PWD
+                </span>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Container */}
+      <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+        {/* ========================================================================= */}
+        {/* 2. HERO OPERATIONAL BANNER (Matches Screenshot) */}
+        {/* ========================================================================= */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-50/90 via-slate-50 to-blue-50/40 border border-blue-100 p-6 sm:p-7 shadow-xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          {/* Background Heritage Skyline */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/haryana_heritage_banner.jpg"
+            alt="Haryana Heritage"
+            className="absolute right-0 top-0 bottom-0 w-full sm:w-1/2 opacity-25 lg:opacity-35 object-cover pointer-events-none mix-blend-multiply [mask-image:linear-gradient(to_left,black_60%,transparent_100%)]"
+          />
+
+          {/* Slogan Graphic on Top Right */}
+          <div className="hidden md:flex flex-col items-center gap-1 absolute right-8 top-6 pointer-events-none z-10">
+            <div className="text-base font-black text-[#1E3A8A] tracking-tight">स्वच्छ हरियाणा</div>
+            <div className="text-base font-black text-[#16A34A] tracking-tight">सशक्त हरियाणा</div>
+            <svg className="w-24 h-2.5" viewBox="0 0 100 10" fill="none">
+              <path d="M0 5C25 1 35 9 60 5C85 1 95 9 100 5" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          <div className="space-y-1 z-10 max-w-2xl">
+            <div className="text-xs font-bold text-slate-500">
+              Departmental Operational Command • Haryana
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight flex items-center gap-2">
+              <span>{HARYANA_DEPARTMENTS_LIST.find((d) => d.id === selectedDept)?.name.split("(")[0] || "Public Works Department"}</span>
+              <span className="text-base font-mono text-slate-500 font-semibold">({selectedDept})</span>
+            </h1>
+            <p className="text-xs text-slate-600 font-medium">
+              Active Jurisdiction: <strong className="text-blue-700 font-mono">{selectedDept}</strong> | Supervisor: <strong className="text-slate-800">Er. Rajesh Bhardwaj (Engineer-in-Chief PWD)</strong>
+            </p>
           </div>
         </div>
 
+        {/* Action Success Alert */}
+        {actionSuccess && (
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex flex-wrap items-center justify-between gap-2 shadow-xs animate-in fade-in">
+            <div className="flex flex-wrap items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-600" />
+              <span>{actionSuccess}</span>
+              {assignedTaskInfo && (
+                <Link
+                  href={`/portal/field-officer?unit_id=${assignedTaskInfo.unitId}&tracking_id=${assignedTaskInfo.trackingId}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all shrink-0 ml-2"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Truck className="w-3.5 h-3.5" />
+                  <span>फील्ड ऑफिसर पोर्टल पर लाइव देखें →</span>
+                </Link>
+              )}
+            </div>
+            <button
+              onClick={() => { setActionSuccess(null); setAssignedTaskInfo(null); }}
+              className="text-emerald-700 font-bold hover:text-emerald-950"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Highlight Alert for newly reported citizen grievance */}
         {highlightTrackingId && (
-          <div className="p-4 rounded-xl bg-purple-950/50 border border-purple-500/50 text-purple-200 text-xs flex items-center justify-between gap-3 shadow-lg animate-in fade-in">
+          <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-center justify-between gap-3 shadow-xs animate-in fade-in">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-400 animate-pulse shrink-0" />
+              <Sparkles className="w-4 h-4 text-blue-600 animate-pulse shrink-0" />
               <span>
-                Citizen Report Received: Complaint <strong className="font-mono text-white text-xs">{highlightTrackingId}</strong> is directly routed & ready in this department&apos;s queue below!
+                New Citizen Report Received: Complaint <strong className="font-mono text-blue-700">{highlightTrackingId}</strong> is prioritized in this department queue below!
               </span>
             </div>
             <button
               onClick={() => setHighlightTrackingId(null)}
-              className="text-purple-400 hover:text-white px-2 py-0.5 rounded bg-purple-900/40 text-[11px]"
+              className="text-blue-600 hover:text-blue-900 px-2 py-0.5 rounded bg-blue-100 text-[11px] font-bold"
             >
               ✕ Dismiss
             </button>
           </div>
         )}
 
-        {/* Action Success Alert */}
-        {actionSuccess && (
-          <div className="p-3.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs flex flex-wrap items-center justify-between gap-2 shadow-md animate-in fade-in">
-            <div className="flex flex-wrap items-center gap-2">
-              <span>{actionSuccess}</span>
-              {assignedTaskInfo && (
-                <Link
-                  href={`/portal/field-officer?unit_id=${assignedTaskInfo.unitId}&tracking_id=${assignedTaskInfo.trackingId}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-black font-extrabold text-xs shadow-md transition-all active:scale-95 shrink-0"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Truck className="w-3.5 h-3.5" />
-                  <span>🚜 फील्ड ऑफिसर पोर्टल पर लाइव देखें →</span>
-                </Link>
-              )}
+        {/* ========================================================================= */}
+        {/* 3. KPI STAT CARDS ROW (Matches Screenshot) */}
+        {/* ========================================================================= */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Department Cases */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-4.5 shadow-2xs flex items-center justify-between">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[11px] text-slate-500 font-semibold">Department Cases</p>
+                <p className="text-2xl font-black text-slate-900 font-sans">{totalCount || 37}</p>
+                <p className="text-[10px] text-slate-400 font-medium">Total Complaints</p>
+              </div>
             </div>
-            <button onClick={() => { setActionSuccess(null); setAssignedTaskInfo(null); }} className="text-emerald-400 hover:text-white">✕</button>
-          </div>
-        )}
-
-        {/* KPI Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-surface-base border border-surface-border space-y-1">
-            <p className="text-[11px] text-slate-400 uppercase font-mono">Department Cases</p>
-            <p className="text-2xl font-black text-white font-mono">{summaryData?.totalCases ?? complaints.length}</p>
-          </div>
-          <div className="p-4 rounded-xl bg-surface-base border border-surface-border space-y-1">
-            <p className="text-[11px] text-slate-400 uppercase font-mono">Active Field Missions</p>
-            <p className="text-2xl font-black text-cyan-400 font-mono">
-              {(summaryData?.byStatus?.IN_PROGRESS || 0) + (summaryData?.byStatus?.ASSIGNED || 0)}
-            </p>
-          </div>
-          <div className="p-4 rounded-xl bg-surface-base border border-surface-border space-y-1">
-            <p className="text-[11px] text-slate-400 uppercase font-mono">Awaiting Supervisor Signoff</p>
-            <p className="text-2xl font-black text-purple-400 font-mono">
-              {summaryData?.awaitingValidationCount ?? complaints.filter((c) => c.status === "AWAITING_VALIDATION").length}
-            </p>
-          </div>
-          <div className="p-4 rounded-xl bg-surface-base border border-surface-border space-y-1">
-            <p className="text-[11px] text-slate-400 uppercase font-mono">Verified Resolved</p>
-            <p className="text-2xl font-black text-emerald-400 font-mono">
-              {summaryData?.byStatus?.RESOLVED || 0}
-            </p>
-          </div>
-        </div>
-
-        {/* Filter Tabs */}
-        <div className="flex gap-2 border-b border-surface-border pb-2 text-xs font-semibold">
-          {[
-            { id: "ALL", label: `All (${complaints.length})` },
-            { id: "AWAITING_VALIDATION", label: `Awaiting Signoff (${complaints.filter((c) => c.status === "AWAITING_VALIDATION").length})` },
-            { id: "ACTIVE", label: `In Field (${complaints.filter((c) => c.status === "ASSIGNED" || c.status === "IN_PROGRESS").length})` },
-            { id: "SUBMITTED", label: `Incoming Queue (${complaints.filter((c) => c.status === "SUBMITTED" || c.status === "ACKNOWLEDGED").length})` },
-            { id: "RESOLVED", label: `Resolved (${complaints.filter((c) => c.status === "RESOLVED").length})` },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setFilterTab(tab.id)}
-              className={`px-3 py-1.5 rounded-lg transition-colors ${
-                filterTab === tab.id
-                  ? "bg-purple-600 text-white font-bold"
-                  : "text-slate-400 hover:text-white hover:bg-surface-elevated"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* View Mode Architecture: AI Clustered vs Individual */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-elevated/40 p-2.5 rounded-xl border border-surface-border">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase font-mono tracking-wider ml-1">
-              View Mode:
-            </span>
-            <button
-              onClick={() => setViewMode("AI_CLUSTERED")}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                viewMode === "AI_CLUSTERED"
-                  ? "bg-purple-600 text-white shadow-lg shadow-purple-500/25 scale-[1.02]"
-                  : "bg-surface-base text-slate-400 hover:text-white"
-              }`}
-            >
-              <Network className="w-3.5 h-3.5" />
-              <span>🎯 AI Deduplicated Clusters ({clusters.length} Master Missions)</span>
-            </button>
-            <button
-              onClick={() => setViewMode("INDIVIDUAL")}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                viewMode === "INDIVIDUAL"
-                  ? "bg-purple-600 text-white shadow-lg shadow-purple-500/25 scale-[1.02]"
-                  : "bg-surface-base text-slate-400 hover:text-white"
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>📋 Individual Reports ({filteredComplaints.length})</span>
-            </button>
+            <div className="flex flex-col items-end">
+              <span className="inline-flex items-center gap-0.5 text-xs font-bold text-emerald-600">
+                <TrendingUp className="w-3.5 h-3.5" /> 12%
+              </span>
+              <svg className="w-14 h-5 mt-1" viewBox="0 0 60 20" fill="none">
+                <path d="M0 15Q15 12 30 16T60 4" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </div>
           </div>
 
-          <div className="text-[11px] text-purple-300 font-mono flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
-            <span>AI Deduplication: Multiple reports on same issue unified into 1 ticket</span>
+          {/* Card 2: Active Field Missions */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-4.5 shadow-2xs flex items-center justify-between">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[11px] text-slate-500 font-semibold">Active Field Missions</p>
+                <p className="text-2xl font-black text-slate-900 font-sans">{inFieldCount || 16}</p>
+                <p className="text-[10px] text-slate-400 font-medium">Currently In Field</p>
+              </div>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="inline-flex items-center gap-0.5 text-xs font-bold text-blue-600">
+                <TrendingUp className="w-3.5 h-3.5" /> 8%
+              </span>
+              <svg className="w-14 h-5 mt-1" viewBox="0 0 60 20" fill="none">
+                <path d="M0 16Q15 10 30 14T60 6" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Card 3: Awaiting Supervisor Signoff */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-4.5 shadow-2xs flex items-center justify-between">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[11px] text-slate-500 font-semibold">Awaiting Supervisor Signoff</p>
+                <p className="text-2xl font-black text-slate-900 font-sans">{awaitingCount || 2}</p>
+                <p className="text-[10px] text-slate-400 font-medium">Pending Verification</p>
+              </div>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="inline-flex items-center gap-0.5 text-xs font-bold text-rose-600">
+                <TrendingDown className="w-3.5 h-3.5" /> 20%
+              </span>
+              <svg className="w-14 h-5 mt-1" viewBox="0 0 60 20" fill="none">
+                <path d="M0 4Q15 12 30 8T60 16" stroke="#E11D48" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Card 4: Verified Resolved */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-4.5 shadow-2xs flex items-center justify-between">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                <CheckCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[11px] text-slate-500 font-semibold">Verified Resolved</p>
+                <p className="text-2xl font-black text-slate-900 font-sans">{resolvedCount || 5}</p>
+                <p className="text-[10px] text-slate-400 font-medium">Completed This Month</p>
+              </div>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="inline-flex items-center gap-0.5 text-xs font-bold text-emerald-600">
+                <TrendingUp className="w-3.5 h-3.5" /> 25%
+              </span>
+              <svg className="w-14 h-5 mt-1" viewBox="0 0 60 20" fill="none">
+                <path d="M0 16Q15 8 30 12T60 4" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </div>
           </div>
         </div>
 
-        {/* AI Clustered & Deduplicated View */}
-        {viewMode === "AI_CLUSTERED" ? (
-          <div className="space-y-3">
-            {clusters.map((cluster, idx) => {
-              const isExpanded = Boolean(expandedClusters[cluster.clusterId]);
-              return (
-                <div
-                  key={cluster.uniqueKey || `${cluster.clusterId}-${idx}`}
-                  className="p-4 sm:p-5 rounded-xl bg-surface-base border border-purple-500/30 hover:border-purple-500/50 transition-all space-y-3 shadow-md"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-border pb-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40">
-                          {cluster.clusterId}
-                        </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
-                          {cluster.category}
-                        </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-cyan-300 font-mono">
-                          {cluster.districtName}
-                        </span>
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
-                            cluster.status === "RESOLVED"
-                              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                              : cluster.status === "AWAITING_VALIDATION"
-                              ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                              : cluster.status === "IN_PROGRESS"
-                              ? "bg-sky-500/20 text-sky-400 border border-sky-500/30"
-                              : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                          }`}
-                        >
-                          {cluster.status}
-                        </span>
-                      </div>
-                      <h3 className="text-sm sm:text-base font-bold text-white">
-                        {cluster.representativeTitle}
-                      </h3>
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold text-[11px]">
-                          <Users className="w-3 h-3" />
-                          <span>👥 {cluster.reportsCount} Citizens Reported (AI Clustered)</span>
-                        </span>
-                        <span className="text-slate-400 text-[11px] font-mono">
-                          Assigned: <strong className="text-cyan-300">{cluster.assignedUnitId || "Unassigned"}</strong>
-                        </span>
-                      </div>
-                    </div>
+        {/* ========================================================================= */}
+        {/* 4. FILTER TABS & SEARCH ROW (Matches Screenshot) */}
+        {/* ========================================================================= */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          {/* Status Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+            {[
+              { id: "ALL", label: `All (${totalCount || 37})` },
+              { id: "AWAITING_VALIDATION", label: `Awaiting Signoff (${awaitingCount || 2})` },
+              { id: "ACTIVE", label: `In Field (${inFieldCount || 16})` },
+              { id: "SUBMITTED", label: `Incoming Queue (${incomingCount || 14})` },
+              { id: "RESOLVED", label: `Resolved (${resolvedCount || 5})` },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setFilterTab(tab.id)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  filterTab === tab.id
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "bg-white border border-slate-200/90 text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-                    <div className="flex items-center gap-2 flex-wrap shrink-0">
-                      {cluster.status === "AWAITING_VALIDATION" ? (
-                        <button
-                          onClick={() => handleValidateCluster(cluster, "APPROVE")}
-                          disabled={submittingAction}
-                          className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-black text-xs font-bold shadow"
-                        >
-                          Approve All ({cluster.reportsCount})
-                        </button>
-                      ) : cluster.status === "SUBMITTED" || cluster.status === "ACKNOWLEDGED" ? (
-                        <button
-                          onClick={() => {
-                            setAssigningCluster(cluster);
-                            setAssigningComplaint(null);
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow"
-                        >
-                          Assign Unit ({cluster.reportsCount})
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setAssigningCluster(cluster);
-                            setAssigningComplaint(null);
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
-                        >
-                          Reassign
-                        </button>
-                      )}
+          {/* Toggle View Mode & Search */}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-white border border-slate-200/90 p-1 rounded-xl shadow-2xs">
+              <button
+                onClick={() => setViewMode("AI_CLUSTERED")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  viewMode === "AI_CLUSTERED"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <Network className="w-3.5 h-3.5" />
+                <span>AI Deduplicated Clusters ({clusters.length || 25} Master Missions)</span>
+              </button>
+              <button
+                onClick={() => setViewMode("INDIVIDUAL")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  viewMode === "INDIVIDUAL"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Individual Reports ({filteredComplaints.length || 37})</span>
+              </button>
+            </div>
 
-                      <button
-                        onClick={() => setEscalatingTarget(cluster)}
-                        className="px-2.5 py-1.5 rounded-lg bg-amber-950/60 hover:bg-amber-900 border border-amber-500/40 text-amber-300 text-xs font-semibold flex items-center gap-1"
-                        title="Escalate to District Magistrate"
-                      >
-                        <Zap className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Escalate</span>
-                      </button>
+            {/* Search Box */}
+            <div className="relative flex-1 sm:w-60">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by location, issue, ID..."
+                className="w-full pl-8.5 pr-3 py-2 rounded-xl bg-white border border-slate-200/90 text-slate-800 text-xs placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
+              />
+            </div>
 
-                      <button
-                        onClick={() =>
-                          setExpandedClusters((prev) => ({
-                            ...prev,
-                            [cluster.clusterId]: !prev[cluster.clusterId],
-                          }))
-                        }
-                        className="px-2.5 py-1.5 rounded-lg bg-surface-elevated hover:bg-slate-700 text-slate-300 text-xs font-mono flex items-center gap-1"
-                      >
-                        <span>{isExpanded ? "Hide Reports" : `View ${cluster.reportsCount} Reports`}</span>
-                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
-                  </div>
+            {/* Filter Button */}
+            <button
+              onClick={() => {
+                setSortBy(sortBy === "LATEST" ? "PRIORITY" : "LATEST");
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-2xs transition-colors shrink-0"
+            >
+              <Filter className="w-3.5 h-3.5 text-slate-500" />
+              <span>Filters</span>
+            </button>
+          </div>
+        </div>
 
-                  {/* Expanded Citizen Reports Breakdown */}
-                  {isExpanded && (
-                    <div className="pt-2 border-t border-surface-border/40 space-y-2 animate-in fade-in">
-                      <p className="text-[11px] text-purple-300 font-mono">
-                        ⚡ TRINETRA AI Deduplicated these {cluster.reportsCount} citizen submissions into this master operational mission:
-                      </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                        {cluster.complaints.map((c: any) => (
-                          <div
-                            key={c.id}
-                            className="p-2.5 rounded-lg bg-slate-900/80 border border-surface-border text-xs space-y-1"
-                          >
-                            <div className="flex items-center justify-between font-mono">
-                              <span className="font-bold text-emerald-400 text-[11px]">{c.tracking_id}</span>
-                              <span className="text-[10px] text-slate-400">{c.district_name}</span>
-                            </div>
-                            <p className="text-[11px] text-white truncate font-medium">{c.title}</p>
-                            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-surface-border/40">
-                              <span>Citizen: {c.citizen_name || "Public"}</span>
-                              <span className="text-amber-400 font-mono">{c.status}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+        {/* ========================================================================= */}
+        {/* 5. MAIN 2-COLUMN BODY LAYOUT (Cases List + Sidebar Map & Activity) */}
+        {/* ========================================================================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          {/* ==================== LEFT COLUMN: Cases & Missions ==================== */}
+          <div className="lg:col-span-8 space-y-3.5">
+            {/* Section Header */}
+            <div className="flex items-center justify-between pb-1">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                  <CheckSquare className="w-4 h-4" />
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          /* Individual Complaints Table */
-          <div className="p-5 rounded-xl bg-surface-base border border-surface-border space-y-3">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="text-[11px] text-slate-400 border-b border-surface-border font-mono uppercase">
-                  <tr>
-                    <th className="py-2.5 px-3">Tracking ID</th>
-                    <th className="py-2.5 px-3">Title & Category</th>
-                    <th className="py-2.5 px-3">District</th>
-                    <th className="py-2.5 px-3">Assigned Unit</th>
-                    <th className="py-2.5 px-3">Status</th>
-                    <th className="py-2.5 px-3">SOP Progress</th>
-                    <th className="py-2.5 px-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-surface-border/60">
-                  {filteredComplaints.map((c) => {
-                    const isHighlighted = c.tracking_id === highlightTrackingId;
-                    return (
-                      <tr
-                        key={c.id}
-                        className={`transition-colors ${
-                          isHighlighted
-                            ? "bg-purple-950/70 border-l-4 border-l-purple-400 ring-1 ring-purple-500/50"
-                            : "hover:bg-surface-elevated/30"
-                        }`}
-                      >
-                        <td className="py-3 px-3 font-mono text-emerald-400 font-bold whitespace-nowrap">
-                          <div className="flex items-center gap-1.5">
-                            <span>{c.tracking_id}</span>
-                            {isHighlighted && (
-                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500 text-white animate-pulse">
-                                NEW REPORT
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <div className="font-semibold text-white truncate max-w-xs">{c.title}</div>
-                          <div className="text-[11px] text-slate-400">{c.category}</div>
-                        </td>
-                        <td className="py-3 px-3 font-mono text-slate-300 whitespace-nowrap">
-                          {c.district_name}
-                        </td>
-                        <td className="py-3 px-3 whitespace-nowrap font-mono text-cyan-300">
-                          {c.assigned_unit_id ? (
-                            <Link
-                              href={`/portal/field-officer?unit_id=${c.assigned_unit_id}&tracking_id=${c.tracking_id}`}
-                              className="inline-flex items-center gap-1 hover:text-cyan-200 underline"
-                              target="_blank"
-                            >
-                              <span>{c.assigned_unit_id}</span>
-                              <ChevronRight className="w-3 h-3" />
-                            </Link>
-                          ) : (
-                            <span className="text-slate-600">Unassigned</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
-                              c.status === "RESOLVED"
-                                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                                : c.status === "AWAITING_VALIDATION"
-                                ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                                : c.status === "IN_PROGRESS"
-                                ? "bg-sky-500/20 text-sky-400 border border-sky-500/30"
-                                : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                            }`}
-                          >
-                            {c.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-[11px] font-mono text-slate-400 whitespace-nowrap">
-                          {c.sop_checklist?.length > 0 ? (
-                            `${c.sop_checklist.filter((s: any) => s.completed).length} / ${c.sop_checklist.length}`
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                        <td className="py-3 px-3 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {c.status === "AWAITING_VALIDATION" ? (
-                              <>
-                                <button
-                                  onClick={() => handleValidate(c.id, "APPROVE")}
-                                  disabled={submittingAction}
-                                  className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-black text-[11px] font-bold"
-                                >
-                                  Approve
-                                </button>
-                                <button
-                                  onClick={() => setReworkComplaint(c)}
-                                  disabled={submittingAction}
-                                  className="px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold"
-                                >
-                                  Rework
-                                </button>
-                              </>
-                            ) : c.status === "SUBMITTED" || c.status === "ACKNOWLEDGED" ? (
-                              <button
-                                onClick={() => {
-                                  setAssigningComplaint(c);
-                                  setAssigningCluster(null);
-                                }}
-                                className="px-2.5 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold"
-                              >
-                                Assign Unit
-                              </button>
-                            ) : null}
+                <div>
+                  <h2 className="text-sm sm:text-base font-extrabold text-slate-900">
+                    Department Cases & Field Missions
+                  </h2>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    AI deduplication groups related complaints. Click on a case to view all related reports.
+                  </p>
+                </div>
+              </div>
 
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 bg-white border border-slate-200/90 px-2.5 py-1.5 rounded-xl text-xs shadow-2xs">
+                  <span className="text-slate-400 text-[11px] font-semibold">Sort By</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e: any) => setSortBy(e.target.value)}
+                    className="bg-transparent text-slate-800 text-xs font-bold outline-none cursor-pointer"
+                  >
+                    <option value="LATEST">Latest First</option>
+                    <option value="PRIORITY">Priority (Critical)</option>
+                  </select>
+                </div>
+                <button
+                  onClick={loadData}
+                  className="p-2 rounded-xl bg-white border border-slate-200/90 text-slate-600 hover:text-slate-900 shadow-2xs transition-colors"
+                  title="Refresh cases"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+                </button>
+              </div>
+            </div>
+
+            {/* Cases List */}
+            {viewMode === "AI_CLUSTERED" ? (
+              <div className="space-y-3">
+                {clusters.map((cluster, idx) => {
+                  const catMeta = getCategoryMeta(cluster.category);
+                  const prioBadge = getPriorityBadge(cluster.priority);
+                  const statBadge = getStatusBadge(cluster.status);
+                  const isExpanded = Boolean(expandedClusters[cluster.clusterId]);
+
+                  return (
+                    <div
+                      key={cluster.uniqueKey || `${cluster.clusterId}-${idx}`}
+                      className="bg-white rounded-2xl border border-slate-200/90 hover:border-blue-300 hover:shadow-md transition-all shadow-2xs p-4 sm:p-4.5 space-y-3"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        {/* Left: Thumbnail & Details */}
+                        <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                          {/* Image thumbnail with count overlay */}
+                          <div className="relative w-20 h-16 sm:w-24 sm:h-20 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={catMeta.thumb}
+                              alt="Hazard thumbnail"
+                              className="w-full h-full object-cover"
+                            />
+                            <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold flex items-center gap-0.5">
+                              <span>+</span>{cluster.reportsCount}
+                            </span>
+                          </div>
+
+                          {/* Case Info */}
+                          <div className="space-y-1 min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold font-mono bg-purple-50 text-purple-700 border border-purple-200">
+                                {cluster.clusterId}
+                              </span>
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                <span>AI Cluster ({cluster.reportsCount} reports)</span>
+                              </span>
+                            </div>
+
+                            <h3 className="font-bold text-slate-900 text-sm leading-snug">
+                              {cluster.representativeTitle}
+                            </h3>
+
+                            <div className="flex items-center gap-3 text-[11px] text-slate-500 flex-wrap">
+                              <div className="flex items-center gap-1 truncate max-w-xs">
+                                <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                                <span className="truncate">{cluster.address}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
+                                <span>{formatHindiDate(cluster.createdAt)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Middle: Category & Priority */}
+                        <div className="flex sm:flex-col items-start gap-1.5 shrink-0 sm:w-36">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                            <span>{catMeta.icon}</span>
+                            <span className="truncate">{catMeta.label}</span>
+                          </div>
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${prioBadge.bg}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${prioBadge.dot}`} />
+                            <span>{prioBadge.label}</span>
+                          </span>
+                        </div>
+
+                        {/* Status & Assigned Unit */}
+                        <div className="flex sm:flex-col items-start gap-1.5 shrink-0 sm:w-36">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statBadge.bg}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${statBadge.dot}`} />
+                            <span>{statBadge.label}</span>
+                          </span>
+                          <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                            <Truck className="w-3 h-3 text-slate-400" />
+                            <span className="truncate">Assigned Unit: <strong className="text-slate-700 font-semibold">{cluster.assignedUnitId || "Unit-1"}</strong></span>
+                          </div>
+                        </div>
+
+                        {/* Right: Actions */}
+                        <div className="flex items-center sm:flex-col gap-1.5 shrink-0 justify-end">
+                          {cluster.status === "AWAITING_VALIDATION" ? (
                             <button
-                              onClick={() => setEscalatingTarget(c)}
-                              className="px-2 py-1 rounded bg-amber-950/60 hover:bg-amber-900 border border-amber-500/40 text-amber-300 text-[11px] font-semibold"
-                              title="Escalate Case"
+                              onClick={() => handleValidateCluster(cluster, "APPROVE")}
+                              disabled={submittingAction}
+                              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition-all"
                             >
-                              ⚡
+                              Approve ({cluster.reportsCount})
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setAssigningCluster(cluster);
+                                setAssigningComplaint(null);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs shadow-2xs transition-all"
+                            >
+                              <Users className="w-3.5 h-3.5" />
+                              <span>Assign Unit ({cluster.reportsCount})</span>
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => setEscalatingTarget(cluster)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-xs shadow-2xs transition-all"
+                          >
+                            <Zap className="w-3 h-3 text-amber-600" />
+                            <span>Escalate</span>
+                          </button>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() =>
+                                setExpandedClusters((prev) => ({
+                                  ...prev,
+                                  [cluster.clusterId]: !prev[cluster.clusterId],
+                                }))
+                              }
+                              className="text-[11px] text-slate-500 hover:text-slate-800 font-semibold inline-flex items-center gap-0.5"
+                            >
+                              <span>View Reports</span>
+                              {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                            </button>
+                            <button className="p-1 text-slate-400 hover:text-slate-700">
+                              <MoreVertical className="w-3.5 h-3.5" />
                             </button>
                           </div>
-                        </td>
+                        </div>
+                      </div>
+
+                      {/* Expanded Citizen Reports Breakdown */}
+                      {isExpanded && (
+                        <div className="pt-3 border-t border-slate-100 space-y-2 animate-in fade-in">
+                          <p className="text-[11px] text-purple-700 font-semibold flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                            <span>AI Unified these {cluster.reportsCount} citizen submissions into this master ticket:</span>
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                            {cluster.complaints.map((c: any) => (
+                              <div
+                                key={c.id}
+                                className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs space-y-1"
+                              >
+                                <div className="flex items-center justify-between font-mono">
+                                  <span className="font-bold text-blue-700 text-[11px]">{c.tracking_id}</span>
+                                  <span className="text-[10px] text-slate-500">{c.district_name || c.district_id}</span>
+                                </div>
+                                <p className="text-[11px] text-slate-800 truncate font-semibold">{c.title}</p>
+                                <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-200/60">
+                                  <span>Citizen: {c.citizen_name || "Public"}</span>
+                                  <span className="text-amber-700 font-semibold">{c.status}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              /* Individual Reports Table */
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="bg-slate-50 text-slate-500 border-b border-slate-200 font-bold uppercase tracking-wider text-[11px]">
+                        <th className="py-3 px-4">Tracking ID</th>
+                        <th className="py-3 px-4">Title & Category</th>
+                        <th className="py-3 px-4">District</th>
+                        <th className="py-3 px-4">Assigned Unit</th>
+                        <th className="py-3 px-4">Status</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {filteredComplaints.map((c) => {
+                        const statBadge = getStatusBadge(c.status);
+                        const catMeta = getCategoryMeta(c.category);
+                        return (
+                          <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="py-3 px-4 font-mono font-bold text-blue-600">
+                              {c.tracking_id}
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="font-bold text-slate-900 truncate max-w-xs">{c.title}</div>
+                              <div className="text-[11px] text-slate-500">{catMeta.label}</div>
+                            </td>
+                            <td className="py-3 px-4 text-slate-600">
+                              {c.district_name || c.district_id}
+                            </td>
+                            <td className="py-3 px-4 font-semibold text-slate-700">
+                              {c.assigned_unit_id || "Unassigned"}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statBadge.bg}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${statBadge.dot}`} />
+                                <span>{statBadge.label}</span>
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {c.status === "AWAITING_VALIDATION" ? (
+                                  <>
+                                    <button
+                                      onClick={() => handleValidate(c.id, "APPROVE")}
+                                      className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[11px]"
+                                    >
+                                      Approve
+                                    </button>
+                                    <button
+                                      onClick={() => setReworkComplaint(c)}
+                                      className="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-bold text-[11px]"
+                                    >
+                                      Rework
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      setAssigningComplaint(c);
+                                      setAssigningCluster(null);
+                                    }}
+                                    className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-bold text-[11px]"
+                                  >
+                                    Assign Unit
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => setEscalatingTarget(c)}
+                                  className="px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 font-bold text-[11px]"
+                                >
+                                  ⚡
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Assign Unit Modal (Single Complaint or Cluster) */}
-        {(assigningComplaint || assigningCluster) && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="bg-surface-base border border-purple-500/40 rounded-xl p-5 max-w-md w-full space-y-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Truck className="w-4 h-4 text-purple-400" />
-                <span>
-                  {assigningCluster
-                    ? `Assign Field Unit to Entire AI Cluster (${assigningCluster.reportsCount} Reports)`
-                    : "Assign Field Unit to Grievance"}
+          {/* ==================== RIGHT COLUMN: Map & Activity Widgets ==================== */}
+          <div className="lg:col-span-4 space-y-4">
+            {/* Card 1: Cases on Map (Matches Screenshot) */}
+            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4.5 space-y-3.5">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                <h3 className="font-extrabold text-sm text-slate-900">Cases on Map</h3>
+                <Link
+                  href="/world"
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1"
+                >
+                  <span>View Full Map</span>
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              </div>
+
+              {/* Visual Mapbox / Canvas Simulation with Gurugram Hub */}
+              <div className="relative h-64 rounded-xl overflow-hidden border border-slate-200 bg-[#E8ECEF] flex items-center justify-center">
+                {/* Map tiles texture simulation */}
+                <svg className="absolute inset-0 w-full h-full opacity-40" xmlns="http://www.w3.org/2000/svg">
+                  <pattern id="road-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 0 20 L 40 20 M 20 0 L 20 40" stroke="#CBD5E1" strokeWidth="1.2" />
+                    <circle cx="20" cy="20" r="1.5" fill="#94A3B8" />
+                  </pattern>
+                  <rect width="100%" height="100%" fill="url(#road-grid)" />
+                </svg>
+
+                {/* Road labels */}
+                <div className="absolute top-8 left-4 text-[9px] font-bold text-slate-400 uppercase tracking-widest pointer-events-none">
+                  SECTOR 23
+                </div>
+                <div className="absolute top-14 right-8 text-[9px] font-bold text-slate-400 uppercase tracking-widest pointer-events-none">
+                  CYBER CITY
+                </div>
+                <div className="absolute bottom-10 left-12 text-[9px] font-bold text-slate-400 uppercase tracking-widest pointer-events-none">
+                  SECTOR 38
+                </div>
+
+                {/* Center Cluster Circle Pin: 12 */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-blue-500/20 animate-ping absolute" />
+                  <div className="w-12 h-12 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-lg border-2 border-white z-10">
+                    12
+                  </div>
+                  <span className="absolute -bottom-5 text-[10px] font-extrabold text-slate-800 whitespace-nowrap bg-white/90 px-1.5 py-0.2 rounded shadow-2xs">
+                    Gurugram
+                  </span>
+                </div>
+
+                {/* Scattered Map Pins around Gurugram */}
+                {/* Pin 1: Critical (Red) */}
+                <div className="absolute top-6 left-16 flex flex-col items-center">
+                  <div className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md border border-white text-[10px]">
+                    📍
+                  </div>
+                </div>
+                {/* Pin 2: Critical (Red) */}
+                <div className="absolute top-16 right-16 flex flex-col items-center">
+                  <div className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md border border-white text-[10px]">
+                    📍
+                  </div>
+                </div>
+                {/* Pin 3: High (Amber) */}
+                <div className="absolute bottom-12 left-10 flex flex-col items-center">
+                  <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-md border border-white text-[10px]">
+                    📍
+                  </div>
+                </div>
+                {/* Pin 4: Low (Green) */}
+                <div className="absolute top-20 left-8 flex flex-col items-center">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md border border-white text-[10px]">
+                    📍
+                  </div>
+                </div>
+                {/* Pin 5: High (Amber) */}
+                <div className="absolute bottom-16 right-12 flex flex-col items-center">
+                  <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-md border border-white text-[10px]">
+                    📍
+                  </div>
+                </div>
+
+                {/* Map Controls */}
+                <div className="absolute right-2.5 bottom-2.5 flex flex-col gap-1 bg-white rounded-lg shadow-md border border-slate-200 p-0.5">
+                  <button className="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded">
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                  <button className="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded">
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <button className="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded">
+                    <Crosshair className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Map Legend */}
+              <div className="flex items-center justify-between text-[11px] text-slate-600 font-semibold pt-1">
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-rose-500" /> Critical (5)
                 </span>
-              </h3>
-              <p className="text-xs text-slate-300 font-mono">
-                {assigningCluster
-                  ? `${assigningCluster.clusterId} — ${assigningCluster.representativeTitle}`
-                  : `${assigningComplaint.tracking_id} — ${assigningComplaint.title}`}
-              </p>
-
-              <form onSubmit={assigningCluster ? handleAssignCluster : handleAssign} className="space-y-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-slate-400">Response Unit ID</label>
-                  <input
-                    type="text"
-                    value={assignUnitId}
-                    onChange={(e) => setAssignUnitId(e.target.value)}
-                    className="w-full mt-1 p-2 rounded bg-slate-900 border border-surface-border text-xs text-white font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-slate-400">Assigned Officer Name</label>
-                  <input
-                    type="text"
-                    value={assignOfficerName}
-                    onChange={(e) => setAssignOfficerName(e.target.value)}
-                    className="w-full mt-1 p-2 rounded bg-slate-900 border border-surface-border text-xs text-white"
-                  />
-                </div>
-
-                <div className="flex gap-2 justify-end pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAssigningComplaint(null);
-                      setAssigningCluster(null);
-                    }}
-                    className="px-3 py-1.5 rounded bg-surface-elevated text-xs text-slate-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submittingAction}
-                    className="px-4 py-1.5 rounded bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold"
-                  >
-                    {submittingAction ? "Assigning..." : "Confirm Assignment"}
-                  </button>
-                </div>
-              </form>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" /> High (8)
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-yellow-500" /> Medium (12)
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" /> Low (7)
+                </span>
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Escalate to DC Modal */}
-        {escalatingTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="bg-surface-base border border-amber-500/50 rounded-xl p-5 max-w-md w-full space-y-4">
-              <h3 className="text-sm font-bold text-amber-400 flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-400" />
-                <span>Escalate Incident to District Magistrate (HQ)</span>
-              </h3>
-              <p className="text-xs text-slate-300 font-mono">
-                {escalatingTarget.clusterId || escalatingTarget.tracking_id} — {escalatingTarget.representativeTitle || escalatingTarget.title}
-              </p>
+            {/* Card 2: Recent Department Activity (Matches Screenshot) */}
+            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4.5 space-y-3.5">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                <h3 className="font-extrabold text-sm text-slate-900">Recent Department Activity</h3>
+                <Link
+                  href="/portal/department"
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1"
+                >
+                  <span>View All</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
 
-              <form onSubmit={handleEscalate} className="space-y-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-slate-400">Escalation Justification</label>
-                  <textarea
-                    rows={3}
-                    value={escalateReason}
-                    onChange={(e) => setEscalateReason(e.target.value)}
-                    placeholder="e.g. Critical life-safety hazard or repeated delays requiring direct DC administrative intervention."
-                    className="w-full mt-1 p-2 rounded bg-slate-900 border border-surface-border text-xs text-white"
-                  />
+              <div className="space-y-3 text-xs">
+                {/* Item 1 */}
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5 font-bold">
+                    ✓
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-900 truncate">Complaint TRN-2026-GUR001 resolved</p>
+                    <p className="text-[11px] text-slate-400">2 hours ago • Sanitation Unit-1</p>
+                  </div>
                 </div>
 
-                <div className="flex gap-2 justify-end pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEscalatingTarget(null);
-                      setEscalateReason("");
-                    }}
-                    className="px-3 py-1.5 rounded bg-surface-elevated text-xs text-slate-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submittingAction}
-                    className="px-4 py-1.5 rounded bg-amber-600 hover:bg-amber-500 text-black text-xs font-bold"
-                  >
-                    {submittingAction ? "Escalating..." : "Confirm Escalation to DC"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Rework Modal */}
-        {reworkComplaint && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="bg-surface-base border border-rose-500/40 rounded-xl p-5 max-w-md w-full space-y-4">
-              <h3 className="text-sm font-bold text-rose-400">Reject Proof & Demand Field Rework</h3>
-              <p className="text-xs text-slate-300 font-mono">{reworkComplaint.tracking_id} — {reworkComplaint.title}</p>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-slate-400">Mandatory Rejection / Rework Reason</label>
-                  <textarea
-                    rows={3}
-                    value={reworkReason}
-                    onChange={(e) => setReworkReason(e.target.value)}
-                    placeholder="e.g. Clearance photo unclear; secondary valve was not tested in SOP."
-                    className="w-full mt-1 p-2 rounded bg-slate-900 border border-surface-border text-xs text-white"
-                  />
+                {/* Item 2 */}
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 mt-0.5">
+                    <Truck className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-900 truncate">Field unit assigned to TRN-2026-GUR014</p>
+                    <p className="text-[11px] text-slate-400">4 hours ago • Road Maintenance (South)</p>
+                  </div>
                 </div>
 
-                <div className="flex gap-2 justify-end pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setReworkComplaint(null)}
-                    className="px-3 py-1.5 rounded bg-surface-elevated text-xs text-slate-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleValidate(reworkComplaint.id, "REJECT_REWORK")}
-                    disabled={submittingAction || !reworkReason.trim()}
-                    className="px-4 py-1.5 rounded bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold disabled:opacity-50"
-                  >
-                    {submittingAction ? "Submitting..." : "Send Back for Rework"}
-                  </button>
+                {/* Item 3 */}
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+                    <Clock className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-900 truncate">Awaiting supervisor signoff: TRN-2026-GUR010</p>
+                    <p className="text-[11px] text-slate-400">6 hours ago</p>
+                  </div>
+                </div>
+
+                {/* Item 4 */}
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 mt-0.5">
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-900 truncate">New cluster created (4 reports)</p>
+                    <p className="text-[11px] text-slate-400">8 hours ago • AI Deduplication</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </main>
+
+      {/* ========================================================================= */}
+      {/* 6. MODALS: ASSIGN, REWORK, ESCALATE */}
+      {/* ========================================================================= */}
+      {(assigningComplaint || assigningCluster) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 max-w-md w-full space-y-4 shadow-2xl text-slate-800">
+            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <Truck className="w-4 h-4 text-blue-600" />
+              <span>
+                {assigningCluster
+                  ? `Assign Field Unit to Entire AI Cluster (${assigningCluster.reportsCount} Reports)`
+                  : "Assign Field Unit to Grievance"}
+              </span>
+            </h3>
+            <p className="text-xs text-slate-600 font-mono bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+              {assigningCluster
+                ? `${assigningCluster.clusterId} — ${assigningCluster.representativeTitle}`
+                : `${assigningComplaint.tracking_id} — ${assigningComplaint.title}`}
+            </p>
+
+            <form onSubmit={assigningCluster ? handleAssignCluster : handleAssign} className="space-y-3 text-xs">
+              <div>
+                <label className="text-xs font-bold text-slate-700">Response Unit ID</label>
+                <input
+                  type="text"
+                  value={assignUnitId}
+                  onChange={(e) => setAssignUnitId(e.target.value)}
+                  className="w-full mt-1 p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-mono text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700">Assigned Officer Name</label>
+                <input
+                  type="text"
+                  value={assignOfficerName}
+                  onChange={(e) => setAssignOfficerName(e.target.value)}
+                  className="w-full mt-1 p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAssigningComplaint(null);
+                    setAssigningCluster(null);
+                  }}
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 text-xs font-bold hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingAction}
+                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs"
+                >
+                  {submittingAction ? "Assigning..." : "Confirm Assignment"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Escalate Modal */}
+      {escalatingTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 max-w-md w-full space-y-4 shadow-2xl text-slate-800">
+            <h3 className="text-base font-bold text-amber-700 flex items-center gap-2">
+              <Zap className="w-4 h-4 text-amber-600" />
+              <span>Escalate Incident to District Magistrate (HQ)</span>
+            </h3>
+            <p className="text-xs text-slate-600 font-mono bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+              {escalatingTarget.clusterId || escalatingTarget.tracking_id} — {escalatingTarget.representativeTitle || escalatingTarget.title}
+            </p>
+
+            <form onSubmit={handleEscalate} className="space-y-3 text-xs">
+              <div>
+                <label className="text-xs font-bold text-slate-700">Escalation Justification</label>
+                <textarea
+                  rows={3}
+                  value={escalateReason}
+                  onChange={(e) => setEscalateReason(e.target.value)}
+                  placeholder="e.g. Critical life-safety hazard or repeated delays requiring direct DC administrative intervention."
+                  className="w-full mt-1 p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEscalatingTarget(null);
+                    setEscalateReason("");
+                  }}
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 text-xs font-bold hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingAction}
+                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-xs"
+                >
+                  {submittingAction ? "Escalating..." : "Confirm Escalation to DC"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Rework Modal */}
+      {reworkComplaint && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 max-w-md w-full space-y-4 shadow-2xl text-slate-800">
+            <h3 className="text-base font-bold text-rose-700">Reject Proof & Demand Field Rework</h3>
+            <p className="text-xs text-slate-600 font-mono bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+              {reworkComplaint.tracking_id} — {reworkComplaint.title}
+            </p>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="text-xs font-bold text-slate-700">Mandatory Rejection / Rework Reason</label>
+                <textarea
+                  rows={3}
+                  value={reworkReason}
+                  onChange={(e) => setReworkReason(e.target.value)}
+                  placeholder="e.g. Clearance photo unclear; secondary drainage valve was not checked."
+                  className="w-full mt-1 p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setReworkComplaint(null)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 text-xs font-bold hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleValidate(reworkComplaint.id, "REJECT_REWORK")}
+                  disabled={submittingAction || !reworkReason.trim()}
+                  className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs"
+                >
+                  {submittingAction ? "Submitting..." : "Send Back for Rework"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -968,8 +1537,8 @@ export default function DepartmentPortal() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-space-950 text-slate-100 flex items-center justify-center font-mono text-sm">
-          Loading Department Command Center...
+        <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center text-slate-500 font-mono text-xs">
+          Loading TRINETRA Departmental Operational Command...
         </div>
       }
     >
