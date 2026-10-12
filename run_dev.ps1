@@ -8,12 +8,24 @@ Write-Host "=================================================================" -
 
 $WorkspaceRoot = $PSScriptRoot
 
-# Determine Python command
+# Determine working Python executable
 $PythonCmd = "python"
-if (Test-Path "$WorkspaceRoot\services\api\.venv\Scripts\python.exe") {
-    $PythonCmd = "$WorkspaceRoot\services\api\.venv\Scripts\python.exe"
-} elseif (Test-Path "$WorkspaceRoot\.venv\Scripts\python.exe") {
-    $PythonCmd = "$WorkspaceRoot\.venv\Scripts\python.exe"
+$Candidates = @(
+    "$WorkspaceRoot\.venv\Scripts\python.exe",
+    "$WorkspaceRoot\services\api\.venv\Scripts\python.exe",
+    "python"
+)
+
+foreach ($c in $Candidates) {
+    try {
+        if ($c -eq "python" -or (Test-Path $c)) {
+            $test = & $c -c "import sys; print(sys.version_info[0])" 2>$null
+            if ($test -eq "3") {
+                $PythonCmd = $c
+                break
+            }
+        }
+    } catch {}
 }
 
 # 1. Start Backend API Service
