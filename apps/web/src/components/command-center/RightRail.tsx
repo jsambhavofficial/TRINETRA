@@ -445,11 +445,11 @@ export const RightRail: React.FC = () => {
                         <span>REF: {(selectedIncident as any).tracking_id}</span>
                       </span>
                       <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase ${
-                        selectedIncident.status === "RESOLVED"
+                        (selectedIncident.status as string) === "RESOLVED"
                           ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
-                          : selectedIncident.status === "IN_PROGRESS"
+                          : (selectedIncident.status as string) === "IN_PROGRESS"
                           ? "bg-blue-950/80 text-blue-300 border border-blue-500/40"
-                          : selectedIncident.status === "ASSIGNED"
+                          : (selectedIncident.status as string) === "ASSIGNED"
                           ? "bg-amber-950/80 text-amber-300 border border-amber-500/40"
                           : "bg-purple-950/80 text-purple-300 border border-purple-500/40"
                       }`}>
@@ -538,7 +538,7 @@ export const RightRail: React.FC = () => {
                     Ground Reality Summary
                   </span>
                   <p className="text-xs text-slate-300 leading-relaxed glass-panel p-2.5 rounded">
-                    {selectedIncident.summary || selectedIncident.description || selectedIncident.title}
+                    {selectedIncident.summary || (selectedIncident as any).description || selectedIncident.title}
                   </p>
                 </div>
 

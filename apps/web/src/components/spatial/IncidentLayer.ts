@@ -20,7 +20,7 @@ export class IncidentLayer {
 
     incidents.forEach((inc) => {
       try {
-        if (inc.status === "RESOLVED" || inc.status === "CLOSED") return;
+        if ((inc.status as string) === "RESOLVED" || (inc.status as string) === "CLOSED") return;
         const { latitude, longitude } = inc.geometry;
         const isCorroborated = inc.status === "CORROBORATED";
         const isCritical = inc.severity === "CRITICAL" || inc.severity === "HIGH";

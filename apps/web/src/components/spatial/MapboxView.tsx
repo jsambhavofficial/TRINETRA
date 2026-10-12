@@ -96,7 +96,7 @@ export const MapboxView: React.FC = () => {
 
     // 1. Master Incidents from snapshot (only active / unresolved ones!)
     (snapshot?.incidents || []).forEach((inc) => {
-      if (inc.status === "RESOLVED" || inc.status === "CLOSED") return;
+      if ((inc.status as string) === "RESOLVED" || (inc.status as string) === "CLOSED") return;
       if (!inc.geometry?.longitude || !inc.geometry?.latitude) return;
 
       // Master incident center point
