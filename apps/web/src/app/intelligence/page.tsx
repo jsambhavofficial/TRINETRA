@@ -90,9 +90,9 @@ export default function ContextualIntelligencePage() {
       const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
       const [ovRes, altRes, intRes] = await Promise.all([
-        fetch("http://localhost:8000/api/v1/intelligence/overview", { headers }).catch(() => null),
-        fetch("http://localhost:8000/api/v1/intelligence/alerts", { headers }).catch(() => null),
-        fetch("http://localhost:8000/api/v1/governance/integrations/status", { headers }).catch(() => null),
+        fetch("/api/v1/intelligence/overview", { headers }).catch(() => null),
+        fetch("/api/v1/intelligence/alerts", { headers }).catch(() => null),
+        fetch("/api/v1/governance/integrations/status", { headers }).catch(() => null),
       ]);
 
       if (ovRes && ovRes.ok) setGovOverview(await ovRes.json());
@@ -118,7 +118,7 @@ export default function ContextualIntelligencePage() {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
-      const res = await fetch("http://localhost:8000/api/v1/intelligence/drilldown", {
+      const res = await fetch("/api/v1/intelligence/drilldown", {
         method: "POST",
         headers,
         body: JSON.stringify({ record_ids: recordIds }),
@@ -152,13 +152,13 @@ export default function ContextualIntelligencePage() {
       setIsLoadingIntel(true);
       try {
         const [expRes, timeRes, evRes] = await Promise.all([
-          fetch(`http://localhost:8000/api/v1/incidents/${currentIncident.id}/explanation`).catch(
+          fetch(`/api/v1/incidents/${currentIncident.id}/explanation`).catch(
             () => null
           ),
-          fetch(`http://localhost:8000/api/v1/incidents/${currentIncident.id}/timeline`).catch(
+          fetch(`/api/v1/incidents/${currentIncident.id}/timeline`).catch(
             () => null
           ),
-          fetch(`http://localhost:8000/api/v1/incidents/${currentIncident.id}/evidence`).catch(
+          fetch(`/api/v1/incidents/${currentIncident.id}/evidence`).catch(
             () => null
           ),
         ]);
@@ -634,7 +634,7 @@ export default function ContextualIntelligencePage() {
                           <button
                             onClick={async () => {
                               const token = localStorage.getItem("token");
-                              await fetch(`http://localhost:8000/api/v1/intelligence/alerts/${alt.id}/acknowledge`, {
+                              await fetch(`/api/v1/intelligence/alerts/${alt.id}/acknowledge`, {
                                 method: "POST",
                                 headers: token ? { Authorization: `Bearer ${token}` } : {},
                               });
@@ -651,7 +651,7 @@ export default function ContextualIntelligencePage() {
                               const note = prompt("Enter resolution remediation notes:");
                               if (!note) return;
                               const token = localStorage.getItem("token");
-                              await fetch(`http://localhost:8000/api/v1/intelligence/alerts/${alt.id}/resolve`, {
+                              await fetch(`/api/v1/intelligence/alerts/${alt.id}/resolve`, {
                                 method: "POST",
                                 headers: {
                                   "Content-Type": "application/json",

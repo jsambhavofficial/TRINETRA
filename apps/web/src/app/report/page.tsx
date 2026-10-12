@@ -66,7 +66,7 @@ export default function ReportPage() {
 
   const fetchNearby = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/v1/citizen/nearby-reports");
+      const res = await fetch("/api/v1/citizen/nearby-reports");
       if (res.ok) {
         const data = await res.json();
         setNearbyData(data);
@@ -93,7 +93,7 @@ export default function ReportPage() {
         if (typeof window !== "undefined") localStorage.setItem("aegis_citizen_token", token);
       }
 
-      const res = await fetch(`http://localhost:8000/api/v1/citizen/reports/${reportId}/corroborate`, {
+      const res = await fetch(`/api/v1/citizen/reports/${reportId}/corroborate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -274,7 +274,7 @@ export default function ReportPage() {
     setPipelineStep(1); // Uploading & Validating
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+      const apiUrl = "/api/v1";
 
       let evidenceId = "";
 
@@ -363,7 +363,7 @@ export default function ReportPage() {
           : "ROAD_BLOCKAGE";
 
         const nearestDistrict = findNearestHaryanaDistrict(latitude, longitude);
-        await fetch("http://localhost:8000/api/v1/complaints", {
+        await fetch("/api/v1/complaints", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -60,7 +60,7 @@ function TrackingContent() {
         if (typeof window !== "undefined") localStorage.setItem("aegis_citizen_token", token);
       }
 
-      const res = await fetch("http://localhost:8000/api/v1/citizen/incidents/INC-R17-GRID-01/feedback", {
+      const res = await fetch("/api/v1/citizen/incidents/INC-R17-GRID-01/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

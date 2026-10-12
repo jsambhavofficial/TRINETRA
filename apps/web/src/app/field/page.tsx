@@ -92,7 +92,7 @@ export default function FieldOperationsPage() {
 
   const fetchAssignmentData = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/v1/field/assignments/asg-r17-grid-01");
+      const res = await fetch("/api/v1/field/assignments/asg-r17-grid-01");
       if (res.ok) {
         const data = await res.json();
         setAssignment(data);
@@ -117,7 +117,7 @@ export default function FieldOperationsPage() {
     setActionLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:8000/api/v1/field/assignments/asg-r17-grid-01/dispatch`,
+        `/api/v1/field/assignments/asg-r17-grid-01/dispatch`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -147,7 +147,7 @@ export default function FieldOperationsPage() {
     setActionLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:8000/api/v1/field/assignments/asg-r17-grid-01/status`,
+        `/api/v1/field/assignments/asg-r17-grid-01/status`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -172,7 +172,7 @@ export default function FieldOperationsPage() {
   const handleToggleSOP = async (stepId: string, currentVal: boolean) => {
     try {
       const res = await fetch(
-        `http://localhost:8000/api/v1/field/assignments/asg-r17-grid-01/sop`,
+        `/api/v1/field/assignments/asg-r17-grid-01/sop`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -206,7 +206,7 @@ export default function FieldOperationsPage() {
     setActionLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:8000/api/v1/field/assignments/asg-r17-grid-01/proof`,
+        `/api/v1/field/assignments/asg-r17-grid-01/proof`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -245,7 +245,7 @@ export default function FieldOperationsPage() {
     setActionLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:8000/api/v1/field/assignments/asg-r17-grid-01/validate`,
+        `/api/v1/field/assignments/asg-r17-grid-01/validate`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -272,7 +272,7 @@ export default function FieldOperationsPage() {
     setActionLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:8000/api/v1/field/assignments/asg-r17-grid-01/validate`,
+        `/api/v1/field/assignments/asg-r17-grid-01/validate`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -301,7 +301,7 @@ export default function FieldOperationsPage() {
     setActionLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:8000/api/v1/field/assignments/asg-r17-grid-01/confirm`,
+        `/api/v1/field/assignments/asg-r17-grid-01/confirm`,
         {
           method: "POST",
         }

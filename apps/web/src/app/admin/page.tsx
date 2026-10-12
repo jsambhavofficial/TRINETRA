@@ -26,11 +26,11 @@ export default function AdminPage() {
     async function loadData() {
       try {
         const [hRes, oRes, rRes] = await Promise.all([
-          fetch("http://localhost:8000/health/dependencies"),
-          fetch("http://localhost:8000/api/v1/organizations", {
+          fetch("/health/dependencies"),
+          fetch("/api/v1/organizations", {
             headers: { "X-User-Role": "COMMANDER" },
           }),
-          fetch("http://localhost:8000/api/v1/roles", {
+          fetch("/api/v1/roles", {
             headers: { "X-User-Role": "COMMANDER" },
           }),
         ]);

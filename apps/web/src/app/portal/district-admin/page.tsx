@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { HaryanaGovernanceMap } from "@/components/map/HaryanaGovernanceMap";
 import { HARYANA_DISTRICTS } from "@/lib/haryana";
-import { AIDecisionPanel } from "@/components/governance/AIDecisionPanel";
+import { AIDecisionPanel } from "@/components/complaints/AIDecisionPanel";
 
 export default function DistrictAdminPortal() {
   const [authUser, setAuthUser] = useState<any>(null);

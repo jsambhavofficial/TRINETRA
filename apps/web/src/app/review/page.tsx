@@ -53,7 +53,7 @@ export default function ReviewPage() {
   const fetchReviews = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/v1/fusion/reviews", {
+      const res = await fetch("/api/v1/fusion/reviews", {
         headers: { "X-User-Role": "COMMANDER" },
       });
       if (res.ok) {
@@ -77,7 +77,7 @@ export default function ReviewPage() {
       const fd = new FormData();
       fd.append("reviewer", "Commander Vikram");
       fd.append("note", "Authorized merge into canonical incident.");
-      const res = await fetch(`http://localhost:8000/api/v1/fusion/${decisionId}/approve`, {
+      const res = await fetch(`/api/v1/fusion/${decisionId}/approve`, {
         method: "POST",
         body: fd,
         headers: { "X-User-Role": "COMMANDER" },
@@ -99,7 +99,7 @@ export default function ReviewPage() {
       const fd = new FormData();
       fd.append("reviewer", "Commander Vikram");
       fd.append("note", "Operator verified distinct events. Keeping separate.");
-      const res = await fetch(`http://localhost:8000/api/v1/fusion/${decisionId}/reject`, {
+      const res = await fetch(`/api/v1/fusion/${decisionId}/reject`, {
         method: "POST",
         body: fd,
         headers: { "X-User-Role": "COMMANDER" },
@@ -117,7 +117,7 @@ export default function ReviewPage() {
 
   const handleTriggerDemo = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/v1/fusion/demo/core-run", { method: "POST" });
+      const res = await fetch("/api/v1/fusion/demo/core-run", { method: "POST" });
       if (res.ok) {
         router.push("/world");
       }
