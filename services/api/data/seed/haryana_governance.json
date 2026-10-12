@@ -1,0 +1,58 @@
+{
+  "state": {
+    "name": "Haryana",
+    "country": "India",
+    "iso_code": "IN-HR",
+    "capital": "Chandigarh",
+    "center": {
+      "latitude": 29.0588,
+      "longitude": 76.0856,
+      "zoom": 7.8
+    },
+    "bounds": {
+      "min_latitude": 27.65,
+      "max_latitude": 30.92,
+      "min_longitude": 74.46,
+      "max_longitude": 77.60
+    },
+    "provenance": {
+      "source": "Government of India / Survey of India Open Spatial Reference Framework",
+      "retrieval_date": "2026-10-11",
+      "license": "National Data Sharing and Accessibility Policy (NDSAP) Open Data Reference",
+      "disclaimer": "District headquarters coordinates and reference markers are provided for governance intelligence research and prototype spatial visualization. Official cadastral boundaries are maintained by the Revenue & Disaster Management Department, Government of Haryana."
+    }
+  },
+  "districts": [
+    { "id": "HR-AM", "name": "Ambala", "division": "Ambala", "headquarters": "Ambala", "latitude": 30.3782, "longitude": 76.7767, "population_tier": "Medium", "risk_index": 0.42 },
+    { "id": "HR-BH", "name": "Bhiwani", "division": "Rohtak", "headquarters": "Bhiwani", "latitude": 28.7831, "longitude": 76.1361, "population_tier": "Medium", "risk_index": 0.38 },
+    { "id": "HR-CD", "name": "Charkhi Dadri", "division": "Rohtak", "headquarters": "Charkhi Dadri", "latitude": 28.5921, "longitude": 76.2674, "population_tier": "Low", "risk_index": 0.31 },
+    { "id": "HR-FR", "name": "Faridabad", "division": "Faridabad", "headquarters": "Faridabad", "latitude": 28.4089, "longitude": 77.3178, "population_tier": "Very High", "risk_index": 0.74 },
+    { "id": "HR-FT", "name": "Fatehabad", "division": "Hisar", "headquarters": "Fatehabad", "latitude": 29.5159, "longitude": 75.4510, "population_tier": "Medium", "risk_index": 0.35 },
+    { "id": "HR-GU", "name": "Gurugram", "division": "Gurugram", "headquarters": "Gurugram", "latitude": 28.4595, "longitude": 77.0266, "population_tier": "Very High", "risk_index": 0.79 },
+    { "id": "HR-HI", "name": "Hisar", "division": "Hisar", "headquarters": "Hisar", "latitude": 29.1492, "longitude": 75.7217, "population_tier": "High", "risk_index": 0.52 },
+    { "id": "HR-JH", "name": "Jhajjar", "division": "Rohtak", "headquarters": "Jhajjar", "latitude": 28.6063, "longitude": 76.6548, "population_tier": "Medium", "risk_index": 0.48 },
+    { "id": "HR-JI", "name": "Jind", "division": "Hisar", "headquarters": "Jind", "latitude": 29.3160, "longitude": 76.3125, "population_tier": "Medium", "risk_index": 0.41 },
+    { "id": "HR-KT", "name": "Kaithal", "division": "Karnal", "headquarters": "Kaithal", "latitude": 29.8015, "longitude": 76.4000, "population_tier": "Medium", "risk_index": 0.39 },
+    { "id": "HR-KR", "name": "Karnal", "division": "Karnal", "headquarters": "Karnal", "latitude": 29.6857, "longitude": 76.9897, "population_tier": "High", "risk_index": 0.55 },
+    { "id": "HR-KU", "name": "Kurukshetra", "division": "Ambala", "headquarters": "Kurukshetra", "latitude": 29.9695, "longitude": 76.8497, "population_tier": "Medium", "risk_index": 0.44 },
+    { "id": "HR-MA", "name": "Mahendragarh", "division": "Gurugram", "headquarters": "Narnaul", "latitude": 28.0444, "longitude": 76.1082, "population_tier": "Medium", "risk_index": 0.37 },
+    { "id": "HR-NU", "name": "Nuh", "division": "Faridabad", "headquarters": "Nuh", "latitude": 28.1067, "longitude": 77.0151, "population_tier": "Medium", "risk_index": 0.61 },
+    { "id": "HR-PW", "name": "Palwal", "division": "Faridabad", "headquarters": "Palwal", "latitude": 28.1487, "longitude": 77.3274, "population_tier": "Medium", "risk_index": 0.51 },
+    { "id": "HR-PK", "name": "Panchkula", "division": "Ambala", "headquarters": "Panchkula", "latitude": 30.6942, "longitude": 76.8606, "population_tier": "High", "risk_index": 0.45 },
+    { "id": "HR-PP", "name": "Panipat", "division": "Karnal", "headquarters": "Panipat", "latitude": 29.3909, "longitude": 76.9635, "population_tier": "High", "risk_index": 0.63 },
+    { "id": "HR-RE", "name": "Rewari", "division": "Gurugram", "headquarters": "Rewari", "latitude": 28.1834, "longitude": 76.6173, "population_tier": "Medium", "risk_index": 0.46 },
+    { "id": "HR-RO", "name": "Rohtak", "division": "Rohtak", "headquarters": "Rohtak", "latitude": 28.8955, "longitude": 76.6066, "population_tier": "High", "risk_index": 0.58 },
+    { "id": "HR-SI", "name": "Sirsa", "division": "Hisar", "headquarters": "Sirsa", "latitude": 29.5349, "longitude": 75.0367, "population_tier": "High", "risk_index": 0.43 },
+    { "id": "HR-SO", "name": "Sonipat", "division": "Rohtak", "headquarters": "Sonipat", "latitude": 28.9931, "longitude": 77.0199, "population_tier": "High", "risk_index": 0.66 },
+    { "id": "HR-YN", "name": "Yamunanagar", "division": "Ambala", "headquarters": "Yamunanagar", "latitude": 30.1290, "longitude": 77.2674, "population_tier": "High", "risk_index": 0.49 }
+  ],
+  "departments": [
+    { "id": "DEPT-HEALTH", "code": "HEALTH", "name": "Health & Family Welfare Department", "category": "Emergency Medical & Public Health", "lead_title": "Director General Health Services" },
+    { "id": "DEPT-POLICE", "code": "POLICE", "name": "Haryana Police / Law & Order", "category": "Public Safety & Law Enforcement", "lead_title": "Director General of Police" },
+    { "id": "DEPT-DISASTER", "code": "DISASTER_MGMT", "name": "Revenue & Disaster Management Department", "category": "Disaster Response & Relief", "lead_title": "Financial Commissioner Revenue" },
+    { "id": "DEPT-IRRIGATION", "code": "IRRIGATION", "name": "Irrigation & Water Resources Department", "category": "Water Management & Flood Control", "lead_title": "Engineer-in-Chief" },
+    { "id": "DEPT-PWD", "code": "PUBLIC_WORKS", "name": "Public Works Department (B&R)", "category": "Infrastructure, Bridges & Highways", "lead_title": "Engineer-in-Chief PWD" },
+    { "id": "DEPT-POWER", "code": "POWER", "name": "Haryana Vidyut Prasaran Nigam (HVPNL / UHBVN / DHBVN)", "category": "Power Grid & Electrical Safety", "lead_title": "Managing Director" },
+    { "id": "DEPT-CIVIL-SUPP", "code": "CIVIL_SUPPLIES", "name": "Food, Civil Supplies & Consumer Affairs", "category": "Essential Commodities & Logistics", "lead_title": "Director Food & Supplies" }
+  ]
+}

@@ -40,10 +40,16 @@ def parse_datetime(dt_str: str) -> datetime:
 
 def load_csv_complaints() -> list:
     """Loads complete Haryana governance dataset from CSV file if present."""
-    csv_path = Path(__file__).resolve().parents[4] / "data" / "seed" / "haryana_full_governance.csv"
-    if not csv_path.exists():
-        csv_path = Path("data/seed/haryana_full_governance.csv")
-    if not csv_path.exists():
+    candidates = [
+        Path(__file__).resolve().parents[2] / "data" / "seed" / "haryana_full_governance.csv",
+        Path(__file__).resolve().parents[4] / "data" / "seed" / "haryana_full_governance.csv",
+        Path("services/api/data/seed/haryana_full_governance.csv"),
+        Path("data/seed/haryana_full_governance.csv"),
+        Path("/app/data/seed/haryana_full_governance.csv"),
+        Path("/app/services/api/data/seed/haryana_full_governance.csv"),
+    ]
+    csv_path = next((p for p in candidates if p.exists()), None)
+    if not csv_path or not csv_path.exists():
         return []
     import csv
     complaints = []

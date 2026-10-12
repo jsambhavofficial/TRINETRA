@@ -13,11 +13,16 @@ _DISTRICTS_CACHE: Optional[List[Dict[str, Any]]] = None
 def get_seed_districts(world_id: str) -> List[DistrictResponse]:
     global _DISTRICTS_CACHE
     if _DISTRICTS_CACHE is None:
-        seed_file = Path(__file__).resolve().parents[4] / "data" / "seed" / "nexus_city.json"
-        if not seed_file.exists():
-            seed_file = Path("data/seed/nexus_city.json")
-
-        if seed_file.exists():
+        candidates = [
+            Path(__file__).resolve().parents[2] / "data" / "seed" / "nexus_city.json",
+            Path(__file__).resolve().parents[4] / "data" / "seed" / "nexus_city.json",
+            Path("services/api/data/seed/nexus_city.json"),
+            Path("data/seed/nexus_city.json"),
+            Path("/app/data/seed/nexus_city.json"),
+            Path("/app/services/api/data/seed/nexus_city.json"),
+        ]
+        seed_file = next((p for p in candidates if p.exists()), None)
+        if seed_file and seed_file.exists():
             with open(seed_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 _DISTRICTS_CACHE = data.get("districts", [])

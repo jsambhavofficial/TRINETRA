@@ -1,0 +1,2693 @@
+{
+  "world": {
+    "id": "world-nexus-city-01",
+    "name": "NEXUS CITY (Smart Metropolitan)",
+    "type": "METROPOLITAN_TWIN",
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            75.75,
+            26.85
+          ],
+          [
+            75.88,
+            26.85
+          ],
+          [
+            75.88,
+            26.98
+          ],
+          [
+            75.75,
+            26.98
+          ],
+          [
+            75.75,
+            26.85
+          ]
+        ]
+      ]
+    },
+    "config": {
+      "center": {
+        "latitude": 26.9124,
+        "longitude": 75.7873,
+        "altitude": 435.0
+      },
+      "defaultZoom": 14,
+      "bounds": {
+        "north": 26.98,
+        "south": 26.85,
+        "east": 75.88,
+        "west": 75.75
+      },
+      "timeZone": "Asia/Kolkata",
+      "enableWeather": true,
+      "enableTraffic": true
+    },
+    "status": "ACTIVE"
+  },
+  "organizations": [
+    {
+      "id": "org-nexus-ops",
+      "name": "NEXUS Operations Command",
+      "type": "MUNICIPAL",
+      "parentId": null
+    },
+    {
+      "id": "org-district-north",
+      "name": "North Operational Sector",
+      "type": "REGIONAL",
+      "parentId": "org-nexus-ops"
+    },
+    {
+      "id": "org-district-south",
+      "name": "South Operational Sector",
+      "type": "REGIONAL",
+      "parentId": "org-nexus-ops"
+    },
+    {
+      "id": "org-district-east",
+      "name": "East Operational Sector",
+      "type": "REGIONAL",
+      "parentId": "org-nexus-ops"
+    },
+    {
+      "id": "org-district-west",
+      "name": "West Operational Sector",
+      "type": "REGIONAL",
+      "parentId": "org-nexus-ops"
+    }
+  ],
+  "roles": [
+    {
+      "id": "role-super-admin",
+      "name": "SUPER_ADMIN",
+      "permissions": [
+        "*"
+      ]
+    },
+    {
+      "id": "role-commander",
+      "name": "COMMANDER",
+      "permissions": [
+        "world:read",
+        "incidents:read",
+        "incidents:write",
+        "scenarios:create",
+        "scenarios:simulate",
+        "plans:generate",
+        "actions:approve",
+        "actions:execute",
+        "audit:read"
+      ]
+    },
+    {
+      "id": "role-regional-operator",
+      "name": "REGIONAL_OPERATOR",
+      "permissions": [
+        "world:read",
+        "incidents:read",
+        "incidents:write",
+        "scenarios:create",
+        "plans:generate"
+      ]
+    },
+    {
+      "id": "role-facility-manager",
+      "name": "FACILITY_MANAGER",
+      "permissions": [
+        "world:read",
+        "incidents:read",
+        "facilities:manage"
+      ]
+    },
+    {
+      "id": "role-field-responder",
+      "name": "FIELD_RESPONDER",
+      "permissions": [
+        "world:read",
+        "incidents:read",
+        "tasks:update",
+        "telemetry:push"
+      ]
+    },
+    {
+      "id": "role-viewer",
+      "name": "VIEWER",
+      "permissions": [
+        "world:read",
+        "incidents:read"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "id": "user-commander-01",
+      "organizationId": "org-nexus-ops",
+      "roleId": "role-commander",
+      "displayName": "Commander Vikram Malhotra",
+      "email": "commander@nexus.ops"
+    },
+    {
+      "id": "user-operator-north",
+      "organizationId": "org-district-north",
+      "roleId": "role-regional-operator",
+      "displayName": "Operator Priya Sharma",
+      "email": "priya.north@nexus.ops"
+    },
+    {
+      "id": "user-facility-central",
+      "organizationId": "org-nexus-ops",
+      "roleId": "role-facility-manager",
+      "displayName": "Dr. Aarav Mehta (Hospital Chief)",
+      "email": "aarav.mehta@nexus.ops"
+    }
+  ],
+  "entities": [
+    {
+      "id": "ent-hosp-01",
+      "worldId": "world-nexus-city-01",
+      "entityType": "HOSPITAL",
+      "name": "Central Memorial Hospital",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.792,
+          26.918
+        ]
+      },
+      "status": "AT_RISK",
+      "attributes": {
+        "bedCapacity": 650,
+        "icuAvailable": 14,
+        "traumaLevel": 1,
+        "primaryAccessRoute": "ent-road-17",
+        "occupancy": 0.72,
+        "icu_occupancy": 0.84,
+        "ambulances_available": 3,
+        "power_status": "STABLE",
+        "access_status": "COMPROMISED",
+        "risk_level": "HIGH",
+        "beds_total": 650,
+        "beds_occupied": 468,
+        "district": "dst-west"
+      }
+    },
+    {
+      "id": "ent-hosp-02",
+      "worldId": "world-nexus-city-01",
+      "entityType": "HOSPITAL",
+      "name": "North District Emergency Clinic",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.805,
+          26.945
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "bedCapacity": 220,
+        "icuAvailable": 8,
+        "traumaLevel": 2,
+        "occupancy": 0.58,
+        "icu_occupancy": 0.62,
+        "ambulances_available": 4,
+        "power_status": "STABLE",
+        "access_status": "NORMAL",
+        "risk_level": "LOW",
+        "beds_total": 220,
+        "beds_occupied": 128,
+        "district": "dst-north"
+      }
+    },
+    {
+      "id": "ent-hosp-03",
+      "worldId": "world-nexus-city-01",
+      "entityType": "HOSPITAL",
+      "name": "Apex Trauma Center",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.772,
+          26.895
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "bedCapacity": 480,
+        "icuAvailable": 22,
+        "traumaLevel": 1,
+        "occupancy": 0.81,
+        "icu_occupancy": 0.78,
+        "ambulances_available": 5,
+        "power_status": "STABLE",
+        "access_status": "NORMAL",
+        "risk_level": "LOW",
+        "beds_total": 480,
+        "beds_occupied": 389,
+        "district": "dst-south"
+      }
+    },
+    {
+      "id": "ent-hosp-04",
+      "worldId": "world-nexus-city-01",
+      "entityType": "HOSPITAL",
+      "name": "West Metro Medical Center",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.758,
+          26.924
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "bedCapacity": 310,
+        "icuAvailable": 11,
+        "traumaLevel": 2,
+        "occupancy": 0.64,
+        "icu_occupancy": 0.69,
+        "ambulances_available": 3,
+        "power_status": "STABLE",
+        "access_status": "NORMAL",
+        "risk_level": "LOW",
+        "beds_total": 310,
+        "beds_occupied": 198,
+        "district": "dst-west"
+      }
+    },
+    {
+      "id": "ent-sta-01",
+      "worldId": "world-nexus-city-01",
+      "entityType": "EMERGENCY_STATION",
+      "name": "Central Fire & Rescue Station #1",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.789,
+          26.912
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "stationType": "FIRE_RESCUE",
+        "activeEngines": 6,
+        "service_zone": "dst-west",
+        "teams_available": 4,
+        "vehicles_ready": 6,
+        "operational_readiness": "100%"
+      }
+    },
+    {
+      "id": "ent-sta-02",
+      "worldId": "world-nexus-city-01",
+      "entityType": "EMERGENCY_STATION",
+      "name": "North Emergency Response Unit #2",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.812,
+          26.952
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "stationType": "PARAMEDIC_POLICE",
+        "activeEngines": 4,
+        "service_zone": "dst-north",
+        "teams_available": 4,
+        "vehicles_ready": 6,
+        "operational_readiness": "100%"
+      }
+    },
+    {
+      "id": "ent-sta-03",
+      "worldId": "world-nexus-city-01",
+      "entityType": "EMERGENCY_STATION",
+      "name": "East Rapid Dispatch Unit #3",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.845,
+          26.908
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "stationType": "MULTI_AGENCY",
+        "activeEngines": 5,
+        "service_zone": "dst-east",
+        "teams_available": 4,
+        "vehicles_ready": 6,
+        "operational_readiness": "100%"
+      }
+    },
+    {
+      "id": "ent-fac-01",
+      "worldId": "world-nexus-city-01",
+      "entityType": "FACILITY",
+      "name": "City Hall Operations & Command Hub",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.795,
+          26.915
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "facilityType": "CIVIC_GOVERNMENT",
+        "criticalPriority": true
+      }
+    },
+    {
+      "id": "ent-fac-02",
+      "worldId": "world-nexus-city-01",
+      "entityType": "FACILITY",
+      "name": "East Water Treatment Facility",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.852,
+          26.898
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "capacityMld": 180,
+        "chlorineStatus": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-fac-03",
+      "worldId": "world-nexus-city-01",
+      "entityType": "FACILITY",
+      "name": "North Grid Power Substation",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.802,
+          26.962
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "voltageKv": 220,
+        "loadPct": 78
+      }
+    },
+    {
+      "id": "ent-fac-04",
+      "worldId": "world-nexus-city-01",
+      "entityType": "FACILITY",
+      "name": "Central Transit Terminal Hub",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.782,
+          26.921
+        ]
+      },
+      "status": "CONSTRAINED",
+      "attributes": {
+        "dailyPassengers": 85000,
+        "activeLines": 8
+      }
+    },
+    {
+      "id": "ent-fac-05",
+      "worldId": "world-nexus-city-01",
+      "entityType": "FACILITY",
+      "name": "West Logistics Depot",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.762,
+          26.905
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "warehouses": 12,
+        "fleetCount": 45
+      }
+    },
+    {
+      "id": "ent-fac-06",
+      "worldId": "world-nexus-city-01",
+      "entityType": "FACILITY",
+      "name": "Metro Flood Pumping Station #4",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.815,
+          26.928
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "flowRateCfs": 450,
+        "pumpsActive": 3
+      }
+    },
+    {
+      "id": "ent-bridge-02",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BRIDGE",
+      "name": "Bridge B02 (Riverfront Span)",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.798,
+            26.922
+          ],
+          [
+            75.808,
+            26.925
+          ]
+        ]
+      },
+      "status": "CONSTRAINED",
+      "attributes": {
+        "lengthMeters": 420,
+        "lanes": 4,
+        "structuralIntegrity": 0.89,
+        "waterClearanceMeters": 1.2
+      }
+    },
+    {
+      "id": "ent-bridge-01",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BRIDGE",
+      "name": "North Metro Overpass",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.795,
+            26.955
+          ],
+          [
+            75.805,
+            26.958
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lengthMeters": 350,
+        "lanes": 6
+      }
+    },
+    {
+      "id": "ent-bridge-03",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BRIDGE",
+      "name": "South Viaduct",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.785,
+            26.885
+          ],
+          [
+            75.795,
+            26.888
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lengthMeters": 580,
+        "lanes": 4
+      }
+    },
+    {
+      "id": "ent-road-17",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "Road R17 (Hospital Access Arterial)",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.791,
+            26.915
+          ],
+          [
+            75.798,
+            26.922
+          ],
+          [
+            75.804,
+            26.929
+          ]
+        ]
+      },
+      "status": "DEGRADED",
+      "attributes": {
+        "lanes": 4,
+        "speedLimitKmh": 50,
+        "waterLevelCm": 38,
+        "currentSpeedKmh": 12,
+        "emergencyRoute": true,
+        "district": "dst-west",
+        "capacity_vph": 3800,
+        "speed_limit": 50
+      }
+    },
+    {
+      "id": "ent-road-01",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "Grand Trunk City Corridor",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.765,
+            26.91
+          ],
+          [
+            75.815,
+            26.91
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 6,
+        "speedLimitKmh": 60,
+        "district": "dst-west",
+        "capacity_vph": 5700,
+        "speed_limit": 60
+      }
+    },
+    {
+      "id": "ent-road-02",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "Riverfront Parkway North",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.798,
+            26.922
+          ],
+          [
+            75.82,
+            26.945
+          ]
+        ]
+      },
+      "status": "CONSTRAINED",
+      "attributes": {
+        "lanes": 4,
+        "speedLimitKmh": 45,
+        "district": "dst-north",
+        "capacity_vph": 3800,
+        "speed_limit": 45
+      }
+    },
+    {
+      "id": "ent-road-03",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "Riverfront Parkway South",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.795,
+            26.91
+          ],
+          [
+            75.798,
+            26.922
+          ]
+        ]
+      },
+      "status": "DEGRADED",
+      "attributes": {
+        "lanes": 4,
+        "speedLimitKmh": 45,
+        "district": "dst-south",
+        "capacity_vph": 3800,
+        "speed_limit": 45
+      }
+    },
+    {
+      "id": "ent-road-04",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "Central Hospital Bypass Boulevard",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.785,
+            26.918
+          ],
+          [
+            75.792,
+            26.925
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 4,
+        "speedLimitKmh": 50,
+        "alternateRouteFor": "ent-road-17",
+        "district": "dst-west",
+        "capacity_vph": 3800,
+        "speed_limit": 50
+      }
+    },
+    {
+      "id": "ent-road-05",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "North Metro Ring Road",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.77,
+            26.96
+          ],
+          [
+            75.85,
+            26.96
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 6,
+        "speedLimitKmh": 80,
+        "district": "dst-north",
+        "capacity_vph": 5700,
+        "speed_limit": 80
+      }
+    },
+    {
+      "id": "ent-road-06",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "South Link Highway",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.76,
+            26.87
+          ],
+          [
+            75.86,
+            26.87
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 6,
+        "speedLimitKmh": 80,
+        "district": "dst-south",
+        "capacity_vph": 5700,
+        "speed_limit": 80
+      }
+    },
+    {
+      "id": "ent-road-07",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "East Industrial Access Road",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.83,
+            26.89
+          ],
+          [
+            75.87,
+            26.92
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 4,
+        "speedLimitKmh": 50,
+        "district": "dst-east",
+        "capacity_vph": 3800,
+        "speed_limit": 50
+      }
+    },
+    {
+      "id": "ent-road-08",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "West University Avenue",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.75,
+            26.92
+          ],
+          [
+            75.78,
+            26.92
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 4,
+        "speedLimitKmh": 40,
+        "district": "dst-west",
+        "capacity_vph": 3800,
+        "speed_limit": 40
+      }
+    },
+    {
+      "id": "ent-road-09",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "Fortress Hill Crescent",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.81,
+            26.93
+          ],
+          [
+            75.83,
+            26.95
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 2,
+        "speedLimitKmh": 35,
+        "district": "dst-west",
+        "capacity_vph": 1900,
+        "speed_limit": 35
+      }
+    },
+    {
+      "id": "ent-road-10",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "Transit Station Link Road",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.78,
+            26.915
+          ],
+          [
+            75.785,
+            26.925
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 4,
+        "speedLimitKmh": 40,
+        "district": "dst-west",
+        "capacity_vph": 3800,
+        "speed_limit": 40
+      }
+    },
+    {
+      "id": "ent-road-11",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "Old City Heritage Way",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.81,
+            26.915
+          ],
+          [
+            75.825,
+            26.925
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 2,
+        "speedLimitKmh": 30,
+        "district": "dst-west",
+        "capacity_vph": 1900,
+        "speed_limit": 30
+      }
+    },
+    {
+      "id": "ent-road-12",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "Civic Center Perimeter Loop",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.792,
+            26.912
+          ],
+          [
+            75.8,
+            26.918
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 4,
+        "speedLimitKmh": 40,
+        "district": "dst-west",
+        "capacity_vph": 3800,
+        "speed_limit": 40
+      }
+    },
+    {
+      "id": "ent-road-13",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "Green Valley Connector",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.76,
+            26.94
+          ],
+          [
+            75.79,
+            26.94
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 4,
+        "speedLimitKmh": 50,
+        "district": "dst-west",
+        "capacity_vph": 3800,
+        "speed_limit": 50
+      }
+    },
+    {
+      "id": "ent-road-14",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "East Lake Shore Drive",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.84,
+            26.93
+          ],
+          [
+            75.86,
+            26.95
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 2,
+        "speedLimitKmh": 45,
+        "district": "dst-east",
+        "capacity_vph": 1900,
+        "speed_limit": 45
+      }
+    },
+    {
+      "id": "ent-road-15",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "Market Square Alleyway System",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.815,
+            26.918
+          ],
+          [
+            75.822,
+            26.922
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 2,
+        "speedLimitKmh": 25,
+        "district": "dst-west",
+        "capacity_vph": 1900,
+        "speed_limit": 25
+      }
+    },
+    {
+      "id": "ent-road-16",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "South Industrial Spine",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.79,
+            26.88
+          ],
+          [
+            75.83,
+            26.88
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 4,
+        "speedLimitKmh": 60,
+        "district": "dst-south",
+        "capacity_vph": 3800,
+        "speed_limit": 60
+      }
+    },
+    {
+      "id": "ent-road-18",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "West Gate Express Route",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.75,
+            26.91
+          ],
+          [
+            75.77,
+            26.91
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 4,
+        "speedLimitKmh": 60,
+        "district": "dst-west",
+        "capacity_vph": 3800,
+        "speed_limit": 60
+      }
+    },
+    {
+      "id": "ent-road-19",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "Substation Access Lane",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.8,
+            26.955
+          ],
+          [
+            75.805,
+            26.962
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 2,
+        "speedLimitKmh": 35,
+        "district": "dst-north",
+        "capacity_vph": 1900,
+        "speed_limit": 35
+      }
+    },
+    {
+      "id": "ent-road-20",
+      "worldId": "world-nexus-city-01",
+      "entityType": "ROAD",
+      "name": "Apex Trauma Access Road",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            75.77,
+            26.89
+          ],
+          [
+            75.775,
+            26.9
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "lanes": 4,
+        "speedLimitKmh": 45,
+        "district": "dst-south",
+        "capacity_vph": 3800,
+        "speed_limit": 45
+      }
+    },
+    {
+      "id": "ent-util-01",
+      "worldId": "world-nexus-city-01",
+      "entityType": "UTILITY_NODE",
+      "name": "Substation U17 (Central Grid)",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.796,
+          26.924
+        ]
+      },
+      "status": "CONSTRAINED",
+      "attributes": {
+        "capacityMva": 50,
+        "waterRiskZone": true
+      }
+    },
+    {
+      "id": "ent-util-02",
+      "worldId": "world-nexus-city-01",
+      "entityType": "UTILITY_NODE",
+      "name": "Water Gate W04 (River Canal Sluice)",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.801,
+          26.927
+        ]
+      },
+      "status": "DEGRADED",
+      "attributes": {
+        "gateLevelPct": 75,
+        "siltationDetected": true
+      }
+    },
+    {
+      "id": "ent-util-03",
+      "worldId": "world-nexus-city-01",
+      "entityType": "UTILITY_NODE",
+      "name": "Telecom Mast Tower T09",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.815,
+          26.938
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "coverageKm": 4.5,
+        "backupBatteryHours": 18
+      }
+    },
+    {
+      "id": "ent-util-04",
+      "worldId": "world-nexus-city-01",
+      "entityType": "UTILITY_NODE",
+      "name": "Flood Storm Drain Node P02",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.794,
+          26.92
+        ]
+      },
+      "status": "CONSTRAINED",
+      "attributes": {
+        "capacityM3s": 35,
+        "currentLoadPct": 92
+      }
+    },
+    {
+      "id": "ent-util-05",
+      "worldId": "world-nexus-city-01",
+      "entityType": "UTILITY_NODE",
+      "name": "Municipal Gas Hub G01",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.768,
+          26.898
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "linePressureBar": 16,
+        "shutoffReady": true
+      }
+    },
+    {
+      "id": "ent-bld-01",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "NEXUS Command Tower Alpha",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.79465,
+              26.914649999999998
+            ],
+            [
+              75.79535,
+              26.914649999999998
+            ],
+            [
+              75.79535,
+              26.91535
+            ],
+            [
+              75.79465,
+              26.91535
+            ],
+            [
+              75.79465,
+              26.914649999999998
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "CIVIC",
+        "height_meters": 110,
+        "floors": 31,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-02",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "State Secretariat Highrise",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.79665,
+              26.91565
+            ],
+            [
+              75.79735,
+              26.91565
+            ],
+            [
+              75.79735,
+              26.91635
+            ],
+            [
+              75.79665,
+              26.91635
+            ],
+            [
+              75.79665,
+              26.91565
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "GOVERNMENT",
+        "height_meters": 85,
+        "floors": 24,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-03",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "Metropolitan Financial Tower 1",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.79065,
+              26.91265
+            ],
+            [
+              75.79135,
+              26.91265
+            ],
+            [
+              75.79135,
+              26.91335
+            ],
+            [
+              75.79065,
+              26.91335
+            ],
+            [
+              75.79065,
+              26.91265
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "COMMERCIAL",
+        "height_meters": 95,
+        "floors": 27,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-04",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "Metropolitan Financial Tower 2",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.79265000000001,
+              26.91065
+            ],
+            [
+              75.79335,
+              26.91065
+            ],
+            [
+              75.79335,
+              26.911350000000002
+            ],
+            [
+              75.79265000000001,
+              26.911350000000002
+            ],
+            [
+              75.79265000000001,
+              26.91065
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "COMMERCIAL",
+        "height_meters": 88,
+        "floors": 25,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-05",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "Riverfront Plaza Complex",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.80165000000001,
+              26.91965
+            ],
+            [
+              75.80235,
+              26.91965
+            ],
+            [
+              75.80235,
+              26.920350000000003
+            ],
+            [
+              75.80165000000001,
+              26.920350000000003
+            ],
+            [
+              75.80165000000001,
+              26.91965
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "MIXED_USE",
+        "height_meters": 65,
+        "floors": 18,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-06",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "Civic Center West Wing",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.79265000000001,
+              26.91565
+            ],
+            [
+              75.79335,
+              26.91565
+            ],
+            [
+              75.79335,
+              26.91635
+            ],
+            [
+              75.79265000000001,
+              26.91635
+            ],
+            [
+              75.79265000000001,
+              26.91565
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "CIVIC",
+        "height_meters": 50,
+        "floors": 14,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-07",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "North Sector IT Park Block A",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.80765000000001,
+              26.94765
+            ],
+            [
+              75.80835,
+              26.94765
+            ],
+            [
+              75.80835,
+              26.94835
+            ],
+            [
+              75.80765000000001,
+              26.94835
+            ],
+            [
+              75.80765000000001,
+              26.94765
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "TECH",
+        "height_meters": 70,
+        "floors": 20,
+        "district": "dst-north",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-08",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "North Sector IT Park Block B",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.81065000000001,
+              26.94965
+            ],
+            [
+              75.81135,
+              26.94965
+            ],
+            [
+              75.81135,
+              26.95035
+            ],
+            [
+              75.81065000000001,
+              26.95035
+            ],
+            [
+              75.81065000000001,
+              26.94965
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "TECH",
+        "height_meters": 75,
+        "floors": 21,
+        "district": "dst-north",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-09",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "Central Telecom Tower Base",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.81365,
+              26.93665
+            ],
+            [
+              75.81434999999999,
+              26.93665
+            ],
+            [
+              75.81434999999999,
+              26.937350000000002
+            ],
+            [
+              75.81365,
+              26.937350000000002
+            ],
+            [
+              75.81365,
+              26.93665
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "INFRASTRUCTURE",
+        "height_meters": 45,
+        "floors": 12,
+        "district": "dst-north",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-10",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "Apex Health Tower",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.77365,
+              26.896649999999998
+            ],
+            [
+              75.77435,
+              26.896649999999998
+            ],
+            [
+              75.77435,
+              26.89735
+            ],
+            [
+              75.77365,
+              26.89735
+            ],
+            [
+              75.77365,
+              26.896649999999998
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "MEDICAL",
+        "height_meters": 60,
+        "floors": 17,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-11",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "Riverbank Residential Tower A",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.80465000000001,
+              26.92665
+            ],
+            [
+              75.80535,
+              26.92665
+            ],
+            [
+              75.80535,
+              26.92735
+            ],
+            [
+              75.80465000000001,
+              26.92735
+            ],
+            [
+              75.80465000000001,
+              26.92665
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "RESIDENTIAL",
+        "height_meters": 72,
+        "floors": 20,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-12",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "Riverbank Residential Tower B",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.80765000000001,
+              26.928649999999998
+            ],
+            [
+              75.80835,
+              26.928649999999998
+            ],
+            [
+              75.80835,
+              26.92935
+            ],
+            [
+              75.80765000000001,
+              26.92935
+            ],
+            [
+              75.80765000000001,
+              26.928649999999998
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "RESIDENTIAL",
+        "height_meters": 68,
+        "floors": 19,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-13",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "Grand Hotel & Conference Center",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.78665000000001,
+              26.91665
+            ],
+            [
+              75.78735,
+              26.91665
+            ],
+            [
+              75.78735,
+              26.917350000000003
+            ],
+            [
+              75.78665000000001,
+              26.917350000000003
+            ],
+            [
+              75.78665000000001,
+              26.91665
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "HOSPITALITY",
+        "height_meters": 58,
+        "floors": 16,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-14",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "City Central Library & Archive",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.79765,
+              26.911649999999998
+            ],
+            [
+              75.79835,
+              26.911649999999998
+            ],
+            [
+              75.79835,
+              26.91235
+            ],
+            [
+              75.79765,
+              26.91235
+            ],
+            [
+              75.79765,
+              26.911649999999998
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "EDUCATION",
+        "height_meters": 38,
+        "floors": 10,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-15",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "Metro Transportation Center",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.78365000000001,
+              26.922649999999997
+            ],
+            [
+              75.78435,
+              26.922649999999997
+            ],
+            [
+              75.78435,
+              26.92335
+            ],
+            [
+              75.78365000000001,
+              26.92335
+            ],
+            [
+              75.78365000000001,
+              26.922649999999997
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "TRANSIT",
+        "height_meters": 42,
+        "floors": 12,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-16",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "East Industrial Tech Hub 1",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.84765,
+              26.90165
+            ],
+            [
+              75.84835,
+              26.90165
+            ],
+            [
+              75.84835,
+              26.902350000000002
+            ],
+            [
+              75.84765,
+              26.902350000000002
+            ],
+            [
+              75.84765,
+              26.90165
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "INDUSTRIAL",
+        "height_meters": 48,
+        "floors": 13,
+        "district": "dst-east",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-17",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "East Industrial Tech Hub 2",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.85165,
+              26.90465
+            ],
+            [
+              75.85235,
+              26.90465
+            ],
+            [
+              75.85235,
+              26.905350000000002
+            ],
+            [
+              75.85165,
+              26.905350000000002
+            ],
+            [
+              75.85165,
+              26.90465
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "INDUSTRIAL",
+        "height_meters": 52,
+        "floors": 14,
+        "district": "dst-east",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-18",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "South District Municipal Office",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.78765,
+              26.88165
+            ],
+            [
+              75.78835,
+              26.88165
+            ],
+            [
+              75.78835,
+              26.882350000000002
+            ],
+            [
+              75.78765,
+              26.882350000000002
+            ],
+            [
+              75.78765,
+              26.88165
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "GOVERNMENT",
+        "height_meters": 40,
+        "floors": 11,
+        "district": "dst-south",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-19",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "West District Court Complex",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.75965000000001,
+              26.91765
+            ],
+            [
+              75.76035,
+              26.91765
+            ],
+            [
+              75.76035,
+              26.91835
+            ],
+            [
+              75.75965000000001,
+              26.91835
+            ],
+            [
+              75.75965000000001,
+              26.91765
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "JUDICIAL",
+        "height_meters": 55,
+        "floors": 15,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-20",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "University Engineering Quad",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.75265,
+              26.922649999999997
+            ],
+            [
+              75.75335,
+              26.922649999999997
+            ],
+            [
+              75.75335,
+              26.92335
+            ],
+            [
+              75.75265,
+              26.92335
+            ],
+            [
+              75.75265,
+              26.922649999999997
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "EDUCATION",
+        "height_meters": 35,
+        "floors": 10,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-21",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "University Life Sciences Center",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.75565,
+              26.925649999999997
+            ],
+            [
+              75.75635,
+              26.925649999999997
+            ],
+            [
+              75.75635,
+              26.92635
+            ],
+            [
+              75.75565,
+              26.92635
+            ],
+            [
+              75.75565,
+              26.925649999999997
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "EDUCATION",
+        "height_meters": 45,
+        "floors": 12,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-22",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "Emergency Medical Annex 1",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.78965000000001,
+              26.91965
+            ],
+            [
+              75.79035,
+              26.91965
+            ],
+            [
+              75.79035,
+              26.920350000000003
+            ],
+            [
+              75.78965000000001,
+              26.920350000000003
+            ],
+            [
+              75.78965000000001,
+              26.91965
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "MEDICAL",
+        "height_meters": 40,
+        "floors": 11,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-23",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "Emergency Medical Annex 2",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.79365,
+              26.92165
+            ],
+            [
+              75.79435,
+              26.92165
+            ],
+            [
+              75.79435,
+              26.92235
+            ],
+            [
+              75.79365,
+              26.92235
+            ],
+            [
+              75.79365,
+              26.92165
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "MEDICAL",
+        "height_meters": 36,
+        "floors": 10,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-24",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "Harbor Logistics Depot Office",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.76365,
+              26.90165
+            ],
+            [
+              75.76435,
+              26.90165
+            ],
+            [
+              75.76435,
+              26.902350000000002
+            ],
+            [
+              75.76365,
+              26.902350000000002
+            ],
+            [
+              75.76365,
+              26.90165
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "LOGISTICS",
+        "height_meters": 30,
+        "floors": 8,
+        "district": "dst-west",
+        "structural_status": "NOMINAL"
+      }
+    },
+    {
+      "id": "ent-bld-25",
+      "worldId": "world-nexus-city-01",
+      "entityType": "BUILDING",
+      "name": "Urban Water Works Office",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.81665,
+              26.925649999999997
+            ],
+            [
+              75.81734999999999,
+              26.925649999999997
+            ],
+            [
+              75.81734999999999,
+              26.92635
+            ],
+            [
+              75.81665,
+              26.92635
+            ],
+            [
+              75.81665,
+              26.925649999999997
+            ]
+          ]
+        ]
+      },
+      "status": "OPERATIONAL",
+      "attributes": {
+        "building_type": "UTILITY",
+        "height_meters": 28,
+        "floors": 8,
+        "district": "dst-east",
+        "structural_status": "NOMINAL"
+      }
+    }
+  ],
+  "assets": [
+    {
+      "id": "ast-amb-101",
+      "entityId": "ent-sta-01",
+      "assetType": "AMBULANCE",
+      "name": "Ambulance Unit MED-101",
+      "geometry": {
+        "latitude": 26.914,
+        "longitude": 75.789
+      },
+      "state": {
+        "speedKmh": 0,
+        "fuelLevelPct": 92,
+        "crewCount": 3,
+        "assignedIncidentId": null
+      },
+      "availability": "AVAILABLE"
+    },
+    {
+      "id": "ast-amb-102",
+      "entityId": "ent-sta-01",
+      "assetType": "AMBULANCE",
+      "name": "Ambulance Unit MED-102 (En Route)",
+      "geometry": {
+        "latitude": 26.919,
+        "longitude": 75.794
+      },
+      "state": {
+        "speedKmh": 44,
+        "fuelLevelPct": 85,
+        "crewCount": 3,
+        "assignedIncidentId": "inc-1047",
+        "routeBlocked": true
+      },
+      "availability": "ENGAGED"
+    },
+    {
+      "id": "ast-amb-103",
+      "entityId": "ent-sta-02",
+      "assetType": "AMBULANCE",
+      "name": "Ambulance Unit MED-103",
+      "geometry": {
+        "latitude": 26.952,
+        "longitude": 75.812
+      },
+      "state": {
+        "speedKmh": 0,
+        "fuelLevelPct": 98,
+        "crewCount": 3
+      },
+      "availability": "AVAILABLE"
+    },
+    {
+      "id": "ast-amb-104",
+      "entityId": "ent-sta-03",
+      "assetType": "AMBULANCE",
+      "name": "Ambulance Unit MED-104",
+      "geometry": {
+        "latitude": 26.908,
+        "longitude": 75.845
+      },
+      "state": {
+        "speedKmh": 0,
+        "fuelLevelPct": 76,
+        "crewCount": 3
+      },
+      "availability": "AVAILABLE"
+    },
+    {
+      "id": "ast-amb-105",
+      "entityId": "ent-hosp-03",
+      "assetType": "AMBULANCE",
+      "name": "Trauma Ambulance MED-105",
+      "geometry": {
+        "latitude": 26.895,
+        "longitude": 75.772
+      },
+      "state": {
+        "speedKmh": 0,
+        "fuelLevelPct": 100,
+        "crewCount": 4
+      },
+      "availability": "AVAILABLE"
+    },
+    {
+      "id": "ast-team-alpha",
+      "entityId": "ent-sta-01",
+      "assetType": "RESPONSE_TEAM",
+      "name": "Rapid Rescue Team Alpha",
+      "geometry": {
+        "latitude": 26.913,
+        "longitude": 75.79
+      },
+      "state": {
+        "crewCount": 6,
+        "equipment": [
+          "INFLATABLE_BOAT",
+          "WATER_PUMP_HIGH_PRESSURE"
+        ]
+      },
+      "availability": "AVAILABLE"
+    },
+    {
+      "id": "ast-team-bravo",
+      "entityId": "ent-sta-02",
+      "assetType": "RESPONSE_TEAM",
+      "name": "Flood & Hazmat Team Bravo",
+      "geometry": {
+        "latitude": 26.953,
+        "longitude": 75.814
+      },
+      "state": {
+        "crewCount": 8,
+        "equipment": [
+          "CHEMICAL_BARRIERS",
+          "DEWATERING_RIG"
+        ]
+      },
+      "availability": "AVAILABLE"
+    },
+    {
+      "id": "ast-team-gamma",
+      "entityId": "ent-fac-06",
+      "assetType": "RESPONSE_TEAM",
+      "name": "Technical Support Team Gamma",
+      "geometry": {
+        "latitude": 26.928,
+        "longitude": 75.815
+      },
+      "state": {
+        "crewCount": 5,
+        "equipment": [
+          "SUBMERSIBLE_PUMPS",
+          "GENERATOR_CART"
+        ]
+      },
+      "availability": "ENGAGED"
+    },
+    {
+      "id": "ast-veh-cv1",
+      "entityId": "ent-fac-01",
+      "assetType": "POLICE_UNIT",
+      "name": "Mobile Command Unit CV-1",
+      "geometry": {
+        "latitude": 26.916,
+        "longitude": 75.796
+      },
+      "state": {
+        "speedKmh": 0,
+        "satelliteUplink": true
+      },
+      "availability": "AVAILABLE"
+    },
+    {
+      "id": "ast-veh-ut4",
+      "entityId": "ent-fac-05",
+      "assetType": "PUMP_UNIT",
+      "name": "Utility Heavy Truck UT-4",
+      "geometry": {
+        "latitude": 26.906,
+        "longitude": 75.763
+      },
+      "state": {
+        "fuelLevelPct": 88
+      },
+      "availability": "AVAILABLE"
+    },
+    {
+      "id": "ast-veh-mp2",
+      "entityId": "ent-fac-06",
+      "assetType": "PUMP_UNIT",
+      "name": "High-Volume Mobile Pump MP-2",
+      "geometry": {
+        "latitude": 26.923,
+        "longitude": 75.801
+      },
+      "state": {
+        "capacityLpm": 8000,
+        "status": "ACTIVE_PUMPING"
+      },
+      "availability": "ENGAGED"
+    },
+    {
+      "id": "ast-veh-pu7",
+      "entityId": "ent-sta-03",
+      "assetType": "POLICE_UNIT",
+      "name": "Traffic Diversion Patrol PU-7",
+      "geometry": {
+        "latitude": 26.918,
+        "longitude": 75.804
+      },
+      "state": {
+        "speedKmh": 25,
+        "assignedTask": "TRAFFIC_REDIRECT"
+      },
+      "availability": "ENGAGED"
+    },
+    {
+      "id": "ast-veh-dc1",
+      "entityId": "ent-fac-01",
+      "assetType": "DRONE",
+      "name": "Recon Drone Unit DC-1",
+      "geometry": {
+        "latitude": 26.921,
+        "longitude": 75.798,
+        "altitude": 65
+      },
+      "state": {
+        "batteryPct": 78,
+        "feedActive": true
+      },
+      "availability": "AVAILABLE"
+    }
+  ],
+  "incidents": [
+    {
+      "id": "inc-1047",
+      "worldId": "world-nexus-city-01",
+      "incidentNumber": 1047,
+      "title": "Severe Flash Flooding & Road Severance on R17",
+      "incidentType": "URBAN_FLOODING",
+      "status": "ACTIVE",
+      "severity": "HIGH",
+      "confidence": 0.93,
+      "geometry": {
+        "latitude": 26.9218,
+        "longitude": 75.7985
+      },
+      "affectedRadiusMeters": 450,
+      "startedAt": "2026-10-02T13:42:00Z",
+      "detectedAt": "2026-10-02T13:43:15Z",
+      "resolvedAt": null,
+      "evidenceCount": 32,
+      "affectedEntityCount": 4,
+      "epistemicStatus": "OBSERVED",
+      "summary": "Heavy rainfall runoff accumulation has breached stormwater drainage near Bridge B02. Standing water reaching 38cm depth has completely halted two lanes of Road R17, severing the primary ambulance artery to Central Memorial Hospital."
+    },
+    {
+      "id": "inc-1048",
+      "worldId": "world-nexus-city-01",
+      "incidentNumber": 1048,
+      "title": "Substation U17 Water Intrusion Warning",
+      "incidentType": "POWER_OUTAGE",
+      "status": "CANDIDATE",
+      "severity": "MEDIUM",
+      "confidence": 0.68,
+      "geometry": {
+        "latitude": 26.9242,
+        "longitude": 75.7961
+      },
+      "affectedRadiusMeters": 200,
+      "startedAt": "2026-10-02T13:50:00Z",
+      "detectedAt": "2026-10-02T13:51:00Z",
+      "resolvedAt": null,
+      "evidenceCount": 4,
+      "affectedEntityCount": 2,
+      "epistemicStatus": "INFERRED",
+      "summary": "Water sensors report rising perimeter water level within 15 meters of transformer housing at Substation U17. Backup generator readiness confirmed."
+    },
+    {
+      "id": "inc-1049",
+      "worldId": "world-nexus-city-01",
+      "incidentNumber": 1049,
+      "title": "Minor Structural Debris at Riverfront Promenade",
+      "incidentType": "INFRASTRUCTURE_DAMAGE",
+      "status": "STABILIZING",
+      "severity": "LOW",
+      "confidence": 0.85,
+      "geometry": {
+        "latitude": 26.9265,
+        "longitude": 75.8032
+      },
+      "affectedRadiusMeters": 150,
+      "startedAt": "2026-10-02T13:30:00Z",
+      "detectedAt": "2026-10-02T13:32:00Z",
+      "resolvedAt": null,
+      "evidenceCount": 6,
+      "affectedEntityCount": 1,
+      "epistemicStatus": "OBSERVED",
+      "summary": "Tree branches and barrier dislodged by strong wind gust along Riverfront Promenade. Maintenance team PU-7 dispatched to clear debris."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-1047-01",
+      "incidentId": "inc-1047",
+      "evidenceType": "PHOTO",
+      "source": "Citizen Mobile App",
+      "objectUri": "/evidence/seed/flood_photo_r17.jpg",
+      "geometry": {
+        "latitude": 26.9215,
+        "longitude": 75.7982
+      },
+      "accuracyMeters": 4.5,
+      "capturedAt": "2026-10-02T13:42:30Z",
+      "receivedAt": "2026-10-02T13:43:00Z",
+      "analysis": {
+        "detectedEvent": "ROAD_FLOODING",
+        "severityHint": "HIGH",
+        "detectedObjects": [
+          "standing water",
+          "partially submerged car",
+          "traffic cone"
+        ],
+        "summary": "High confidence visual evidence of 35-40cm standing water covering Road R17 arterial near Bridge B02."
+      },
+      "confidence": 0.94,
+      "privacyState": "PUBLIC"
+    },
+    {
+      "id": "ev-1047-02",
+      "incidentId": "inc-1047",
+      "evidenceType": "VOICE",
+      "source": "Emergency Hotline Audio Dispatch",
+      "objectUri": "/evidence/seed/citizen_audio_dispatch.mp3",
+      "geometry": {
+        "latitude": 26.922,
+        "longitude": 75.799
+      },
+      "accuracyMeters": 12.0,
+      "capturedAt": "2026-10-02T13:43:20Z",
+      "receivedAt": "2026-10-02T13:43:45Z",
+      "analysis": {
+        "detectedEvent": "ROAD_FLOODING",
+        "severityHint": "HIGH",
+        "detectedObjects": [
+          "vehicle slowdown",
+          "water accumulation"
+        ],
+        "transcript": "Bridge ke paas Road R17 pura paani se bhar gaya hai, gaadiyan ruk gayi hain aur hospital ka rasta block ho raha hai.",
+        "summary": "Citizen voice report confirming impassable water levels on Road R17 blocking ambulance approach to hospital."
+      },
+      "confidence": 0.91,
+      "privacyState": "PUBLIC"
+    }
+  ],
+  "districts": [
+    {
+      "id": "dst-north",
+      "worldId": "world-nexus-city-01",
+      "name": "North Operational Sector",
+      "code": "NORTH",
+      "status": "STABLE",
+      "operationalScore": 0.88,
+      "populationEstimate": 245000,
+      "incidentCount": 1,
+      "facilityCount": 5,
+      "assetCount": 4,
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.75,
+              26.93
+            ],
+            [
+              75.88,
+              26.93
+            ],
+            [
+              75.88,
+              26.98
+            ],
+            [
+              75.75,
+              26.98
+            ],
+            [
+              75.75,
+              26.93
+            ]
+          ]
+        ]
+      },
+      "color": "#3B82F6"
+    },
+    {
+      "id": "dst-south",
+      "worldId": "world-nexus-city-01",
+      "name": "South Operational Sector",
+      "code": "SOUTH",
+      "status": "STABLE",
+      "operationalScore": 0.95,
+      "populationEstimate": 198000,
+      "incidentCount": 0,
+      "facilityCount": 4,
+      "assetCount": 3,
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.75,
+              26.85
+            ],
+            [
+              75.88,
+              26.85
+            ],
+            [
+              75.88,
+              26.89
+            ],
+            [
+              75.75,
+              26.89
+            ],
+            [
+              75.75,
+              26.85
+            ]
+          ]
+        ]
+      },
+      "color": "#10B981"
+    },
+    {
+      "id": "dst-east",
+      "worldId": "world-nexus-city-01",
+      "name": "East Operational Sector",
+      "code": "EAST",
+      "status": "ELEVATED_RISK",
+      "operationalScore": 0.82,
+      "populationEstimate": 310000,
+      "incidentCount": 1,
+      "facilityCount": 4,
+      "assetCount": 4,
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.81,
+              26.89
+            ],
+            [
+              75.88,
+              26.89
+            ],
+            [
+              75.88,
+              26.93
+            ],
+            [
+              75.81,
+              26.93
+            ],
+            [
+              75.81,
+              26.89
+            ]
+          ]
+        ]
+      },
+      "color": "#F59E0B"
+    },
+    {
+      "id": "dst-west",
+      "worldId": "world-nexus-city-01",
+      "name": "West Operational Sector",
+      "code": "WEST",
+      "status": "CONSTRAINED",
+      "operationalScore": 0.71,
+      "populationEstimate": 420000,
+      "incidentCount": 2,
+      "facilityCount": 7,
+      "assetCount": 6,
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.75,
+              26.89
+            ],
+            [
+              75.81,
+              26.89
+            ],
+            [
+              75.81,
+              26.93
+            ],
+            [
+              75.75,
+              26.93
+            ],
+            [
+              75.75,
+              26.89
+            ]
+          ]
+        ]
+      },
+      "color": "#EF4444"
+    }
+  ]
+}

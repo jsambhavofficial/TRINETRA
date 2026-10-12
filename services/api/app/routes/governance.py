@@ -26,13 +26,33 @@ _HARYANA_DATA: Optional[Dict[str, Any]] = None
 def get_haryana_seed() -> Dict[str, Any]:
     global _HARYANA_DATA
     if _HARYANA_DATA is None:
-        seed_path = Path(__file__).resolve().parents[4] / "data" / "seed" / "haryana_governance.json"
-        if not seed_path.exists():
-            seed_path = Path("data/seed/haryana_governance.json")
-        if not seed_path.exists():
-            raise FileNotFoundError(f"Haryana governance seed not found at {seed_path}")
-        with open(seed_path, "r", encoding="utf-8") as f:
-            _HARYANA_DATA = json.load(f)
+        candidates = [
+            Path(__file__).resolve().parents[2] / "data" / "seed" / "haryana_governance.json",
+            Path(__file__).resolve().parents[4] / "data" / "seed" / "haryana_governance.json",
+            Path("services/api/data/seed/haryana_governance.json"),
+            Path("data/seed/haryana_governance.json"),
+            Path("./data/seed/haryana_governance.json"),
+            Path("/app/data/seed/haryana_governance.json"),
+            Path("/app/services/api/data/seed/haryana_governance.json"),
+        ]
+        seed_path = next((p for p in candidates if p.exists()), None)
+        if seed_path and seed_path.exists():
+            with open(seed_path, "r", encoding="utf-8") as f:
+                _HARYANA_DATA = json.load(f)
+        else:
+            from app.core.haryana import HARYANA_DISTRICTS, HARYANA_BOUNDS
+            _HARYANA_DATA = {
+                "state": {
+                    "name": "Haryana",
+                    "code": "HR",
+                    "capital": "Chandigarh",
+                    "center": {"lat": 29.0588, "lng": 76.0856},
+                    "bounds": HARYANA_BOUNDS,
+                    "districts_count": len(HARYANA_DISTRICTS)
+                },
+                "districts": HARYANA_DISTRICTS,
+                "departments": []
+            }
     return _HARYANA_DATA
 
 
