@@ -316,6 +316,7 @@ export const useWorldStore = create<WorldState>((set, get) => ({
   selectIncident: (incident) =>
     set({
       selectedIncident: incident,
+      isRightRailOpen: true,
       selectedDistrict: null,
       selectedEntity: null,
       selectedAsset: null,

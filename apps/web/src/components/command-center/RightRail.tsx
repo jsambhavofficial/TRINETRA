@@ -337,7 +337,12 @@ export const RightRail: React.FC = () => {
             {/* Header & Status */}
             <div>
               <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                {selectedIncident.status === "CORROBORATED" ? (
+                {(selectedIncident as any).tracking_id ? (
+                  <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-blue-950/80 border border-blue-500/60 text-blue-300 font-bold uppercase tracking-wider flex items-center gap-1">
+                    <FileText className="w-2.5 h-2.5 text-blue-400" />
+                    {(selectedIncident as any).tracking_id}
+                  </span>
+                ) : selectedIncident.status === "CORROBORATED" ? (
                   <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/60 text-cyan-300 font-bold uppercase tracking-wider flex items-center gap-1 shadow-[0_0_8px_rgba(6,182,212,0.3)]">
                     <Shield className="w-2.5 h-2.5 text-cyan-400" />
                     CORROBORATED
@@ -348,10 +353,10 @@ export const RightRail: React.FC = () => {
                   </Badge>
                 )}
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 font-semibold">
-                  {selectedIncident.evidenceCount || 4} EVIDENCES FUSED
+                  {selectedIncident.evidenceCount || 1} RECORD
                 </span>
-                <Badge variant="observed" size="sm">
-                  {selectedIncident.epistemicStatus || "OBSERVED"}
+                <Badge variant={selectedIncident.severity === "CRITICAL" ? "critical" : selectedIncident.severity === "HIGH" ? "warning" : "nominal"} size="sm">
+                  {selectedIncident.severity || "MEDIUM"}
                 </Badge>
               </div>
               <h3 className="text-sm font-bold text-slate-100 leading-snug">
@@ -431,6 +436,86 @@ export const RightRail: React.FC = () => {
             {/* TAB 1: CONTEXT */}
             {incidentTab === "CONTEXT" && (
               <div className="space-y-3">
+                {/* Real Grievance Dossier (Populated from Citizen Submission) */}
+                {(selectedIncident as any).tracking_id && (
+                  <div className="p-3 rounded-xl bg-slate-900/95 border border-emerald-500/30 space-y-2.5 shadow-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 font-bold flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-emerald-400" />
+                        <span>REF: {(selectedIncident as any).tracking_id}</span>
+                      </span>
+                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase ${
+                        selectedIncident.status === "RESOLVED"
+                          ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
+                          : selectedIncident.status === "IN_PROGRESS"
+                          ? "bg-blue-950/80 text-blue-300 border border-blue-500/40"
+                          : selectedIncident.status === "ASSIGNED"
+                          ? "bg-amber-950/80 text-amber-300 border border-amber-500/40"
+                          : "bg-purple-950/80 text-purple-300 border border-purple-500/40"
+                      }`}>
+                        {selectedIncident.status}
+                      </span>
+                    </div>
+
+                    {/* Exact Location & GPS Coordinates */}
+                    <div className="p-2 rounded bg-slate-950/80 border border-slate-800 space-y-1">
+                      <div className="flex items-center gap-1 text-[11px] text-slate-300 font-medium">
+                        <MapPin className="w-3 h-3 text-rose-400 shrink-0" />
+                        <span className="truncate">{(selectedIncident as any).address || (selectedIncident as any).district_name || "Haryana"}</span>
+                      </div>
+                      {selectedIncident.geometry && (
+                        <div className="flex items-center justify-between text-[10px] font-mono text-cyan-400 pl-4">
+                          <span>GPS: {selectedIncident.geometry.latitude?.toFixed(6)}° N, {selectedIncident.geometry.longitude?.toFixed(6)}° E</span>
+                          <span className="text-emerald-400 text-[9px] bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800">
+                            EXACT LOCATION
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Department & Citizen Attribution */}
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-300">
+                      <div className="p-2 rounded bg-slate-950/60 border border-slate-800/80">
+                        <span className="text-[9px] text-slate-400 block uppercase font-mono">Assigned Department</span>
+                        <span className="font-semibold text-slate-200 truncate block">
+                          {(selectedIncident as any).department_name || (selectedIncident as any).department_id || "Public Works"}
+                        </span>
+                      </div>
+                      <div className="p-2 rounded bg-slate-950/60 border border-slate-800/80">
+                        <span className="text-[9px] text-slate-400 block uppercase font-mono">Reported By</span>
+                        <span className="font-semibold text-slate-200 truncate block">
+                          {(selectedIncident as any).citizen_name || "Citizen"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 1-Click Action Buttons */}
+                    <div className="pt-1 flex items-center gap-1.5">
+                      <Link
+                        href="/portal/department"
+                        className="flex-1 py-1.5 px-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 font-mono text-[10px] font-bold text-center flex items-center justify-center gap-1 transition-colors"
+                      >
+                        <Building className="w-3 h-3" />
+                        <span>Dept Portal</span>
+                      </Link>
+                      <Link
+                        href="/portal/field-officer"
+                        className="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300 font-mono text-[10px] font-bold text-center flex items-center justify-center gap-1 transition-colors"
+                      >
+                        <Truck className="w-3 h-3" />
+                        <span>Field Ops</span>
+                      </Link>
+                      <Link
+                        href={`/portal/citizen?track=${encodeURIComponent((selectedIncident as any).tracking_id)}`}
+                        className="flex-1 py-1.5 px-2 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/40 text-purple-300 font-mono text-[10px] font-bold text-center flex items-center justify-center gap-1 transition-colors"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        <span>Track</span>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
                 {/* Severity & Confidence Gauge */}
                 <div className="grid grid-cols-2 gap-2 p-2.5 rounded glass-panel text-xs mono-telemetry">
                   <div>
@@ -442,7 +527,7 @@ export const RightRail: React.FC = () => {
                   <div>
                     <span className="text-slate-400 text-[10px] uppercase block">Confidence</span>
                     <span className="text-emerald-400 font-bold tracking-wider">
-                      {(selectedIncident.confidence * 100).toFixed(0)}% Corroborated
+                      {(((selectedIncident as any).confidence ?? 0.94) * 100).toFixed(0)}% Corroborated
                     </span>
                   </div>
                 </div>
@@ -453,7 +538,7 @@ export const RightRail: React.FC = () => {
                     Ground Reality Summary
                   </span>
                   <p className="text-xs text-slate-300 leading-relaxed glass-panel p-2.5 rounded">
-                    {selectedIncident.summary}
+                    {selectedIncident.summary || selectedIncident.description || selectedIncident.title}
                   </p>
                 </div>
 

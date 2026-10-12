@@ -257,7 +257,7 @@ async def list_complaints(
     category: Optional[str] = Query(None, description="Filter by category"),
     priority: Optional[str] = Query(None, description="Filter by priority"),
     search: Optional[str] = Query(None, description="Search tracking_id or title"),
-    limit: int = Query(50, ge=1, le=100),
+    limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
     user: Optional[UserModel] = Depends(get_optional_user),

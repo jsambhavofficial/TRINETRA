@@ -1391,8 +1391,15 @@ export default function CitizenPortal() {
                     <select
                       value={districtId}
                       onChange={(e) => {
-                        setDistrictId(e.target.value);
-                        triggerAiAnalysis(title, description, e.target.value);
+                        const newDistId = e.target.value;
+                        setDistrictId(newDistId);
+                        const dist = HARYANA_DISTRICTS.find((d) => d.id === newDistId);
+                        if (dist) {
+                          setLatitude(dist.lat);
+                          setLongitude(dist.lng);
+                          setGpsDetectedBadge(`स्थान: ${dist.name} (${dist.lat.toFixed(4)}° N, ${dist.lng.toFixed(4)}° E)`);
+                        }
+                        triggerAiAnalysis(title, description, newDistId);
                       }}
                       className="w-full p-2 rounded-lg bg-slate-900 border border-slate-800 text-white outline-none focus:border-emerald-500 text-xs"
                     >
@@ -1413,6 +1420,32 @@ export default function CitizenPortal() {
                       placeholder="जैसे सुभाष चौक, सेक्टर 38, मुख्य मोड़"
                       className="w-full p-2 rounded-lg bg-slate-900 border border-slate-800 text-white outline-none focus:border-emerald-500 text-xs"
                       required
+                    />
+                  </div>
+                </div>
+
+                {/* Exact GPS Coordinates Row */}
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-900">
+                  <div>
+                    <label className="block text-[10px] text-slate-400 mb-0.5 font-mono">Latitude (अक्षांश)</label>
+                    <input
+                      type="number"
+                      step="0.000001"
+                      value={latitude || ""}
+                      onChange={(e) => setLatitude(parseFloat(e.target.value))}
+                      placeholder="28.4595"
+                      className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-cyan-300 font-mono text-xs outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-400 mb-0.5 font-mono">Longitude (देशांतर)</label>
+                    <input
+                      type="number"
+                      step="0.000001"
+                      value={longitude || ""}
+                      onChange={(e) => setLongitude(parseFloat(e.target.value))}
+                      placeholder="77.0266"
+                      className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-cyan-300 font-mono text-xs outline-none focus:border-cyan-500"
                     />
                   </div>
                 </div>

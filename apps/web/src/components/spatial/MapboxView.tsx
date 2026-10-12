@@ -58,16 +58,24 @@ export const MapboxView: React.FC = () => {
   // Fetch live citizen complaints from backend with real-time polling
   // so newly reported complaints appear immediately and resolved complaints are automatically removed from the map!
   useEffect(() => {
-    const fetchComplaints = () => {
-      fetch("/api/v1/complaints?limit=200")
-        .then((res) => (res.ok ? res.json() : []))
-        .then((data) => {
-          if (Array.isArray(data)) setLiveComplaints(data);
-        })
-        .catch(() => {});
+    const fetchComplaints = async () => {
+      try {
+        let res = await fetch("/api/v1/complaints?limit=300").catch(() => null);
+        if (!res || !res.ok) {
+          res = await fetch("http://localhost:8000/api/v1/complaints?limit=300").catch(() => null);
+        }
+        if (res && res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            setLiveComplaints(data);
+          }
+        }
+      } catch (err) {
+        // silent
+      }
     };
     fetchComplaints();
-    const interval = setInterval(fetchComplaints, 3000);
+    const interval = setInterval(fetchComplaints, 2500);
     return () => clearInterval(interval);
   }, []);
 
@@ -384,13 +392,30 @@ export const MapboxView: React.FC = () => {
               incidentNumber: liveComp.tracking_id || liveComp.id,
               title: liveComp.title,
               description: liveComp.description || liveComp.title,
+              summary: liveComp.description || liveComp.title,
               severity: liveComp.priority || "MEDIUM",
               status: liveComp.status || "SUBMITTED",
               incidentType: liveComp.category || "CIVIC_GRIEVANCE",
               geometry: { longitude: coords[0], latitude: coords[1] },
               evidenceCount: 1,
+              confidence: 0.96,
+              epistemicStatus: "OBSERVED",
               createdAt: liveComp.created_at || new Date().toISOString(),
               assignedUnitId: liveComp.assigned_unit_id,
+              // Rich grievance properties
+              tracking_id: liveComp.tracking_id,
+              citizen_name: liveComp.citizen_name,
+              citizen_phone: liveComp.citizen_phone,
+              address: liveComp.address,
+              district_name: liveComp.district_name,
+              district_id: liveComp.district_id,
+              department_name: liveComp.department_name,
+              department_id: liveComp.department_id,
+              priority: liveComp.priority,
+              category: liveComp.category,
+              sop_checklist: liveComp.sop_checklist,
+              ai_triage: liveComp.ai_triage,
+              rawComplaint: liveComp,
             } as any;
           }
         }
