@@ -199,36 +199,36 @@ export default function ContextualIntelligencePage() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#07090F] text-slate-100 font-sans">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#F8FAFC] text-slate-800 font-sans">
       {/* 1. AEGIS Mission Control Header */}
       <Header />
 
       {/* 2. Main Contextual Intelligence Workspace */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar: Incident Roster & Selector */}
-        <div className="w-80 border-r border-slate-800/80 bg-[#0B0F19] flex flex-col shrink-0">
-          <div className="p-4 border-b border-slate-800">
+        <div className="w-80 border-r border-slate-200 bg-white flex flex-col shrink-0">
+          <div className="p-4 border-b border-slate-100">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <Brain className="w-4 h-4 text-cyan-400" />
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-200 mono-telemetry">
+                <Brain className="w-4 h-4 text-blue-600" />
+                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
                   Active Intelligence Feed
                 </span>
               </div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-400 font-mono font-bold">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold border border-blue-200">
                 {snapshot?.incidents.length || 3} ACTIVE
               </span>
             </div>
 
             {/* Search Input */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-500" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search incident, location, or code..."
-                className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-cyan-500 font-mono"
+                className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 font-medium"
               />
             </div>
           </div>
@@ -243,43 +243,43 @@ export default function ContextualIntelligencePage() {
                 <div
                   key={inc.id}
                   onClick={() => selectIncident(inc)}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all space-y-1.5 ${
+                  className={`p-3 rounded-xl border cursor-pointer transition-all space-y-1.5 ${
                     isSelected
-                      ? "bg-cyan-950/40 border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/40"
-                      : "bg-slate-900/60 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900"
+                      ? "bg-blue-50/80 border-blue-400 shadow-2xs ring-1 ring-blue-500/40 text-blue-950"
+                      : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700"
                   }`}
                 >
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-red-400 animate-ping" />
-                      <span className="font-bold text-slate-100 font-mono">
+                      <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                      <span className="font-bold text-slate-900 font-mono">
                         #{inc.incidentNumber}
                       </span>
                       <span
-                        className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold ${
+                        className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
                           isCritical
-                            ? "bg-red-950/80 text-red-400 border border-red-800"
-                            : "bg-amber-950/80 text-amber-400 border border-amber-800"
+                            ? "bg-red-50 text-red-700 border border-red-200"
+                            : "bg-amber-50 text-amber-800 border border-amber-200"
                         }`}
                       >
                         {inc.severity}
                       </span>
                     </div>
-                    <span className="text-[10px] text-cyan-400 font-mono">
+                    <span className="text-[10px] text-blue-600 font-bold">
                       {Math.round((inc.corroborationScore || 0.95) * 100)}% Match
                     </span>
                   </div>
 
-                  <div className="text-xs font-semibold text-slate-200 line-clamp-2">
+                  <div className="text-xs font-bold text-slate-900 line-clamp-2">
                     {inc.title}
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
                     <span className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-slate-500" />
+                      <MapPin className="w-3 h-3 text-slate-400" />
                       {(inc as any).districtId || "North Sector"}
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400">
+                    <span className="text-[10px] font-medium text-slate-500">
                       {inc.evidenceCount || 4} Evidences
                     </span>
                   </div>
@@ -289,10 +289,10 @@ export default function ContextualIntelligencePage() {
           </div>
 
           {/* Quick 3D Viewport Launcher */}
-          <div className="p-3 border-t border-slate-800 bg-[#07090F]">
+          <div className="p-3 border-t border-slate-200 bg-slate-50">
             <button
               onClick={handleFocusIn3D}
-              className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20 transition-all group"
+              className="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10 transition-all group"
             >
               <Globe2 className="w-3.5 h-3.5" />
               <span>Inspect in 3D Viewport</span>
@@ -302,23 +302,23 @@ export default function ContextualIntelligencePage() {
         </div>
 
         {/* Right Section: Comprehensive Contextual Intelligence Canvas */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-[#0A0E18]">
+        <div className="flex-1 flex flex-col overflow-hidden bg-[#F8FAFC]">
           {/* Top Incident Summary Banner */}
           {currentIncident && (
-            <div className="p-4 border-b border-slate-800 bg-[#0D1220]/90 backdrop-blur-md flex items-center justify-between shrink-0">
+            <div className="p-4 border-b border-slate-200 bg-white flex items-center justify-between shrink-0 shadow-2xs">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-red-950/80 border border-red-800 text-red-300">
+                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-lg bg-red-50 border border-red-200 text-red-700">
                     INCIDENT #{currentIncident.incidentNumber}
                   </span>
-                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800 text-emerald-300">
+                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700">
                     {currentIncident.evidenceCount || 4} EVIDENCES FUSED
                   </span>
-                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800 text-cyan-300">
+                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700">
                     {currentIncident.epistemicStatus || "OBSERVED"}
                   </span>
                 </div>
-                <h1 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                <h1 className="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2">
                   {currentIncident.title}
                 </h1>
               </div>
@@ -326,9 +326,9 @@ export default function ContextualIntelligencePage() {
               {/* Focus in 3D Viewport CTA Button */}
               <button
                 onClick={handleFocusIn3D}
-                className="px-4 py-2 rounded-lg bg-blue-600/20 border border-blue-500/40 hover:bg-blue-600/30 text-blue-300 hover:text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-md"
+                className="px-4 py-2 rounded-xl bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 text-xs font-bold flex items-center gap-2 transition-all shadow-2xs"
               >
-                <Globe2 className="w-4 h-4 text-cyan-400" />
+                <Globe2 className="w-4 h-4 text-blue-600" />
                 <span>Focus in 3D Viewport</span>
                 <ArrowUpRight className="w-3.5 h-3.5" />
               </button>
@@ -336,7 +336,7 @@ export default function ContextualIntelligencePage() {
           )}
 
           {/* Tab Navigation Ribbon */}
-          <div className="flex items-center gap-1 px-4 border-b border-slate-800 bg-[#090C16] text-xs shrink-0 overflow-x-auto">
+          <div className="flex items-center gap-1 px-4 border-b border-slate-200 bg-white text-xs shrink-0 overflow-x-auto">
             {[
               { id: "GOVERNANCE_INTEL", label: "Governance Intel & Ageing", icon: Layers },
               { id: "ALERTS_SLA", label: "SLA Alerts & Escalations", icon: AlertOctagon },
@@ -354,10 +354,10 @@ export default function ContextualIntelligencePage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-3.5 py-2.5 font-bold transition-all flex items-center gap-1.5 border-b-2 whitespace-nowrap ${
+                  className={`px-3.5 py-3 font-bold transition-all flex items-center gap-1.5 border-b-2 whitespace-nowrap text-xs ${
                     isActive
-                      ? "border-cyan-400 text-cyan-300 bg-cyan-950/20"
-                      : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/30"
+                      ? "border-blue-600 text-blue-700 bg-blue-50/40"
+                      : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -367,140 +367,139 @@ export default function ContextualIntelligencePage() {
             })}
           </div>
 
-
           {/* Tab Content Body */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* TAB: GOVERNANCE_INTEL (Phase 3) */}
             {activeTab === "GOVERNANCE_INTEL" && (
               <div className="space-y-6 max-w-5xl">
                 {/* Data Provenance & Freshness Bar */}
-                <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-3">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-bold text-cyan-400 font-mono uppercase tracking-wider">
+                      <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wider">
                         Haryana State Operational Governance Intel
                       </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800 text-emerald-300 font-mono">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold">
                         N = {govOverview?.sample_size ?? 5} Records
                       </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800 text-cyan-300 font-mono">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-bold">
                         Scope: {govOverview?.caller_scope?.role || "STATE_LEADERSHIP"}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-500">
                       {govOverview?.data_notice || "Operational dataset for Haryana Governance Framework."}
                     </p>
                   </div>
-                  <div className="text-[11px] font-mono text-slate-400">
+                  <div className="text-[11px] text-slate-500 font-medium">
                     Freshness: {govOverview?.data_freshness_iso ? new Date(govOverview.data_freshness_iso).toLocaleTimeString() : "Live"}
                   </div>
                 </div>
 
                 {/* 4 Metric Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-                    <div className="text-[10px] font-mono text-slate-500 uppercase">Total Registered</div>
-                    <div className="text-2xl font-bold text-slate-100 font-mono mt-1">
+                  <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+                    <div className="text-[10px] text-slate-500 font-bold uppercase">Total Registered</div>
+                    <div className="text-2xl font-black text-slate-900 mt-1">
                       {govOverview?.metrics?.total_complaints ?? 5}
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-1">Audited cases</div>
+                    <div className="text-[10px] text-slate-400 mt-1 font-medium">Audited cases</div>
                   </div>
-                  <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-                    <div className="text-[10px] font-mono text-slate-500 uppercase">Active Remediation</div>
-                    <div className="text-2xl font-bold text-amber-400 font-mono mt-1">
+                  <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+                    <div className="text-[10px] text-slate-500 font-bold uppercase">Active Remediation</div>
+                    <div className="text-2xl font-black text-amber-600 mt-1">
                       {govOverview?.metrics?.active_complaints ?? 4}
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-1">Pending resolution</div>
+                    <div className="text-[10px] text-slate-400 mt-1 font-medium">Pending resolution</div>
                   </div>
-                  <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-                    <div className="text-[10px] font-mono text-slate-500 uppercase">Verified Resolved</div>
-                    <div className="text-2xl font-bold text-emerald-400 font-mono mt-1">
+                  <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+                    <div className="text-[10px] text-slate-500 font-bold uppercase">Verified Resolved</div>
+                    <div className="text-2xl font-black text-emerald-600 mt-1">
                       {govOverview?.metrics?.resolved_complaints ?? 1}
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-1">Supervisor approved</div>
+                    <div className="text-[10px] text-slate-400 mt-1 font-medium">Supervisor approved</div>
                   </div>
-                  <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-                    <div className="text-[10px] font-mono text-slate-500 uppercase">Citizen Reopen Rate</div>
-                    <div className="text-2xl font-bold text-red-400 font-mono mt-1">
+                  <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+                    <div className="text-[10px] text-slate-500 font-bold uppercase">Citizen Reopen Rate</div>
+                    <div className="text-2xl font-black text-rose-600 mt-1">
                       {govOverview?.metrics?.reopened_complaints ? `${govOverview.metrics.reopened_complaints} Reopened` : "0%"}
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-1">Contested resolutions</div>
+                    <div className="text-[10px] text-slate-400 mt-1 font-medium">Contested resolutions</div>
                   </div>
                 </div>
 
                 {/* Ageing Breakdown */}
-                <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-bold text-slate-200">Workload Ageing Distribution</h3>
-                      <p className="text-xs text-slate-400">Duration cases have remained unfinalized since intake.</p>
+                      <h3 className="text-sm font-extrabold text-slate-900">Workload Ageing Distribution</h3>
+                      <p className="text-xs text-slate-500">Duration cases have remained unfinalized since intake.</p>
                     </div>
-                    <span className="text-[10px] font-mono text-slate-400">Target SLA: &lt; 48h</span>
+                    <span className="text-[10px] text-slate-500 font-bold">Target SLA: &lt; 48h</span>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="p-3 rounded-lg bg-[#07090F] border border-slate-800/80">
-                      <div className="text-[11px] font-mono text-emerald-400">&lt; 24 Hours</div>
-                      <div className="text-xl font-bold text-slate-200 font-mono mt-1">
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                      <div className="text-[11px] font-bold text-emerald-700">&lt; 24 Hours</div>
+                      <div className="text-xl font-black text-slate-900 font-mono mt-1">
                         {govOverview?.ageing?.buckets?.under_24h ?? 0}
                       </div>
-                      <div className="text-[10px] text-slate-500">Fresh intake</div>
+                      <div className="text-[10px] text-slate-500 font-medium">Fresh intake</div>
                     </div>
-                    <div className="p-3 rounded-lg bg-[#07090F] border border-slate-800/80">
-                      <div className="text-[11px] font-mono text-blue-400">24 – 48 Hours</div>
-                      <div className="text-xl font-bold text-slate-200 font-mono mt-1">
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                      <div className="text-[11px] font-bold text-blue-700">24 – 48 Hours</div>
+                      <div className="text-xl font-black text-slate-900 font-mono mt-1">
                         {govOverview?.ageing?.buckets?.["24_to_48h"] ?? 0}
                       </div>
-                      <div className="text-[10px] text-slate-500">In remediation</div>
+                      <div className="text-[10px] text-slate-500 font-medium">In remediation</div>
                     </div>
-                    <div className="p-3 rounded-lg bg-[#07090F] border border-slate-800/80">
-                      <div className="text-[11px] font-mono text-amber-400">48 – 72 Hours</div>
-                      <div className="text-xl font-bold text-slate-200 font-mono mt-1">
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                      <div className="text-[11px] font-bold text-amber-700">48 – 72 Hours</div>
+                      <div className="text-xl font-black text-slate-900 font-mono mt-1">
                         {govOverview?.ageing?.buckets?.["48_to_72h"] ?? 0}
                       </div>
-                      <div className="text-[10px] text-slate-500">Approaching SLA breach</div>
+                      <div className="text-[10px] text-slate-500 font-medium">Approaching SLA breach</div>
                     </div>
                     <div
                       onClick={() => {
                         const ids = govOverview?.ageing?.affected_ids?.over_72h || [];
                         if (ids.length > 0) handleDrilldown(ids, "Cases Pending Over 72 Hours");
                       }}
-                      className="p-3 rounded-lg bg-red-950/30 border border-red-800/40 cursor-pointer hover:bg-red-950/50 transition-all"
+                      className="p-3 rounded-xl bg-rose-50 border border-rose-200 cursor-pointer hover:bg-rose-100/70 transition-all shadow-2xs"
                     >
-                      <div className="text-[11px] font-mono text-red-400 flex items-center justify-between">
+                      <div className="text-[11px] font-bold text-rose-800 flex items-center justify-between">
                         <span>&gt; 72 Hours (Critical)</span>
-                        <Eye className="w-3 h-3 text-red-400" />
+                        <Eye className="w-3.5 h-3.5 text-rose-600" />
                       </div>
-                      <div className="text-xl font-bold text-red-300 font-mono mt-1">
+                      <div className="text-xl font-black text-rose-700 font-mono mt-1">
                         {govOverview?.ageing?.buckets?.over_72h ?? 0}
                       </div>
-                      <div className="text-[10px] text-red-400/80">Click to drill down</div>
+                      <div className="text-[10px] text-rose-700 font-medium">Click to drill down</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Repeated Issue Clusters */}
-                <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-4">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-200">Repeated Issue Clusters (&lt; 2.0 km)</h3>
-                    <p className="text-xs text-slate-400">Spatial grouping of localized complaints sharing category domains.</p>
+                    <h3 className="text-sm font-extrabold text-slate-900">Repeated Issue Clusters (&lt; 2.0 km)</h3>
+                    <p className="text-xs text-slate-500">Spatial grouping of localized complaints sharing category domains.</p>
                   </div>
                   {govOverview?.repeated_clusters && govOverview.repeated_clusters.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {govOverview.repeated_clusters.map((clst: any) => (
-                        <div key={clst.cluster_id} className="p-4 rounded-xl bg-[#07090F] border border-slate-800 space-y-2">
+                        <div key={clst.cluster_id} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-mono font-bold text-cyan-400">{clst.category}</span>
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 font-mono">
+                            <span className="text-xs font-bold text-blue-700">{clst.category}</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-bold">
                               {clst.report_count} Reports
                             </span>
                           </div>
-                          <div className="text-xs text-slate-200 font-semibold">{clst.sample_title}</div>
-                          <p className="text-[11px] text-slate-400">{clst.explanation}</p>
+                          <div className="text-xs text-slate-900 font-bold">{clst.sample_title}</div>
+                          <p className="text-[11px] text-slate-600">{clst.explanation}</p>
                           <div className="pt-2 flex items-center justify-between">
-                            <span className="text-[10px] font-mono text-slate-500">District: {clst.district_name}</span>
+                            <span className="text-[10px] text-slate-500 font-medium">District: {clst.district_name}</span>
                             <button
                               onClick={() => handleDrilldown(clst.member_record_ids, `Cluster: ${clst.category} (${clst.district_name})`)}
-                              className="text-xs text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1"
+                              className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1"
                             >
                               <span>Drilldown</span>
                               <ArrowRight className="w-3 h-3" />
@@ -510,36 +509,36 @@ export default function ContextualIntelligencePage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="p-4 rounded-lg bg-slate-950 text-xs text-slate-500 font-mono">
+                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 font-medium">
                       No multi-report clusters currently detected within 2.0 km radius.
                     </div>
                   )}
                 </div>
 
                 {/* Evidence-Backed Anomaly Signals */}
-                <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-4">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-200">Evidence-Backed Anomaly Signals</h3>
-                    <p className="text-xs text-slate-400">Algorithmic indicators calculated from state records with audit triggers.</p>
+                    <h3 className="text-sm font-extrabold text-slate-900">Evidence-Backed Anomaly Signals</h3>
+                    <p className="text-xs text-slate-500">Algorithmic indicators calculated from state records with audit triggers.</p>
                   </div>
                   {govOverview?.anomalies && govOverview.anomalies.length > 0 ? (
                     <div className="space-y-2.5">
                       {govOverview.anomalies.map((an: any, idx: number) => (
-                        <div key={idx} className="p-3.5 rounded-lg bg-[#07090F] border border-amber-800/40 flex items-start justify-between gap-4">
+                        <div key={idx} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start justify-between gap-4">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-amber-300">{an.title}</span>
-                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-950 border border-amber-800 text-amber-300 font-mono">
+                              <span className="text-xs font-bold text-amber-800">{an.title}</span>
+                              <span className="text-[9px] px-1.5 py-0.2 rounded font-bold bg-amber-50 border border-amber-200 text-amber-800">
                                 {an.severity}
                               </span>
                             </div>
-                            <p className="text-xs text-slate-300">{an.evidence}</p>
-                            <span className="text-[10px] font-mono text-slate-500">Trigger rule: {an.trigger_metric}</span>
+                            <p className="text-xs text-slate-700">{an.evidence}</p>
+                            <span className="text-[10px] text-slate-500">Trigger rule: {an.trigger_metric}</span>
                           </div>
                           {an.affected_record_ids && an.affected_record_ids.length > 0 && (
                             <button
                               onClick={() => handleDrilldown(an.affected_record_ids, an.title)}
-                              className="shrink-0 px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1"
+                              className="shrink-0 px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 text-xs font-bold flex items-center gap-1 shadow-2xs"
                             >
                               <Eye className="w-3 h-3" />
                               <span>View {an.affected_record_ids.length} Cases</span>
@@ -549,33 +548,33 @@ export default function ContextualIntelligencePage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="p-4 rounded-lg bg-slate-950 text-xs text-slate-500 font-mono">
+                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 font-medium">
                       All governance metrics within normal baseline tolerances.
                     </div>
                   )}
                 </div>
 
                 {/* Haryana External System Integrations Scaffolding */}
-                <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-4">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-200">Haryana State Integration Readiness</h3>
-                    <p className="text-xs text-slate-400">Standardized adapter boundaries for state systems (live vs scaffolded).</p>
+                    <h3 className="text-sm font-extrabold text-slate-900">Haryana State Integration Readiness</h3>
+                    <p className="text-xs text-slate-500">Standardized adapter boundaries for state systems (live vs scaffolded).</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {integrationsList.map((ad: any) => (
-                      <div key={ad.system_id} className="p-3.5 rounded-lg bg-[#07090F] border border-slate-800 space-y-2">
+                      <div key={ad.system_id} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-200">{ad.name}</span>
-                          <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold ${
+                          <span className="text-xs font-bold text-slate-900">{ad.name}</span>
+                          <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
                             ad.status === "ONLINE"
-                              ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
-                              : "bg-slate-800 text-slate-400 border border-slate-700"
+                              ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                              : "bg-slate-100 text-slate-600 border border-slate-200"
                           }`}>
                             {ad.status}
                           </span>
                         </div>
                         <div className="text-[10px] font-mono text-slate-500 truncate">{ad.api_endpoint}</div>
-                        <p className="text-[11px] text-slate-400">{ad.disclaimer}</p>
+                        <p className="text-[11px] text-slate-600">{ad.disclaimer}</p>
                       </div>
                     ))}
                   </div>
@@ -586,12 +585,12 @@ export default function ContextualIntelligencePage() {
             {/* TAB: ALERTS_SLA (Phase 3) */}
             {activeTab === "ALERTS_SLA" && (
               <div className="space-y-6 max-w-5xl">
-                <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
+                <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-center justify-between">
                   <div>
-                    <h2 className="text-sm font-bold text-slate-200">Governance SLA & Escalation Alerts</h2>
-                    <p className="text-xs text-slate-400">Auditable breaches of configured turnaround times across districts.</p>
+                    <h2 className="text-sm font-extrabold text-slate-900">Governance SLA & Escalation Alerts</h2>
+                    <p className="text-xs text-slate-500">Auditable breaches of configured turnaround times across districts.</p>
                   </div>
-                  <span className="text-xs font-mono font-bold px-2.5 py-1 rounded bg-red-950 border border-red-800 text-red-300">
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700">
                     {alertsList.filter(a => a.status === "TRIGGERED").length} Unresolved Alerts
                   </span>
                 </div>
@@ -600,36 +599,36 @@ export default function ContextualIntelligencePage() {
                   {alertsList.map((alt: any) => (
                     <div
                       key={alt.id}
-                      className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-3"
+                      className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-3"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-red-950/80 border border-red-800 text-red-300">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-50 border border-rose-200 text-rose-700">
                             {alt.severity}
                           </span>
-                          <span className="text-xs font-mono text-slate-400">{alt.rule_id}</span>
-                          <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
+                          <span className="text-xs font-mono text-slate-500 font-bold">{alt.rule_id}</span>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                             alt.status === "RESOLVED"
-                              ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                               : alt.status === "ACKNOWLEDGED"
-                              ? "bg-blue-950 text-blue-300 border border-blue-800"
-                              : "bg-amber-950 text-amber-300 border border-amber-800"
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
+                              : "bg-amber-50 text-amber-700 border border-amber-200"
                           }`}>
                             {alt.status}
                           </span>
                         </div>
-                        <span className="text-xs font-mono text-slate-400">
+                        <span className="text-xs text-slate-500 font-medium">
                           Elapsed: {alt.elapsed_hours ? `${alt.elapsed_hours}h` : "N/A"} / SLA: {alt.sla_configured_hours}h
                         </span>
                       </div>
 
                       <div>
-                        <h4 className="text-sm font-bold text-slate-100">{alt.title}</h4>
-                        <p className="text-xs text-slate-300 mt-1">{alt.trigger_reason}</p>
+                        <h4 className="text-sm font-bold text-slate-900">{alt.title}</h4>
+                        <p className="text-xs text-slate-600 mt-1">{alt.trigger_reason}</p>
                       </div>
 
-                      <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
-                        <span className="text-slate-500 font-mono">Entity: {alt.entity_id}</span>
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                        <span className="text-slate-400 font-mono">Entity: {alt.entity_id}</span>
                         {alt.status === "TRIGGERED" && (
                           <button
                             onClick={async () => {
@@ -640,7 +639,7 @@ export default function ContextualIntelligencePage() {
                               });
                               fetchGovData();
                             }}
-                            className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-all"
+                            className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-2xs"
                           >
                             Acknowledge Alert
                           </button>
@@ -661,7 +660,7 @@ export default function ContextualIntelligencePage() {
                               });
                               fetchGovData();
                             }}
-                            className="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all"
+                            className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-2xs"
                           >
                             Resolve Alert
                           </button>
