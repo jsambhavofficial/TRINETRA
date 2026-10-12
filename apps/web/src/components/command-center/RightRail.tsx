@@ -115,9 +115,9 @@ export const RightRail: React.FC = () => {
       setLoadingIntel(true);
       try {
         const [expRes, timeRes, evRes] = await Promise.all([
-          fetch(`http://localhost:8000/api/v1/incidents/${selectedIncident.id}/explanation`).catch(() => null),
-          fetch(`http://localhost:8000/api/v1/incidents/${selectedIncident.id}/timeline`).catch(() => null),
-          fetch(`http://localhost:8000/api/v1/incidents/${selectedIncident.id}/evidence`).catch(() => null),
+          fetch(`/api/v1/incidents/${selectedIncident.id}/explanation`).catch(() => null),
+          fetch(`/api/v1/incidents/${selectedIncident.id}/timeline`).catch(() => null),
+          fetch(`/api/v1/incidents/${selectedIncident.id}/evidence`).catch(() => null),
         ]);
 
         if (isMounted) {

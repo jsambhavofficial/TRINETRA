@@ -23,7 +23,7 @@ import {
 import { DEMO_TIMELINE_STEPS } from "./demoTimeline";
 import { cameraController } from "../components/spatial/CameraController";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 
 let autoPlayTimer: NodeJS.Timeout | null = null;
 

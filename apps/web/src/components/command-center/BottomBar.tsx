@@ -17,7 +17,11 @@ export const BottomBar: React.FC = () => {
 
     const connectWs = () => {
       try {
-        const wsUrl = "ws://localhost:8000/ws/world/world-nexus-city-01";
+        const defaultWs =
+          typeof window !== "undefined" && window.location.protocol === "https:"
+            ? `wss://${window.location.host}/ws/world/world-nexus-city-01`
+            : "ws://localhost:8000/ws/world/world-nexus-city-01";
+        const wsUrl = process.env.NEXT_PUBLIC_WS_URL || defaultWs;
         ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {

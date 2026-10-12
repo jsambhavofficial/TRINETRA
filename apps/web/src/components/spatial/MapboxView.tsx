@@ -60,10 +60,7 @@ export const MapboxView: React.FC = () => {
   useEffect(() => {
     const fetchComplaints = async () => {
       try {
-        let res = await fetch("/api/v1/complaints?limit=300").catch(() => null);
-        if (!res || !res.ok) {
-          res = await fetch("http://localhost:8000/api/v1/complaints?limit=300").catch(() => null);
-        }
+        const res = await fetch("/api/v1/complaints?limit=300").catch(() => null);
         if (res && res.ok) {
           const data = await res.json();
           if (Array.isArray(data)) {
