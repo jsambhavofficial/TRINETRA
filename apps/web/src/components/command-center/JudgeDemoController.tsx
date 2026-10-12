@@ -86,8 +86,8 @@ export const JudgeDemoController: React.FC = () => {
     };
   }, [isPlaying]);
 
-  // Do not obscure citizen grievance portal (evaluated after all hooks)
-  if (pathname?.startsWith("/portal/citizen")) {
+  // Do not obscure governance portals or login
+  if (pathname?.startsWith("/portal") || pathname === "/login") {
     return null;
   }
 

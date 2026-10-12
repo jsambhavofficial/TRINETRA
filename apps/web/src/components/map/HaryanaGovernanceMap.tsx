@@ -976,25 +976,25 @@ export const HaryanaGovernanceMap: React.FC<{
   };
 
   return (
-    <div className="relative w-full min-h-[680px] bg-slate-950 rounded-2xl border border-slate-800 shadow-2xl flex flex-col overflow-hidden text-slate-100 font-sans">
+    <div className="relative w-full min-h-[680px] bg-white rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col overflow-hidden text-slate-800 font-sans">
       {/* 1. Header Bar: Map Stats & View Mode Toggle */}
-      <div className="p-4 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 z-10">
+      <div className="p-4 border-b border-slate-200 bg-slate-50/90 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 z-10">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
+          <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 shadow-2xs">
             <MapIcon className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-white tracking-wide">
+              <h2 className="text-sm font-extrabold text-slate-900 tracking-wide">
                 HARYANA GEOSPATIAL INCIDENT RESPONSE MAP
               </h2>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center gap-1">
-                <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-1">
+                <Radio className="w-3 h-3 text-emerald-600 animate-pulse" />
                 <span>LIVE FEED</span>
               </span>
             </div>
-            <p className="text-xs text-slate-400">
-              Showing <strong className="text-white">{filteredIncidents.length}</strong> active civic & infrastructure incidents plotted across 22 Haryana districts
+            <p className="text-xs text-slate-500">
+              Showing <strong className="text-slate-900">{filteredIncidents.length}</strong> active civic & infrastructure incidents plotted across 22 Haryana districts
             </p>
           </div>
         </div>
@@ -1003,10 +1003,10 @@ export const HaryanaGovernanceMap: React.FC<{
         <div className="flex items-center gap-2">
           <button
             onClick={() => setViewMode("map")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
               viewMode === "map"
-                ? "bg-purple-600 text-white shadow"
-                : "bg-slate-800 text-slate-300 hover:text-white"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900 shadow-2xs"
             }`}
           >
             <MapIcon className="w-3.5 h-3.5" />
@@ -1014,10 +1014,10 @@ export const HaryanaGovernanceMap: React.FC<{
           </button>
           <button
             onClick={() => setViewMode("table")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
               viewMode === "table"
-                ? "bg-purple-600 text-white shadow"
-                : "bg-slate-800 text-slate-300 hover:text-white"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900 shadow-2xs"
             }`}
           >
             <Table className="w-3.5 h-3.5" />
@@ -1027,23 +1027,25 @@ export const HaryanaGovernanceMap: React.FC<{
       </div>
 
       {/* 2. Interactive Incident Category Filter Pills */}
-      <div className="px-4 py-2.5 bg-slate-900/60 border-b border-slate-800/80 flex items-center gap-2 overflow-x-auto text-xs scrollbar-none">
-        <span className="text-[11px] font-bold text-slate-400 shrink-0 uppercase tracking-wider flex items-center gap-1">
-          <Filter className="w-3.5 h-3.5 text-purple-400" />
+      <div className="px-4 py-2.5 bg-white border-b border-slate-200 flex items-center gap-2 overflow-x-auto text-xs scrollbar-none">
+        <span className="text-[11px] font-bold text-slate-500 shrink-0 uppercase tracking-wider flex items-center gap-1">
+          <Filter className="w-3.5 h-3.5 text-blue-600" />
           <span>Incident Type:</span>
         </span>
 
         {/* ALL PILL */}
         <button
           onClick={() => setSelectedCategory("ALL")}
-          className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+          className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
             selectedCategory === "ALL"
-              ? "bg-purple-500 text-white shadow-sm ring-1 ring-purple-400/50"
-              : "bg-slate-800 text-slate-400 hover:text-slate-200"
+              ? "bg-blue-600 text-white shadow-xs ring-1 ring-blue-500"
+              : "bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200/60"
           }`}
         >
           <span>All Incidents</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-900/70 font-mono">
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+            selectedCategory === "ALL" ? "bg-blue-700 text-white" : "bg-slate-200 text-slate-700"
+          }`}>
             {categoryCounts.ALL || 0}
           </span>
         </button>
@@ -1057,15 +1059,15 @@ export const HaryanaGovernanceMap: React.FC<{
             <button
               key={key}
               onClick={() => setSelectedCategory(key)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
                 isSelected
-                  ? `${cfg.bg} ${cfg.color} border ${cfg.border} ring-1 ring-white/10`
-                  : "bg-slate-800/80 text-slate-300 hover:text-white border border-transparent"
+                  ? `bg-blue-50 text-blue-800 border border-blue-300 ring-1 ring-blue-400`
+                  : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200"
               }`}
             >
               <span>{cfg.icon}</span>
               <span>{cfg.label.split("(")[0]}</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-900/70 font-mono font-bold">
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200/80 text-slate-700 font-mono font-bold">
                 {count}
               </span>
             </button>
@@ -1074,14 +1076,14 @@ export const HaryanaGovernanceMap: React.FC<{
       </div>
 
       {/* 3. Secondary Controls: District Dropdown, Priority, Search */}
-      <div className="px-4 py-2 border-b border-slate-800 bg-slate-900/40 flex flex-wrap items-center gap-2 text-xs">
+      <div className="px-4 py-2 border-b border-slate-200 bg-slate-50/70 flex flex-wrap items-center gap-2 text-xs">
         {/* District Selector */}
-        <div className="flex items-center gap-1">
-          <label className="text-[11px] text-slate-400">District:</label>
+        <div className="flex items-center gap-1.5">
+          <label className="text-[11px] font-bold text-slate-500">District:</label>
           <select
             value={selectedDistrictId}
             onChange={(e) => setSelectedDistrictId(e.target.value)}
-            className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-slate-200 focus:outline-none focus:border-purple-500 text-xs"
+            className="bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-slate-800 focus:outline-none focus:border-blue-500 text-xs font-medium shadow-2xs"
           >
             <option value="ALL">All 22 Districts</option>
             {HARYANA_DISTRICTS.map((d) => (
@@ -1093,12 +1095,12 @@ export const HaryanaGovernanceMap: React.FC<{
         </div>
 
         {/* Priority Filter */}
-        <div className="flex items-center gap-1">
-          <label className="text-[11px] text-slate-400">Priority:</label>
+        <div className="flex items-center gap-1.5">
+          <label className="text-[11px] font-bold text-slate-500">Priority:</label>
           <select
             value={selectedPriority}
             onChange={(e) => setSelectedPriority(e.target.value)}
-            className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-slate-200 focus:outline-none focus:border-purple-500 text-xs"
+            className="bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-slate-800 focus:outline-none focus:border-blue-500 text-xs font-medium shadow-2xs"
           >
             <option value="ALL">All Priorities</option>
             <option value="CRITICAL">Critical</option>
@@ -1116,43 +1118,43 @@ export const HaryanaGovernanceMap: React.FC<{
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search incident, location or ID..."
-            className="w-full pl-8 pr-2.5 py-1 rounded-md bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 outline-none focus:border-purple-500"
+            className="w-full pl-8 pr-2.5 py-1 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 shadow-2xs font-medium"
           />
         </div>
       </div>
 
       {/* Success Notification */}
       {actionSuccessNotice && (
-        <div className="mx-4 mt-2 p-2.5 rounded-lg bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-xs flex items-center justify-between">
+        <div className="mx-4 mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between shadow-2xs">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{actionSuccessNotice}</span>
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="font-medium">{actionSuccessNotice}</span>
           </div>
-          <button onClick={() => setActionSuccessNotice(null)} className="text-emerald-400 hover:text-white">✕</button>
+          <button onClick={() => setActionSuccessNotice(null)} className="text-emerald-700 hover:text-emerald-950 font-bold">✕</button>
         </div>
       )}
 
       {/* 4. MAIN MAP CANVAS VIEW */}
-      <div className="relative flex-1 bg-[#060b14] overflow-hidden flex flex-col justify-center items-center">
+      <div className="relative flex-1 bg-slate-100/70 overflow-hidden flex flex-col justify-center items-center">
         {viewMode === "map" ? (
           <div className="relative w-full h-[520px] max-w-5xl mx-auto overflow-hidden flex items-center justify-center p-4">
             {/* Tactical Grid Overlay */}
             <div
-              className="absolute inset-0 opacity-20 pointer-events-none"
+              className="absolute inset-0 opacity-25 pointer-events-none"
               style={{
-                backgroundImage: `radial-gradient(circle, #818cf8 1px, transparent 1px)`,
+                backgroundImage: `radial-gradient(circle, #94a3b8 1px, transparent 1px)`,
                 backgroundSize: "28px 28px",
               }}
             />
 
             {/* Haryana State Geographic Map Surface Container */}
-            <div className="relative w-full h-full max-w-4xl max-h-[500px] rounded-2xl bg-gradient-to-b from-[#0b1329] via-[#091124] to-[#060a18] border border-slate-800/80 shadow-2xl overflow-hidden">
+            <div className="relative w-full h-full max-w-4xl max-h-[500px] rounded-2xl bg-gradient-to-b from-blue-50/90 via-slate-50 to-blue-50/40 border border-slate-200 shadow-xs overflow-hidden">
               {/* Map Title Watermark */}
               <div className="absolute top-3 left-4 pointer-events-none z-0">
-                <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase block">
+                <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase block font-bold">
                   GEOSPATIAL COMMAND • HARYANA STATE
                 </span>
-                <span className="text-xs font-bold text-slate-400">
+                <span className="text-xs font-bold text-slate-500">
                   LAT 27.5°N - 31.1°N • LNG 74.3°E - 77.8°E
                 </span>
               </div>
@@ -1164,10 +1166,10 @@ export const HaryanaGovernanceMap: React.FC<{
                   <div
                     key={d.id}
                     style={{ left: `${pos.left}%`, top: `${pos.top}%` }}
-                    className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none flex flex-col items-center opacity-35"
+                    className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none flex flex-col items-center opacity-45"
                   >
-                    <div className="w-1.5 h-1.5 rounded-full bg-slate-500" />
-                    <span className="text-[8px] font-mono text-slate-400 font-bold whitespace-nowrap mt-0.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                    <span className="text-[8px] font-mono text-slate-500 font-bold whitespace-nowrap mt-0.5">
                       {d.name}
                     </span>
                   </div>
@@ -1193,7 +1195,7 @@ export const HaryanaGovernanceMap: React.FC<{
                     {(isCrit || isHigh) && (
                       <span
                         className={`absolute -inset-2 rounded-full ${
-                          isCrit ? "bg-rose-500/40" : "bg-amber-500/30"
+                          isCrit ? "bg-rose-500/30" : "bg-amber-500/25"
                         } animate-ping pointer-events-none`}
                       />
                     )}
@@ -1203,12 +1205,12 @@ export const HaryanaGovernanceMap: React.FC<{
                       onClick={() => setSelectedPin(inc)}
                       onMouseEnter={() => setHoveredPin(inc)}
                       onMouseLeave={() => setHoveredPin(null)}
-                      className={`relative flex items-center justify-center p-1.5 rounded-full transition-all duration-200 shadow-xl ${
+                      className={`relative flex items-center justify-center p-1.5 rounded-full transition-all duration-200 shadow-md ${
                         isSelected
-                          ? "scale-125 ring-2 ring-white z-30 bg-purple-600 shadow-purple-500/50"
+                          ? "scale-125 ring-2 ring-blue-500 z-30 bg-blue-600 text-white shadow-blue-500/40"
                           : isHovered
-                          ? "scale-110 ring-1 ring-purple-400 bg-slate-800"
-                          : "bg-slate-900 border border-slate-700 hover:border-white"
+                          ? "scale-110 ring-1 ring-blue-400 bg-slate-50"
+                          : "bg-white border border-slate-200 hover:border-blue-400"
                       }`}
                       title={`${inc.tracking_id}: ${inc.title}`}
                     >
@@ -1216,31 +1218,31 @@ export const HaryanaGovernanceMap: React.FC<{
 
                       {/* Small Status Indicator Dot */}
                       <span
-                        className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-slate-900 ${
-                          isCrit ? "bg-rose-500" : isHigh ? "bg-amber-400" : "bg-emerald-400"
+                        className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-white ${
+                          isCrit ? "bg-rose-500" : isHigh ? "bg-amber-500" : "bg-emerald-500"
                         }`}
                       />
                     </button>
 
                     {/* Tooltip on Hover */}
                     {(isHovered || isSelected) && (
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2 rounded-xl bg-slate-950/95 border border-slate-700 text-left shadow-2xl z-40 pointer-events-none backdrop-blur-md animate-fade-in">
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 rounded-xl bg-white border border-slate-200 text-left shadow-xl z-40 pointer-events-none animate-in fade-in">
                         <div className="flex items-center justify-between text-[10px]">
-                          <span className="font-mono font-bold text-purple-400">{inc.tracking_id}</span>
+                          <span className="font-mono font-bold text-blue-700">{inc.tracking_id}</span>
                           <span
                             className={`px-1.5 py-0.2 rounded font-bold text-[9px] ${
-                              isCrit ? "bg-rose-950 text-rose-300" : "bg-slate-800 text-slate-300"
+                              isCrit ? "bg-rose-100 text-rose-800" : "bg-slate-100 text-slate-700"
                             }`}
                           >
                             {inc.priority}
                           </span>
                         </div>
-                        <p className="text-xs font-semibold text-white mt-1 line-clamp-2 leading-tight">
+                        <p className="text-xs font-bold text-slate-900 mt-1 line-clamp-2 leading-tight">
                           {inc.title}
                         </p>
-                        <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1.5 pt-1 border-t border-slate-800">
-                          <span className="font-medium text-slate-300">{inc.district_name}</span>
-                          <span className="font-mono text-emerald-400">{inc.status}</span>
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1.5 pt-1 border-t border-slate-100">
+                          <span className="font-medium text-slate-700">{inc.district_name}</span>
+                          <span className="font-mono font-bold text-emerald-600">{inc.status}</span>
                         </div>
                       </div>
                     )}
@@ -1249,11 +1251,11 @@ export const HaryanaGovernanceMap: React.FC<{
               })}
 
               {/* Map Legend (Bottom Left) */}
-              <div className="absolute bottom-3 left-3 bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 text-[10px] space-y-1.5 backdrop-blur-md z-10 hidden sm:block">
-                <span className="font-bold text-slate-300 uppercase tracking-wider block text-[9px]">
+              <div className="absolute bottom-3 left-3 bg-white/95 border border-slate-200 rounded-xl p-2.5 text-[10px] space-y-1.5 shadow-md z-10 hidden sm:block">
+                <span className="font-bold text-slate-700 uppercase tracking-wider block text-[9px]">
                   Incident Legend
                 </span>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-slate-300">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-slate-600 font-medium">
                   <div className="flex items-center gap-1.5">
                     <span>🌊</span>
                     <span>Waterlogging</span>
@@ -1284,9 +1286,9 @@ export const HaryanaGovernanceMap: React.FC<{
           </div>
         ) : (
           /* 5. INCIDENT TABLE VIEW (Alternative Grid) */
-          <div className="w-full h-full overflow-auto p-4">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-900 border-b border-slate-800 text-slate-400 font-semibold sticky top-0">
+          <div className="w-full h-full overflow-auto p-4 bg-white">
+            <table className="w-full text-left text-xs text-slate-700">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold sticky top-0">
                 <tr>
                   <th className="py-2.5 px-3">Tracking ID</th>
                   <th className="py-2.5 px-3">Type</th>
@@ -1298,47 +1300,47 @@ export const HaryanaGovernanceMap: React.FC<{
                   <th className="py-2.5 px-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-slate-100">
                 {filteredIncidents.map((inc, index) => {
                   const cfg = INCIDENT_CATEGORIES_CONFIG[inc.category] || INCIDENT_CATEGORIES_CONFIG.URBAN_FLOODING;
                   return (
-                    <tr key={`${inc.id}-${inc.tracking_id}-${index}`} className="hover:bg-slate-900/40 transition-colors">
-                      <td className="py-2.5 px-3 font-mono font-bold text-purple-400">
+                    <tr key={`${inc.id}-${inc.tracking_id}-${index}`} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-2.5 px-3 font-mono font-bold text-blue-700">
                         {inc.tracking_id}
                       </td>
                       <td className="py-2.5 px-3">
                         <span className="flex items-center gap-1">
                           <span>{cfg.icon}</span>
-                          <span className="font-semibold text-white">{inc.category.replace("_", " ")}</span>
+                          <span className="font-bold text-slate-800">{inc.category.replace("_", " ")}</span>
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 font-medium text-white max-w-xs truncate">
+                      <td className="py-2.5 px-3 font-medium text-slate-900 max-w-xs truncate">
                         {inc.title}
                       </td>
-                      <td className="py-2.5 px-3">{inc.district_name}</td>
+                      <td className="py-2.5 px-3 text-slate-600">{inc.district_name}</td>
                       <td className="py-2.5 px-3">
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                             inc.priority === "CRITICAL"
-                              ? "bg-rose-950 text-rose-300 border border-rose-800"
+                              ? "bg-rose-100 text-rose-800 border border-rose-200"
                               : inc.priority === "HIGH"
-                              ? "bg-amber-950 text-amber-300 border border-amber-800"
-                              : "bg-slate-800 text-slate-300"
+                              ? "bg-amber-100 text-amber-800 border border-amber-200"
+                              : "bg-slate-100 text-slate-700"
                           }`}
                         >
                           {inc.priority}
                         </span>
                       </td>
                       <td className="py-2.5 px-3">
-                        <span className="text-emerald-400 font-mono">{inc.status}</span>
+                        <span className="text-emerald-700 font-mono font-bold">{inc.status}</span>
                       </td>
-                      <td className="py-2.5 px-3 text-slate-400 truncate max-w-[140px]">
+                      <td className="py-2.5 px-3 text-slate-500 truncate max-w-[140px]">
                         {inc.department_name || "Line Department"}
                       </td>
                       <td className="py-2.5 px-3 text-right">
                         <button
                           onClick={() => setSelectedPin(inc)}
-                          className="px-2.5 py-1 rounded bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-600/30 text-[11px] font-semibold"
+                          className="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 text-[11px] font-bold"
                         >
                           View Mission
                         </button>
@@ -1353,27 +1355,27 @@ export const HaryanaGovernanceMap: React.FC<{
 
         {/* 6. Selected Incident Mission Drawer / Detail Modal */}
         {selectedPin && (
-          <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-[420px] bg-slate-950/95 border border-purple-500/40 rounded-2xl shadow-2xl p-4 text-xs backdrop-blur-xl z-50 space-y-3 animate-fade-in ring-1 ring-white/10">
+          <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-[420px] bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 text-xs z-50 space-y-3 animate-in fade-in">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div className="flex items-center gap-2">
-                <span className="font-mono font-black text-purple-400 text-sm">{selectedPin.tracking_id}</span>
+                <span className="font-mono font-black text-blue-700 text-sm">{selectedPin.tracking_id}</span>
                 <span
                   className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                     selectedPin.priority === "CRITICAL"
-                      ? "bg-rose-950 text-rose-300 border border-rose-800"
-                      : "bg-slate-800 text-slate-300"
+                      ? "bg-rose-100 text-rose-800 border border-rose-200"
+                      : "bg-slate-100 text-slate-700"
                   }`}
                 >
                   {selectedPin.priority}
                 </span>
-                <span className="text-emerald-400 font-mono text-[10px] font-bold">
+                <span className="text-emerald-700 font-mono text-[10px] font-bold">
                   [{selectedPin.status}]
                 </span>
               </div>
               <button
                 onClick={() => setSelectedPin(null)}
-                className="text-slate-400 hover:text-white p-1 rounded-md"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-md"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1381,53 +1383,53 @@ export const HaryanaGovernanceMap: React.FC<{
 
             {/* Title & Description */}
             <div>
-              <div className="flex items-center gap-1.5 text-purple-300 text-[11px] font-bold mb-1">
+              <div className="flex items-center gap-1.5 text-blue-700 text-[11px] font-bold mb-1">
                 <span>{INCIDENT_CATEGORIES_CONFIG[selectedPin.category]?.icon || "⚠️"}</span>
                 <span>{selectedPin.category.replace("_", " ")}</span>
               </div>
-              <h3 className="font-bold text-white text-sm leading-snug">{selectedPin.title}</h3>
+              <h3 className="font-bold text-slate-900 text-sm leading-snug">{selectedPin.title}</h3>
               {selectedPin.description && (
-                <p className="text-xs text-slate-300 mt-1 leading-relaxed">{selectedPin.description}</p>
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed">{selectedPin.description}</p>
               )}
             </div>
 
             {/* Jurisdictional Specs */}
-            <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px]">
+            <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px]">
               <div>
-                <span className="text-slate-400">District:</span>
-                <p className="font-bold text-white">{selectedPin.district_name}</p>
+                <span className="text-slate-500">District:</span>
+                <p className="font-bold text-slate-900">{selectedPin.district_name}</p>
               </div>
               <div>
-                <span className="text-slate-400">Line Dept:</span>
-                <p className="font-semibold text-slate-200 truncate">{selectedPin.department_name || "Line Department"}</p>
+                <span className="text-slate-500">Line Dept:</span>
+                <p className="font-semibold text-slate-800 truncate">{selectedPin.department_name || "Line Department"}</p>
               </div>
               {selectedPin.address && (
                 <div className="col-span-2">
-                  <span className="text-slate-400">Location:</span>
-                  <p className="text-slate-300 truncate">{selectedPin.address}</p>
+                  <span className="text-slate-500">Location:</span>
+                  <p className="text-slate-700 truncate">{selectedPin.address}</p>
                 </div>
               )}
               {selectedPin.assigned_officer_name && (
                 <div className="col-span-2">
-                  <span className="text-slate-400">Field Unit Dispatched:</span>
-                  <p className="font-bold text-cyan-300">{selectedPin.assigned_officer_name} ({selectedPin.assigned_unit_id})</p>
+                  <span className="text-slate-500">Field Unit Dispatched:</span>
+                  <p className="font-bold text-blue-700">{selectedPin.assigned_officer_name} ({selectedPin.assigned_unit_id})</p>
                 </div>
               )}
             </div>
 
             {/* Remediation Photo Proof (If verified or resolving) */}
             {selectedPin.resolution_proof && selectedPin.resolution_proof.after_photo && (
-              <div className="p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 space-y-1.5">
-                <span className="text-[10px] font-bold text-emerald-300 flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1.5">
+                <span className="text-[10px] font-bold text-emerald-800 flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Ground Remediation Photo Proof</span>
                 </span>
                 <img
                   src={selectedPin.resolution_proof.after_photo}
                   alt="Resolution proof"
-                  className="w-full h-24 object-cover rounded-lg border border-slate-700"
+                  className="w-full h-24 object-cover rounded-lg border border-slate-200"
                 />
-                <p className="text-[10px] text-slate-300 italic">{selectedPin.resolution_proof.field_note}</p>
+                <p className="text-[10px] text-slate-700 italic">{selectedPin.resolution_proof.field_note}</p>
               </div>
             )}
 
@@ -1435,25 +1437,25 @@ export const HaryanaGovernanceMap: React.FC<{
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <button
                 onClick={() => setIsDecisionPanelOpen(true)}
-                className="flex-1 py-2 px-3 rounded-xl bg-purple-600/20 border border-purple-500/40 hover:bg-purple-600/30 text-purple-300 font-bold text-xs transition flex items-center justify-center gap-1.5"
+                className="flex-1 py-2 px-3 rounded-xl bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-800 font-bold text-xs transition flex items-center justify-center gap-1.5"
               >
-                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
                 <span>AI Decision Rationale</span>
               </button>
 
               <button
                 onClick={() => handleQuickEscalate(selectedPin)}
-                className="py-2 px-3 rounded-xl bg-amber-600/20 border border-amber-500/40 hover:bg-amber-600/30 text-amber-300 font-bold text-xs transition flex items-center gap-1"
+                className="py-2 px-3 rounded-xl bg-amber-50 border border-amber-300 hover:bg-amber-100 text-amber-800 font-bold text-xs transition flex items-center gap-1"
                 title="Escalate incident directly to District Magistrate HQ"
               >
-                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <Zap className="w-3.5 h-3.5 text-amber-600" />
                 <span>⚡ Escalate to DC</span>
               </button>
 
               {onComplaintSelect && (
                 <button
                   onClick={() => onComplaintSelect(selectedPin)}
-                  className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium text-xs transition"
+                  className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition"
                 >
                   Manage
                 </button>
