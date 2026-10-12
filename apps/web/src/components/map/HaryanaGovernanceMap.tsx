@@ -839,17 +839,22 @@ export const HaryanaGovernanceMap: React.FC<{
   const [actionSuccessNotice, setActionSuccessNotice] = useState<string | null>(null);
 
   // Load real-time complaints and incidents from backend with micro-dispersion for co-located reports
+  // Polls automatically so newly lodged complaints appear live, and resolved complaints are automatically removed!
   useEffect(() => {
     const fetchIncidents = async () => {
       try {
-        setLoading(true);
-        const res = await fetch("/api/v1/complaints?limit=100");
+        const res = await fetch("/api/v1/complaints?limit=200");
         if (res.ok) {
           const apiComplaints: any[] = await res.json();
           if (Array.isArray(apiComplaints) && apiComplaints.length > 0) {
+            // Filter strictly for ACTIVE complaints — if solved/resolved, remove from map!
+            const activeOnly = apiComplaints.filter(
+              (c) => c.status !== "RESOLVED" && c.status !== "REJECTED"
+            );
+
             // Track co-located coords to micro-disperse so every single incident is visible as its own dot
             const seenCoords: Record<string, number> = {};
-            const mappedPins: IncidentPin[] = apiComplaints
+            const mappedPins: IncidentPin[] = activeOnly
               .filter((c) => c.latitude && c.longitude)
               .map((c) => {
                 const key = `${c.latitude.toFixed(3)}_${c.longitude.toFixed(3)}`;
@@ -888,9 +893,10 @@ export const HaryanaGovernanceMap: React.FC<{
                 };
               });
 
-            // Combine with canonical Haryana incidents to ensure rich geographic coverage across all 22 districts
+            // Combine with canonical Haryana incidents (active only)
             const combined = [...mappedPins];
             CANONICAL_HARYANA_INCIDENTS.forEach((canon) => {
+              if (canon.status === "RESOLVED" || canon.status === "REJECTED") return;
               if (!combined.some((p) => p.tracking_id === canon.tracking_id)) {
                 combined.push(canon);
               }
@@ -904,15 +910,18 @@ export const HaryanaGovernanceMap: React.FC<{
       } finally {
         setLoading(false);
       }
-      setIncidents(CANONICAL_HARYANA_INCIDENTS);
+      setIncidents(CANONICAL_HARYANA_INCIDENTS.filter((c) => c.status !== "RESOLVED"));
     };
 
     fetchIncidents();
+    const interval = setInterval(fetchIncidents, 3500);
+    return () => clearInterval(interval);
   }, []);
 
-  // Filtered Incidents
+  // Filtered Incidents (Resolved complaints are completely excluded from map display)
   const filteredIncidents = useMemo(() => {
     return incidents.filter((inc) => {
+      if (inc.status === "RESOLVED" || inc.status === "REJECTED") return false;
       if (selectedCategory !== "ALL" && inc.category !== selectedCategory) return false;
       if (selectedPriority !== "ALL" && inc.priority !== selectedPriority) return false;
       if (selectedDistrictId !== "ALL" && inc.district_id !== selectedDistrictId) return false;

@@ -55,12 +55,20 @@ export const MapboxView: React.FC = () => {
     bearing: -15,
   });
 
-  // Fetch live citizen complaints from backend to reflect real citizen grievance dots
+  // Fetch live citizen complaints from backend with real-time polling
+  // so newly reported complaints appear immediately and resolved complaints are automatically removed from the map!
   useEffect(() => {
-    fetch("/api/v1/complaints?limit=100")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => setLiveComplaints(data || []))
-      .catch(() => {});
+    const fetchComplaints = () => {
+      fetch("/api/v1/complaints?limit=200")
+        .then((res) => (res.ok ? res.json() : []))
+        .then((data) => {
+          if (Array.isArray(data)) setLiveComplaints(data);
+        })
+        .catch(() => {});
+    };
+    fetchComplaints();
+    const interval = setInterval(fetchComplaints, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   // Determine Mapbox style URL based on mode
@@ -76,13 +84,14 @@ export const MapboxView: React.FC = () => {
     }
   };
 
-  // Build GeoJSON features strictly from actual incidents and citizen reports
-  // Every single dot represents an actual incident; more reports in an area = more dots = higher heat density
+  // Build GeoJSON features strictly from actual active incidents and citizen reports
+  // If a complaint is resolved, it is automatically excluded so it is removed from the map!
   const incidentGeoJson = useMemo<GeoJSON.FeatureCollection>(() => {
     const features: GeoJSON.Feature[] = [];
 
-    // 1. Master Incidents from snapshot (Real system incidents across Haryana)
+    // 1. Master Incidents from snapshot (only active / unresolved ones!)
     (snapshot?.incidents || []).forEach((inc) => {
+      if (inc.status === "RESOLVED" || inc.status === "CLOSED") return;
       if (!inc.geometry?.longitude || !inc.geometry?.latitude) return;
 
       // Master incident center point
@@ -95,6 +104,7 @@ export const MapboxView: React.FC = () => {
           incidentNumber: inc.incidentNumber,
           severity: inc.severity,
           incidentType: inc.incidentType,
+          status: inc.status,
           weight: inc.severity === "CRITICAL" ? 1.0 : inc.severity === "HIGH" ? 0.75 : 0.45,
           isMaster: true,
         },
@@ -105,7 +115,6 @@ export const MapboxView: React.FC = () => {
       });
 
       // Clustered citizen reports that compose this incident (50-to-1 clustering)
-      // Dots are placed at the exact locations where citizens reported the issue
       const clusterCount = Math.max(
         1,
         inc.evidenceCount || (inc.severity === "CRITICAL" ? 7 : inc.severity === "HIGH" ? 4 : 2)
@@ -126,6 +135,7 @@ export const MapboxView: React.FC = () => {
             incidentNumber: inc.incidentNumber,
             severity: inc.severity,
             incidentType: inc.incidentType,
+            status: inc.status,
             weight: inc.severity === "CRITICAL" ? 0.8 : inc.severity === "HIGH" ? 0.55 : 0.35,
             isMaster: false,
           },
@@ -137,18 +147,22 @@ export const MapboxView: React.FC = () => {
       }
     });
 
-    // 2. Real citizen complaints submitted to the system
+    // 2. Real citizen complaints submitted to the system (ACTIVE ONLY - removed if RESOLVED)
     liveComplaints.forEach((comp) => {
+      if (comp.status === "RESOLVED" || comp.status === "REJECTED") return;
       if (comp.longitude && comp.latitude) {
         features.push({
           type: "Feature",
           id: comp.id,
           properties: {
-            id: comp.incident_id || comp.id,
+            id: comp.id,
             title: comp.title,
             incidentNumber: comp.tracking_id || comp.id,
             severity: comp.priority || "MEDIUM",
             incidentType: comp.category || "CIVIC_GRIEVANCE",
+            status: comp.status || "SUBMITTED",
+            departmentName: comp.department_name || comp.department_id || "Civil Administration",
+            address: comp.address || comp.district_name || "Haryana",
             weight: comp.priority === "CRITICAL" ? 1.0 : comp.priority === "HIGH" ? 0.75 : 0.45,
             isMaster: true,
           },
@@ -327,20 +341,23 @@ export const MapboxView: React.FC = () => {
         popup
           .setLngLat(coords)
           .setHTML(`
-            <div style="background:#090e1c; color:#fff; padding:6px 10px; border-radius:8px; border:1px solid #334155; font-family:monospace; font-size:11px; box-shadow:0 8px 24px rgba(0,0,0,0.8);">
+            <div style="background:#090e1c; color:#fff; padding:8px 12px; border-radius:8px; border:1px solid #334155; font-family:monospace; font-size:11px; box-shadow:0 8px 24px rgba(0,0,0,0.85);">
               <div style="font-weight:bold; color:${
                 props.severity === "CRITICAL"
                   ? "#ef4444"
                   : props.severity === "HIGH"
                   ? "#f59e0b"
                   : "#06b6d4"
-              }; display:flex; align-items:center; gap:4px;">
+              }; display:flex; align-items:center; gap:6px;">
                 <span>⚠️ ${props.severity}</span>
                 <span style="color:#94a3b8;">• #${props.incidentNumber}</span>
+                <span style="color:#38bdf8; background:rgba(56,189,248,0.15); padding:1px 5px; border-radius:4px; font-size:9px; font-weight:700;">${props.status || 'ACTIVE'}</span>
               </div>
-              <div style="color:#e2e8f0; margin-top:2px; max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+              <div style="color:#f1f5f9; font-weight:600; margin-top:4px; max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                 ${props.title}
               </div>
+              ${props.departmentName ? `<div style="color:#94a3b8; font-size:10px; margin-top:2px;">🏛️ ${props.departmentName}</div>` : ''}
+              ${props.address ? `<div style="color:#64748b; font-size:10px;">📍 ${props.address}</div>` : ''}
             </div>
           `)
           .addTo(map);
@@ -354,13 +371,33 @@ export const MapboxView: React.FC = () => {
       // Click on dot opens that exact incident in RightRail
       map.on("click", "real-incident-dots", (e) => {
         if (!e.features?.[0]) return;
-        const targetId = e.features[0].properties?.id;
-        const inc =
-          snapshot?.incidents.find((i) => i.id === targetId) || snapshot?.incidents[0];
+        const props = e.features[0].properties as any;
+        const targetId = props?.id;
+        const coords = (e.features[0].geometry as any).coordinates;
+
+        let inc = snapshot?.incidents.find((i) => i.id === targetId);
+        if (!inc) {
+          const liveComp = liveComplaints.find((c) => c.id === targetId || c.tracking_id === props.incidentNumber);
+          if (liveComp) {
+            inc = {
+              id: liveComp.id,
+              incidentNumber: liveComp.tracking_id || liveComp.id,
+              title: liveComp.title,
+              description: liveComp.description || liveComp.title,
+              severity: liveComp.priority || "MEDIUM",
+              status: liveComp.status || "SUBMITTED",
+              incidentType: liveComp.category || "CIVIC_GRIEVANCE",
+              geometry: { longitude: coords[0], latitude: coords[1] },
+              evidenceCount: 1,
+              createdAt: liveComp.created_at || new Date().toISOString(),
+              assignedUnitId: liveComp.assigned_unit_id,
+            } as any;
+          }
+        }
         if (inc) {
           selectIncident(inc);
           map.flyTo({
-            center: (e.features[0].geometry as any).coordinates,
+            center: coords,
             zoom: 15.2,
             pitch: 58,
             duration: 1200,
@@ -416,14 +453,26 @@ export const MapboxView: React.FC = () => {
     };
   }, [mapDisplayMode]);
 
-  // Update source data when incidents change
+  // Update source data when incidents change (live complaint additions or removals on resolution)
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
+    if (!map) return;
 
-    const source = map.getSource("real-incidents-source") as mapboxgl.GeoJSONSource;
-    if (source) {
-      source.setData(incidentGeoJson);
+    const updateSource = () => {
+      try {
+        const source = map.getSource("real-incidents-source") as mapboxgl.GeoJSONSource | undefined;
+        if (source) {
+          source.setData(incidentGeoJson);
+        }
+      } catch (err) {
+        // ignore during style transit
+      }
+    };
+
+    if (map.isStyleLoaded()) {
+      updateSource();
+    } else {
+      map.once("idle", updateSource);
     }
   }, [incidentGeoJson]);
 
