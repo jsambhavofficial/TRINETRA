@@ -75,6 +75,7 @@ function DepartmentPortalContent() {
 
   const [submittingAction, setSubmittingAction] = useState(false);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [assignedTaskInfo, setAssignedTaskInfo] = useState<{ trackingId: string; unitId: string } | null>(null);
 
   useEffect(() => {
     try {
@@ -149,15 +150,15 @@ function DepartmentPortalContent() {
 
   const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!assigningComplaint || !token) return;
+    if (!assigningComplaint) return;
     setSubmittingAction(true);
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch(`/api/v1/complaints/${assigningComplaint.id}/assign`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({
           assigned_unit_id: assignUnitId,
           assigned_officer_name: assignOfficerName,
@@ -165,6 +166,10 @@ function DepartmentPortalContent() {
         }),
       });
       if (res.ok) {
+        setAssignedTaskInfo({
+          trackingId: assigningComplaint.tracking_id,
+          unitId: assignUnitId,
+        });
         setActionSuccess(`Task successfully assigned to ${assignUnitId} (${assignOfficerName}).`);
         setAssigningComplaint(null);
         loadData();
@@ -177,15 +182,14 @@ function DepartmentPortalContent() {
   };
 
   const handleValidate = async (complaintId: string, decision: "APPROVE" | "REJECT_REWORK") => {
-    if (!token) return;
     setSubmittingAction(true);
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch(`/api/v1/complaints/${complaintId}/validate-resolution`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({
           decision,
           rejection_reason: decision === "REJECT_REWORK" ? reworkReason : undefined,
@@ -230,6 +234,12 @@ function DepartmentPortalContent() {
           }).catch(() => null)
         )
       );
+      if (items.length > 0) {
+        setAssignedTaskInfo({
+          trackingId: items[0].tracking_id,
+          unitId: assignUnitId,
+        });
+      }
       setActionSuccess(
         `AI Master Incident [${assigningCluster.clusterId}] and all ${items.length} citizen reports successfully assigned to ${assignUnitId} (${assignOfficerName})!`
       );
@@ -430,9 +440,22 @@ function DepartmentPortalContent() {
 
         {/* Action Success Alert */}
         {actionSuccess && (
-          <div className="p-3.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between">
-            <span>{actionSuccess}</span>
-            <button onClick={() => setActionSuccess(null)} className="text-emerald-400 hover:text-white">✕</button>
+          <div className="p-3.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs flex flex-wrap items-center justify-between gap-2 shadow-md animate-in fade-in">
+            <div className="flex flex-wrap items-center gap-2">
+              <span>{actionSuccess}</span>
+              {assignedTaskInfo && (
+                <Link
+                  href={`/portal/field-officer?unit_id=${assignedTaskInfo.unitId}&tracking_id=${assignedTaskInfo.trackingId}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-black font-extrabold text-xs shadow-md transition-all active:scale-95 shrink-0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Truck className="w-3.5 h-3.5" />
+                  <span>🚜 फील्ड ऑफिसर पोर्टल पर लाइव देखें →</span>
+                </Link>
+              )}
+            </div>
+            <button onClick={() => { setActionSuccess(null); setAssignedTaskInfo(null); }} className="text-emerald-400 hover:text-white">✕</button>
           </div>
         )}
 
@@ -702,7 +725,18 @@ function DepartmentPortalContent() {
                           {c.district_name}
                         </td>
                         <td className="py-3 px-3 whitespace-nowrap font-mono text-cyan-300">
-                          {c.assigned_unit_id || <span className="text-slate-600">Unassigned</span>}
+                          {c.assigned_unit_id ? (
+                            <Link
+                              href={`/portal/field-officer?unit_id=${c.assigned_unit_id}&tracking_id=${c.tracking_id}`}
+                              className="inline-flex items-center gap-1 hover:text-cyan-200 underline"
+                              target="_blank"
+                            >
+                              <span>{c.assigned_unit_id}</span>
+                              <ChevronRight className="w-3 h-3" />
+                            </Link>
+                          ) : (
+                            <span className="text-slate-600">Unassigned</span>
+                          )}
                         </td>
                         <td className="py-3 px-3 whitespace-nowrap">
                           <span

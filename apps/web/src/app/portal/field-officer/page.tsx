@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/command-center/Header";
 import {
   Truck,
@@ -19,11 +20,31 @@ import {
   RefreshCw,
   AlertCircle,
   Camera,
+  Sparkles,
+  Building2,
+  Check,
 } from "lucide-react";
 
-export default function FieldOfficerPortal() {
+const HARYANA_UNITS = [
+  { id: "ALL", name: "All Field Units (सभी फील्ड यूनिट्स — Consolidated)" },
+  { id: "UNIT-AMB-01", name: "UNIT-AMB-01 (Ambala Quick Response Unit)" },
+  { id: "UNIT-PWR-01", name: "UNIT-PWR-01 (Power Feeder Rapid Restoration)" },
+  { id: "UNIT-HLTH-02", name: "UNIT-HLTH-02 (Health & Casualty Mobile Squad)" },
+  { id: "UNIT-PWD-01", name: "UNIT-PWD-01 (PWD Heavy Road Remediation)" },
+  { id: "UNIT-SON-02", name: "UNIT-SON-02 (Sonipat Grid Response Team)" },
+  { id: "UNIT-PAN-01", name: "UNIT-PAN-01 (Panipat Civic Drainage Unit)" },
+];
+
+function FieldOfficerPortalContent() {
+  const searchParams = useSearchParams();
+  const urlTrackingId = searchParams?.get("tracking_id");
+  const urlUnit = searchParams?.get("unit_id");
+
   const [authUser, setAuthUser] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [selectedUnit, setSelectedUnit] = useState<string>(urlUnit || "ALL");
+  const [highlightTrackingId, setHighlightTrackingId] = useState<string | null>(urlTrackingId || null);
+
   const [tasks, setTasks] = useState<any[]>([]);
   const [activeTask, setActiveTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -39,7 +60,7 @@ export default function FieldOfficerPortal() {
   useEffect(() => {
     try {
       const stored = localStorage.getItem("trinetra_user");
-      const storedToken = localStorage.getItem("trinetra_token");
+      const storedToken = localStorage.getItem("trinetra_token") || localStorage.getItem("token");
       if (stored) setAuthUser(JSON.parse(stored));
       if (storedToken) setToken(storedToken);
     } catch (e) {
@@ -47,7 +68,10 @@ export default function FieldOfficerPortal() {
     }
   }, []);
 
-  const unitId = authUser?.unit_id || "UNIT-AMB-01";
+  useEffect(() => {
+    if (urlUnit) setSelectedUnit(urlUnit);
+    if (urlTrackingId) setHighlightTrackingId(urlTrackingId);
+  }, [urlUnit, urlTrackingId]);
 
   const loadTasks = async () => {
     try {
@@ -55,10 +79,21 @@ export default function FieldOfficerPortal() {
       const headers: Record<string, string> = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const res = await fetch("/api/v1/complaints", { headers });
+      const unitQuery = selectedUnit === "ALL" ? "?unit_id=ALL" : `?unit_id=${selectedUnit}`;
+      const res = await fetch(`/api/v1/complaints${unitQuery}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setTasks(data);
+
+        // Auto-focus on URL tracking ID if present
+        if (highlightTrackingId) {
+          const match = data.find((t: any) => t.tracking_id === highlightTrackingId);
+          if (match) {
+            setActiveTask(match);
+            return;
+          }
+        }
+
         if (data.length > 0 && !activeTask) {
           setActiveTask(data[0]);
         } else if (activeTask) {
@@ -75,18 +110,22 @@ export default function FieldOfficerPortal() {
 
   useEffect(() => {
     loadTasks();
-  }, [token]);
+    const interval = setInterval(() => {
+      loadTasks();
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [token, selectedUnit, highlightTrackingId]);
 
   const handleStatusChange = async (newStatus: string) => {
-    if (!activeTask || !token) return;
+    if (!activeTask) return;
     setSubmitting(true);
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch(`/api/v1/complaints/${activeTask.id}/field-progress`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({ status: newStatus }),
       });
       if (res.ok) {
@@ -103,14 +142,14 @@ export default function FieldOfficerPortal() {
   };
 
   const handleToggleSop = async (stepId: string, currentStatus: boolean) => {
-    if (!activeTask || !token) return;
+    if (!activeTask) return;
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch(`/api/v1/complaints/${activeTask.id}/field-progress`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({
           sop_step_id: stepId,
           sop_completed: !currentStatus,
@@ -128,15 +167,15 @@ export default function FieldOfficerPortal() {
 
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeTask || !token || !fieldNote.trim()) return;
+    if (!activeTask || !fieldNote.trim()) return;
     setSubmitting(true);
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch(`/api/v1/complaints/${activeTask.id}/field-progress`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({ note: fieldNote.trim() }),
       });
       if (res.ok) {
@@ -144,6 +183,7 @@ export default function FieldOfficerPortal() {
         setActiveTask(updated);
         setFieldNote("");
         setSuccessBanner("Field observation note recorded in operational log.");
+        loadTasks();
       }
     } catch (e) {
       console.error(e);
@@ -154,19 +194,19 @@ export default function FieldOfficerPortal() {
 
   const handleSubmitProof = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeTask || !token) return;
+    if (!activeTask) return;
     setSubmitting(true);
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch(`/api/v1/complaints/${activeTask.id}/submit-proof`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({
           before_photo: beforePhoto,
           after_photo: afterPhoto,
-          field_note: proofNote || "All SOP steps completed. Physical clearance validated.",
+          field_note: proofNote || "All SOP steps completed. Physical clearance validated on-ground.",
           location_confirmed: true,
         }),
       });
@@ -193,20 +233,39 @@ export default function FieldOfficerPortal() {
           <div className="space-y-1">
             <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
               <Truck className="w-3.5 h-3.5" />
-              <span>FIELD OFFICER MOBILE RESPONSE TERMINAL</span>
+              <span>FIELD OFFICER MOBILE RESPONSE TERMINAL • HARYANA</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              Tactical Mission & Task Execution
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
+              <span>Tactical Mission & Task Execution</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-400">
-              Assigned Unit: <strong className="text-cyan-300 font-mono">{unitId}</strong> | Officer: <span className="text-slate-200">{authUser?.display_name || "Field Responder"}</span>
+              Active Unit Filter: <strong className="text-cyan-300 font-mono">{selectedUnit}</strong> | Responder: <span className="text-slate-200">{authUser?.display_name || "Field Officer"}</span>
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Unit Selector */}
+            <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg p-1.5 shadow-sm">
+              <Truck className="w-4 h-4 text-cyan-400 ml-1" />
+              <select
+                value={selectedUnit}
+                onChange={(e) => {
+                  setSelectedUnit(e.target.value);
+                  setHighlightTrackingId(null);
+                }}
+                className="bg-transparent text-white text-xs font-semibold outline-none py-1 px-1 cursor-pointer"
+              >
+                {HARYANA_UNITS.map((u) => (
+                  <option key={u.id} value={u.id} className="bg-slate-900 text-white">
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <button
               onClick={loadTasks}
-              className="p-2 rounded-lg bg-surface-elevated border border-surface-border text-slate-300 hover:text-white"
+              className="p-2.5 rounded-lg bg-surface-elevated border border-surface-border text-slate-300 hover:text-white transition-colors"
               title="Refresh Queue"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -229,6 +288,24 @@ export default function FieldOfficerPortal() {
           </div>
         </div>
 
+        {/* Highlight Alert for task assigned from department */}
+        {highlightTrackingId && (
+          <div className="p-4 rounded-xl bg-cyan-950/50 border border-cyan-500/50 text-cyan-200 text-xs flex items-center justify-between gap-3 shadow-lg animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse shrink-0" />
+              <span>
+                Department Assigned Mission: Task <strong className="font-mono text-white text-xs">{highlightTrackingId}</strong> is selected and ready for field response execution below!
+              </span>
+            </div>
+            <button
+              onClick={() => setHighlightTrackingId(null)}
+              className="text-cyan-400 hover:text-white px-2 py-0.5 rounded bg-cyan-900/40 text-[11px]"
+            >
+              ✕ Dismiss
+            </button>
+          </div>
+        )}
+
         {/* Success Banner */}
         {successBanner && (
           <div className="p-3.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between">
@@ -238,21 +315,44 @@ export default function FieldOfficerPortal() {
         )}
 
         {/* Task Selection Bar */}
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {tasks.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setActiveTask(t)}
-              className={`px-3.5 py-2 rounded-lg border text-xs font-semibold shrink-0 transition-all text-left ${
-                activeTask?.id === t.id
-                  ? "bg-cyan-950/40 border-cyan-500/50 text-cyan-300 shadow-md"
-                  : "bg-surface-base border-surface-border text-slate-400 hover:text-white"
-              }`}
-            >
-              <div className="font-mono text-[10px] text-slate-500">{t.tracking_id}</div>
-              <div className="truncate max-w-[200px]">{t.title}</div>
-            </button>
-          ))}
+        <div className="space-y-1.5">
+          <div className="text-[11px] font-mono text-slate-400 flex items-center justify-between">
+            <span>Active Field Missions ({tasks.length}):</span>
+            <span className="text-[10px] text-cyan-400">Click a card to execute mission SOP & proof</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {tasks.map((t) => {
+              const isMatch = t.tracking_id === highlightTrackingId;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTask(t)}
+                  className={`px-3.5 py-2.5 rounded-lg border text-xs font-semibold shrink-0 transition-all text-left min-w-[220px] ${
+                    activeTask?.id === t.id
+                      ? "bg-cyan-950/60 border-cyan-400 text-cyan-200 shadow-md ring-1 ring-cyan-500/50"
+                      : "bg-surface-base border-surface-border text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center justify-between font-mono text-[10px] pb-1">
+                    <span className="text-emerald-400 font-bold">{t.tracking_id}</span>
+                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                      t.status === "RESOLVED" ? "bg-emerald-500/20 text-emerald-400" :
+                      t.status === "AWAITING_VALIDATION" ? "bg-purple-500/20 text-purple-300" :
+                      t.status === "IN_PROGRESS" ? "bg-sky-500/20 text-sky-300" :
+                      "bg-amber-500/20 text-amber-300"
+                    }`}>
+                      {t.status}
+                    </span>
+                  </div>
+                  <div className="truncate text-white font-medium">{t.title}</div>
+                  <div className="text-[10px] text-slate-400 flex items-center justify-between pt-1 font-mono">
+                    <span>{t.department_id}</span>
+                    <span className="text-cyan-400">{t.assigned_unit_id || "Unassigned"}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {activeTask ? (
@@ -264,7 +364,7 @@ export default function FieldOfficerPortal() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-elevated text-cyan-300">
-                      {activeTask.category} • {activeTask.district_name}
+                      {activeTask.category} • {activeTask.district_name || activeTask.district_id} • {activeTask.department_name || activeTask.department_id}
                     </span>
                     <h2 className="text-lg font-bold text-white mt-2">{activeTask.title}</h2>
                     <p className="text-xs text-slate-300 mt-1 leading-relaxed">{activeTask.description}</p>
@@ -280,7 +380,7 @@ export default function FieldOfficerPortal() {
                     <span>{activeTask.address || "Sector Location, Gurugram"}</span>
                   </span>
                   <span className="font-mono text-[11px] text-slate-400">
-                    GPS: {activeTask.latitude?.toFixed(4)}, {activeTask.longitude?.toFixed(4)}
+                    GPS: {activeTask.latitude ? activeTask.latitude.toFixed(4) : "28.4595"}, {activeTask.longitude ? activeTask.longitude.toFixed(4) : "77.0266"}
                   </span>
                 </div>
 
@@ -319,7 +419,7 @@ export default function FieldOfficerPortal() {
                       type="button"
                       disabled={submitting}
                       onClick={() => handleStatusChange("IN_PROGRESS")}
-                      className="py-2 px-3 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-black font-extrabold"
+                      className="py-2 px-3 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-black font-extrabold shadow"
                     >
                       Executing Work
                     </button>
@@ -340,12 +440,17 @@ export default function FieldOfficerPortal() {
                     </p>
                   </div>
                   <span className="text-xs font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/30">
-                    {activeTask.sop_checklist?.filter((s: any) => s.completed).length} / {activeTask.sop_checklist?.length} Done
+                    {activeTask.sop_checklist?.filter((s: any) => s.completed).length || 0} / {activeTask.sop_checklist?.length || 0} Done
                   </span>
                 </div>
 
                 <div className="space-y-2.5">
-                  {activeTask.sop_checklist?.map((step: any) => (
+                  {(activeTask.sop_checklist?.length ? activeTask.sop_checklist : [
+                    { id: "sop-1", title: "Site safety perimeter secured and traffic diversion signboards established", completed: false },
+                    { id: "sop-2", title: "Physical remediation and defect clearance executed by assigned technicians", completed: false },
+                    { id: "sop-3", title: "Secondary line testing and civic safety parameters certified clean", completed: false },
+                    { id: "sop-4", title: "Final geotagged photographic verification captured for supervisor approval", completed: false },
+                  ]).map((step: any) => (
                     <div
                       key={step.id}
                       onClick={() => handleToggleSop(step.id, step.completed)}
@@ -358,16 +463,16 @@ export default function FieldOfficerPortal() {
                       <div className="flex items-center gap-3">
                         <input
                           type="checkbox"
-                          checked={step.completed}
-                          readOnly
-                          className="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-surface-border"
+                          checked={Boolean(step.completed)}
+                          onChange={() => {}}
+                          className="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-surface-border pointer-events-none"
                         />
                         <span className={step.completed ? "line-through text-slate-400" : "font-medium"}>
                           {step.title}
                         </span>
                       </div>
                       {step.completed && (
-                        <span className="text-[10px] font-mono text-emerald-400">Verified</span>
+                        <span className="text-[10px] font-mono text-emerald-400 font-bold">✓ Verified</span>
                       )}
                     </div>
                   ))}
@@ -446,7 +551,7 @@ export default function FieldOfficerPortal() {
                       rows={3}
                       value={proofNote}
                       onChange={(e) => setProofNote(e.target.value)}
-                      placeholder="e.g. Flood water evacuated; drainage grate unblocked; traffic restored."
+                      placeholder="e.g. Ground remediation completed; road clearance validated; civic disruption cleared."
                       className="w-full mt-1 p-2 rounded-lg bg-slate-900 border border-surface-border text-xs text-white"
                     />
                   </div>
@@ -461,17 +566,28 @@ export default function FieldOfficerPortal() {
                 </form>
 
                 <div className="p-3 rounded-lg bg-amber-950/20 border border-amber-500/30 text-[11px] text-amber-300 leading-relaxed">
-                  <strong>Validation Protocol:</strong> Submitting proof transitions state to <em>AWAITING_VALIDATION</em>. The complaint cannot be marked <em>RESOLVED</em> until authorized department supervisor validates clearance proof.
+                  <strong>Validation Protocol:</strong> Submitting proof transitions state to <em>AWAITING_VALIDATION</em>. The complaint cannot be marked <em>RESOLVED</em> until authorized department supervisor validates clearance proof in Department Portal.
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="p-12 text-center bg-surface-base rounded-xl border border-surface-border text-xs text-slate-400 font-mono">
-            No active field tasks assigned to unit {unitId}.
+          <div className="p-12 text-center bg-surface-base rounded-xl border border-surface-border text-xs text-slate-400 font-mono space-y-2">
+            <p>No active field tasks assigned to unit {selectedUnit}.</p>
+            <p className="text-[11px] text-slate-500">
+              Select <strong>&quot;All Field Units&quot;</strong> in the dropdown above or assign incoming complaints from the Department Portal.
+            </p>
           </div>
         )}
       </main>
     </div>
+  );
+}
+
+export default function FieldOfficerPortal() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-space-950 flex items-center justify-center text-xs text-slate-400 font-mono">Loading Field Terminal...</div>}>
+      <FieldOfficerPortalContent />
+    </Suspense>
   );
 }
