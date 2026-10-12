@@ -82,6 +82,9 @@ export default function LoginPage() {
       });
 
       if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error("बैकएंड से कनेक्शन नहीं हो सका (Backend Not Connected)। कृपया Vercel Environment Variables में API_BACKEND_URL सही सेट करें।");
+        }
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData?.error?.message || errData?.detail || "Invalid email or password");
       }
