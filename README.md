@@ -106,19 +106,16 @@ This script launches both the FastAPI backend on port `8000` and the Next.js fro
 ### Manual Step-by-Step Setup
 
 #### 1. Start the FastAPI Backend
+
+**Option A — From `services/api` directory:**
 ```bash
-cd "services/api"
-
-# Windows PowerShell:
-.\.venv\Scripts\Activate.ps1
-# macOS / Linux:
-# source .venv/bin/activate
-
-# Install dependencies
-pip install -e .
-
-# Launch API server
+cd services/api
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Option B — Directly from project root (`TRINETRA`):**
+```bash
+python -m uvicorn app.main:app --app-dir services/api --host 0.0.0.0 --port 8000 --reload
 ```
 - **API Base**: `http://localhost:8000/api/v1`
 - **Swagger Documentation**: `http://localhost:8000/docs`
