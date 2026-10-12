@@ -79,7 +79,7 @@ function DepartmentPortalContent() {
   useEffect(() => {
     try {
       const stored = localStorage.getItem("trinetra_user");
-      const storedToken = localStorage.getItem("trinetra_token");
+      const storedToken = localStorage.getItem("trinetra_token") || localStorage.getItem("token");
       if (stored) {
         const u = JSON.parse(stored);
         setAuthUser(u);
@@ -92,6 +92,23 @@ function DepartmentPortalContent() {
       // ignore
     }
   }, [urlDept]);
+
+  useEffect(() => {
+    if (urlTrackingId) {
+      setHighlightTrackingId(urlTrackingId);
+      setFilterTab("ALL");
+    }
+  }, [urlTrackingId]);
+
+  useEffect(() => {
+    if (highlightTrackingId && complaints.length > 0) {
+      const match = complaints.find((c) => c.tracking_id === highlightTrackingId);
+      if (match) {
+        const clusterBaseId = match.incident_id || `INC-${match.district_id}-${match.category.replace('_', '').slice(0, 4)}`;
+        setExpandedClusters((prev) => ({ ...prev, [clusterBaseId]: true }));
+      }
+    }
+  }, [highlightTrackingId, complaints]);
 
   const loadData = async () => {
     try {

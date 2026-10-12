@@ -659,7 +659,16 @@ export default function CitizenPortal() {
                 विभाग: <strong className="text-slate-200">{lodgeSuccess.department_name || lodgeSuccess.department_id}</strong> • फील्ड टीम को सूचित किया गया है।
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/portal/department?department_id=${lodgeSuccess.department_id || "ALL"}&tracking_id=${lodgeSuccess.tracking_id}`}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Building2 className="w-3.5 h-3.5 text-purple-200" />
+                <span>🏢 विभाग पोर्टल पर लाइव देखें →</span>
+              </Link>
               <button
                 onClick={() => {
                   setTrackQuery(lodgeSuccess.tracking_id);

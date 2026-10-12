@@ -314,10 +314,12 @@ async def get_department_summary(
     from app.models.complaint import ComplaintModel
     from app.auth.dependencies import enforce_department_scope
 
-    if current_user and current_user.role == "DEPARTMENT":
-        effective_dept = enforce_department_scope(current_user, department_id) or "DEPT-PWD"
+    if department_id and department_id != "ALL":
+        effective_dept = department_id
+    elif current_user and current_user.role == "DEPARTMENT" and current_user.department_id:
+        effective_dept = current_user.department_id
     else:
-        effective_dept = department_id if (department_id and department_id != "ALL") else "DEPT-PWD"
+        effective_dept = "DEPT-PWD"
 
     stmt = select(ComplaintModel).where(ComplaintModel.department_id == effective_dept)
     res = await db.execute(stmt)

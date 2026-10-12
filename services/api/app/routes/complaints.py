@@ -296,11 +296,13 @@ async def list_complaints(
         else:
             stmt = stmt.where(ComplaintModel.assigned_officer_id == user.id)
     elif user.role == "DEPARTMENT":
-        if department_id == "ALL" and getattr(user, "is_admin", False):
+        if department_id and department_id != "ALL":
+            stmt = stmt.where(ComplaintModel.department_id == department_id)
+        elif department_id == "ALL":
             pass
         else:
-            effective_dept = enforce_department_scope(user, department_id if department_id != "ALL" else None)
-            stmt = stmt.where(ComplaintModel.department_id == effective_dept)
+            if user.department_id:
+                stmt = stmt.where(ComplaintModel.department_id == user.department_id)
         if district_id and district_id != "ALL":
             stmt = stmt.where(ComplaintModel.district_id == district_id)
     elif user.role == "DISTRICT_ADMIN":
