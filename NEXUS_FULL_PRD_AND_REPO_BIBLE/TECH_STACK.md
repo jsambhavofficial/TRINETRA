@@ -32,16 +32,16 @@
 - pgvector
 - MinIO / S3
 
-### AI
+### AI & Intelligence Kernel
 
-- multimodal reasoning API
-- realtime voice API
-- LangGraph
-- Grounding DINO
-- SAM 2
-- RT-DETR/PaddleDetection
-- Whisper / whisper.cpp
-- Piper (offline TTS)
+- Google Gemini 2.5 Flash Lite (`gemini-flash-lite-latest` via Google GenAI SDK)
+- DeterministicRulesAIProvider (zero-downtime offline fallback)
+- AI Deduplication & Incident Clustering Engine (50 citizen grievances -> 1 master department mission)
+- Multimodal Complaint Reasoner (image classification, category, priority P1-P4, SLA)
+- Realtime Web Speech API & NLP Voice Command Center
+- H3 Uber Hexcell spatial indexing + Haversine 1000m proximity fusion
+- Grounding DINO / YOLOv8 vision perception
+- Whisper / whisper.cpp audio transcription
 
 ### Geospatial
 

@@ -2,8 +2,8 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "NEXUS — Detailed Tech Stack",
-    "output": ".archify/architecture-nexus-tech-stack-20261004-133504/review-2/nexus-tech-stack.html",
+    "title": "TRINETRA — Detailed Tech Stack & AI Architecture",
+    "output": ".archify/architecture-nexus-tech-stack-20261004-133504/nexus-tech-stack.html",
     "quality_profile": "showcase"
   },
   "components": [
@@ -23,16 +23,23 @@
     },
     {
       "id": "cdn",
-      "type": "external",      "label": "Cesium CDN + Tiles",
+      "type": "external",
+      "label": "Cesium CDN + Tiles",
       "sublabel": "external WebGL assets",
-      "pos": [40, 60],
-      "size": [140, 75]
+      "pos": [
+        40,
+        60
+      ],
+      "size": [
+        140,
+        75
+      ]
     },
     {
       "id": "spatial",
       "type": "frontend",
       "label": "CesiumJS 3D + Mapbox",
-      "sublabel": "twin rendering views",
+      "sublabel": "Haryana 3D twin canvas",
       "pos": [
         280,
         60
@@ -46,7 +53,7 @@
       "id": "webapp",
       "type": "frontend",
       "label": "Next.js 15 Web App",
-      "sublabel": "React 19 · Tailwind · Zustand",
+      "sublabel": "React 19 · Zustand · 5 Portals",
       "tag": "apps/web",
       "pos": [
         250,
@@ -60,8 +67,8 @@
     {
       "id": "rbac",
       "type": "security",
-      "label": "RBAC Permission Gate",
-      "sublabel": "role matrix · header auth",
+      "label": "1-Click RBAC Gate",
+      "sublabel": "5 governance personas",
       "pos": [
         615,
         60
@@ -74,8 +81,8 @@
     {
       "id": "redis",
       "type": "database",
-      "label": "Redis 7",
-      "sublabel": "dependency health",
+      "label": "Redis 7 Cache",
+      "sublabel": "dependency & state health",
       "pos": [
         890,
         60
@@ -130,9 +137,13 @@
     },
     {
       "id": "fusion",
-      "type": "backend",      "label": "Fusion & AI Engine",
-      "sublabel": "H3 geo · cosine similarity",
-      "pos": [608, 575],
+      "type": "backend",
+      "label": "Gemini AI & Fusion",
+      "sublabel": "Gemini 2.5 · 50-to-1 clustering",
+      "pos": [
+        608,
+        575
+      ],
       "size": [
         170,
         75
@@ -170,7 +181,7 @@
   "boundaries": [
     {
       "kind": "region",
-      "label": "docker-compose: nexus-web (node:22-alpine)",
+      "label": "docker-compose: trinetra-web (node:22-alpine)",
       "wraps": [
         "webapp",
         "spatial"
@@ -178,7 +189,7 @@
     },
     {
       "kind": "region",
-      "label": "docker-compose: nexus-api (python:3.11-slim)",
+      "label": "docker-compose: trinetra-api (python:3.11-slim)",
       "wraps": [
         "api",
         "rbac",
@@ -263,7 +274,7 @@
       "id": "evidence-fusion",
       "from": "api",
       "to": "fusion",
-      "label": "evidence fusion",
+      "label": "Gemini AI triage",
       "fromSide": "bottom",
       "toSide": "top"
     },
@@ -292,8 +303,8 @@
       "items": [
         "Next.js 15 App Router - React 19 - TypeScript 5.6 (apps/web/package.json)",
         "Tailwind CSS 3.4 - lucide-react icons - clsx",
-        "Zustand 5 store with fetch REST + WebSocket client (src/store/useWorldStore.ts, src/components/command-center/BottomBar.tsx)",
-        "CesiumJS 1.121 (3D) and Mapbox GL 3.32 (2D) viewers (src/components/spatial/)"
+        "5 Dedicated Portals: Citizen, Line Dept, District Admin, State Leadership, Field Officer",
+        "CesiumJS 1.121 (3D) and Mapbox GL 3.32 (2D) with collapsible layers & pop-in incident drawer"
       ]
     },
     {
@@ -303,17 +314,17 @@
         "Python 3.11 - FastAPI >=0.115 - Uvicorn ASGI (services/api/app/main.py, pyproject.toml)",
         "Pydantic v2 + pydantic-settings .env configuration (services/api/app/core/config.py)",
         "SQLAlchemy 2 asyncio: asyncpg (Postgres) / aiosqlite (dev) (services/api/app/db/session.py)",
-        "RBAC role matrix + request-ID/CORS middleware (services/api/app/auth/permissions.py)"
+        "1-Click Persona Switcher + RBAC matrix (services/api/app/auth/permissions.py)"
       ]
     },
     {
       "dot": "violet",
       "title": "Intelligence services",
       "items": [
-        "H3 geospatial cells + cosine similarity fusion (services/api/app/services/fusion_engine.py)",
-        "Model-abstracted AI pipeline with deterministic demo fixtures (services/api/app/services/ai_pipeline.py)",
-        "Rule-based natural-language voice command dispatcher (services/api/app/services/voice_service.py)",
-        "Job worker broadcasting via WebSocket event hub (services/api/app/services/job_worker.py, event_hub.py)"
+        "Google Gemini 2.5 Flash Lite live multimodal AI (services/api/app/services/ai_provider.py)",
+        "Zero-downtime deterministic fallback engine for 100% offline uptime",
+        "AI Deduplication Engine: Clusters 50 citizen reports into 1 master incident (INC-HR-XX-YYYY)",
+        "H3 geospatial indexing + Haversine 1000m proximity fusion & Bayesian scoring"
       ]
     },
     {

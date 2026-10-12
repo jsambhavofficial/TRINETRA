@@ -1,7 +1,7 @@
 [project]
-name = "trinetra-api"
+name = "nexus-api"
 version = "0.1.0"
-description = "TRINETRA State Governance & Operational Intelligence Backend API"
+description = "NEXUS Operational Intelligence Backend API"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

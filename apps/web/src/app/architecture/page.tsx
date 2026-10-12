@@ -17,7 +17,7 @@ export default function ArchitecturePage() {
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-cyan-400" />
             <span className="text-xs font-bold uppercase tracking-wider text-slate-200 mono-telemetry">
-              AEGIS Technical Architecture Diagram (Generated via Archify)
+              TRINETRA AI & Technical Architecture Diagram (Generated via Archify)
             </span>
           </div>
           <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-700/60 text-cyan-300 font-mono font-bold">

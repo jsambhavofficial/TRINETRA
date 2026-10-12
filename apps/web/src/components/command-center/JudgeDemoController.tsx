@@ -22,7 +22,9 @@ import {
   Zap,
   X,
   Mic,
+  ShieldCheck,
 } from "lucide-react";
+import { AiValidationModal } from "./AiValidationModal";
 
 const DEMO_EVENTS = [
   { step: 1, title: "Citizen report submitted", target: "/report", desc: "Citizen reports power outage in Sector 17 with photo & location." },
@@ -58,6 +60,7 @@ export const JudgeDemoController: React.FC = () => {
   const [isMinimized, setIsMinimized] = useState<boolean>(true);
   const [isOpen, setIsOpen] = useState<boolean>(true);
   const [showHeroMessage, setShowHeroMessage] = useState<boolean>(false);
+  const [isValidationModalOpen, setIsValidationModalOpen] = useState<boolean>(false);
   const autoPlayTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Auto-play timer loop
@@ -83,10 +86,15 @@ export const JudgeDemoController: React.FC = () => {
     };
   }, [isPlaying]);
 
+  // Do not obscure citizen grievance portal (evaluated after all hooks)
+  if (pathname?.startsWith("/portal/citizen")) {
+    return null;
+  }
+
   const executeStep = async (stepNum: number, navigate: boolean = true) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/field/demo/step/${stepNum}`, {
+      const res = await fetch(`/api/v1/field/demo/step/${stepNum}`, {
         method: "POST",
       });
       if (res.ok) {
@@ -111,7 +119,7 @@ export const JudgeDemoController: React.FC = () => {
     setShowHeroMessage(false);
     setLoading(true);
     try {
-      await fetch("http://localhost:8000/api/v1/field/demo/reset", { method: "POST" });
+      await fetch("/api/v1/field/demo/reset", { method: "POST" });
       setCurrentStep(1);
       router.push("/report");
     } catch (err) {
@@ -145,6 +153,14 @@ export const JudgeDemoController: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
             <span>Judge Mode (Step {currentStep}/20)</span>
           </button>
+          <button
+            onClick={() => setIsValidationModalOpen(true)}
+            className="px-3 py-1.5 rounded-full bg-emerald-950/90 border border-emerald-500/60 hover:border-emerald-400 text-emerald-300 text-xs font-mono font-bold flex items-center gap-1.5 shadow-[0_0_15px_rgba(16,185,129,0.35)] backdrop-blur transition-all"
+            title="Open 100-Complaint AI Benchmark Report"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>AI Benchmark (100)</span>
+          </button>
         </div>
       )}
 
@@ -172,6 +188,14 @@ export const JudgeDemoController: React.FC = () => {
                 >
                   <Mic className="w-3 h-3 text-cyan-400" />
                   <span>Voice</span>
+                </button>
+                <button
+                  onClick={() => setIsValidationModalOpen(true)}
+                  className="text-[11px] font-mono text-emerald-300 hover:text-white px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/50 hover:border-emerald-400 transition-colors flex items-center gap-1 shadow-sm"
+                  title="Open 100-Complaint AI Validation Benchmark"
+                >
+                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                  <span>AI Benchmark</span>
                 </button>
                 <button
                   onClick={() => toggleJudgeBriefing(true)}
@@ -474,6 +498,12 @@ export const JudgeDemoController: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* 100-Complaint Multilingual AI Validation Benchmark Modal */}
+      <AiValidationModal
+        isOpen={isValidationModalOpen}
+        onClose={() => setIsValidationModalOpen(false)}
+      />
     </>
   );
 };

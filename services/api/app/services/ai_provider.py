@@ -13,14 +13,55 @@ from app.core.logging import logger
 from app.services.fusion_engine import haversine_distance_m
 
 
-# Category keywords mapping for deterministic classifier
 CATEGORY_KEYWORD_RULES = [
-    ("URBAN_FLOODING", ["flood", "waterlogging", "water level", "drain", "rain", "submerged", "inundation", "overflow", "embankment", "seepage", "nala"]),
-    ("ELECTRICAL_HAZARD", ["transformer", "spark", "wire", "power", "blackout", "electricity", "feeder", "high-tension", "pole", "shock"]),
-    ("ROAD_BLOCKAGE", ["tree", "pothole", "trunk", "crater", "debris", "road", "block", "divider", "congestion", "asphalt", "highway"]),
-    ("HEALTH_HAZARD", ["dengue", "mosquito", "garbage", "waste", "stagnant", "epidemic", "hospital", "larvae", "fever", "dump"]),
-    ("SEWERAGE_OVERFLOW", ["sewer", "drainage", "manhole", "stench", "pipeline", "choked", "effluent"]),
-    ("CIVIL_INFRASTRUCTURE", ["bridge", "flyover", "crack", "wall", "slab", "railing", "culvert", "collapse"]),
+    (
+        "URBAN_FLOODING",
+        [
+            "flood", "waterlogging", "water level", "drain", "rain", "submerged", "inundation", "overflow", "embankment", "seepage", "nala",
+            "जलभराव", "बाढ़", "पानी", "डूब", "बरसात", "नाला", "अंडरपास", "जल जमाव",
+            "paani", "water", "jalbhorav", "underpass", "subway", "storm water", "deluge"
+        ],
+    ),
+    (
+        "ELECTRICAL_HAZARD",
+        [
+            "transformer", "spark", "wire", "power", "blackout", "electricity", "feeder", "high-tension", "pole", "shock", "live wire",
+            "ट्रांसफार्मर", "बिजली", "स्पार्क", "तार", "करंट", "धमाका", "शॉर्ट सर्किट", "अंधेरा",
+            "bijli", "taar", "currant", "short circuit", "sparking", "blackout", "light cut"
+        ],
+    ),
+    (
+        "ROAD_BLOCKAGE",
+        [
+            "tree", "pothole", "trunk", "crater", "debris", "road", "block", "divider", "congestion", "asphalt", "highway", "sinkhole",
+            "गड्ढे", "सड़क", "जाम", "पेड़", "अवरोध", "रास्ता बंद", "खड्डा",
+            "gaddhe", "gaddha", "sadak", "traffic jam", "road block", "ped gir", "potholes"
+        ],
+    ),
+    (
+        "HEALTH_HAZARD",
+        [
+            "dengue", "mosquito", "garbage", "waste", "stagnant", "epidemic", "hospital", "larvae", "fever", "dump", "biohazard",
+            "डेंगू", "मच्छर", "कूड़ा", "कचरा", "गंदगी", "बीमारी", "महामारी", "सड़ांध",
+            "machhar", "koora", "kachra", "gandagi", "dengu", "larva", "fever outbreak"
+        ],
+    ),
+    (
+        "SEWERAGE_OVERFLOW",
+        [
+            "sewer", "drainage", "manhole", "stench", "pipeline", "choked", "effluent", "gutter",
+            "सीवर", "नाली", "मैनहोल", "गटर", "गंदा पानी", "बदबू", "सीवर लाइन",
+            "sewer line", "ganda paani", "manhole", "gutter", "badboo", "drainage choke"
+        ],
+    ),
+    (
+        "CIVIL_INFRASTRUCTURE",
+        [
+            "bridge", "flyover", "crack", "wall", "slab", "railing", "culvert", "collapse", "pillar",
+            "पुल", "पुलिया", "दीवार", "दरार", "फ्लाईओवर", "धंस", "गिर गया",
+            "pul", "puliya", "flyover", "crack", "wall collapse", "pillar"
+        ],
+    ),
 ]
 
 CATEGORY_TO_DEPARTMENT = {
@@ -243,5 +284,71 @@ class DeterministicRulesAIProvider(BaseAIProvider):
         }
 
 
-# Singleton AI service boundary instance
-ai_provider: BaseAIProvider = DeterministicRulesAIProvider()
+class GeminiAIProvider(BaseAIProvider):
+    """
+    Live Google Gemini model provider.
+    Reads API key from .env (gemine_api or GEMINI_API_KEY).
+    Transparently delegates to DeterministicRulesAIProvider if rate-limited or offline.
+    """
+    def __init__(self):
+        from app.core.config import settings
+        self.fallback = DeterministicRulesAIProvider()
+        self.api_key = getattr(settings, "GEMINI_API_KEY", None) or getattr(settings, "gemine_api", None)
+        self.provider_name = "GOOGLE_GEMINI_LIVE" if self.api_key else "DETERMINISTIC_RULES_FALLBACK"
+
+    async def suggest_classification(self, title: str, description: str) -> Dict[str, Any]:
+        from app.core.config import settings
+        api_key = getattr(settings, "GEMINI_API_KEY", None) or getattr(settings, "gemine_api", None)
+        if not api_key:
+            return await self.fallback.suggest_classification(title, description)
+
+        try:
+            import json
+            import urllib.request
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key={api_key}"
+            prompt = (
+                f"Classify this civic grievance in Haryana: Title: {title}, Description: {description}. "
+                f"Output valid JSON only with keys category (one of URBAN_FLOODING, ELECTRICAL_HAZARD, "
+                f"ROAD_BLOCKAGE, HEALTH_HAZARD, SEWERAGE_OVERFLOW, CIVIL_INFRASTRUCTURE) and confidence (float 0.0-1.0)."
+            )
+            req_data = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode("utf-8")
+            req = urllib.request.Request(url, data=req_data, headers={"Content-Type": "application/json"}, method="POST")
+            res = urllib.request.urlopen(req, timeout=3.0)
+            raw = json.loads(res.read().decode("utf-8"))
+            text = raw["candidates"][0]["content"]["parts"][0]["text"]
+            clean = re.sub(r'```json\s*|\s*```', '', text).strip()
+            parsed = json.loads(clean)
+            cat = parsed.get("category", "URBAN_FLOODING")
+            conf = float(parsed.get("confidence", 0.95))
+            return {
+                "suggested_category": cat,
+                "confidence_score": conf,
+                "scored_candidates": [{"category": cat, "confidence": conf, "matched_keywords": ["gemini_ai_inferred"]}],
+                "top_keywords": ["gemini_api_verified"],
+                "model_provider": "GOOGLE_GEMINI_LIVE",
+                "is_simulated": False,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        except Exception as e:
+            res = await self.fallback.suggest_classification(title, description)
+            res["gemini_key_detected"] = bool(api_key)
+            return res
+
+    async def suggest_routing(self, title: str, description: str, district_id: Optional[str]) -> Dict[str, Any]:
+        return await self.fallback.suggest_routing(title, description, district_id)
+
+    async def summarize_complaint(self, record: Dict[str, Any]) -> Dict[str, Any]:
+        return await self.fallback.summarize_complaint(record)
+
+    async def explain_similarity(self, record_a: Dict[str, Any], record_b: Dict[str, Any]) -> Dict[str, Any]:
+        return await self.fallback.explain_similarity(record_a, record_b)
+
+    async def generate_escalation_draft(self, record: Dict[str, Any], reason: str) -> Dict[str, Any]:
+        return await self.fallback.generate_escalation_draft(record, reason)
+
+    async def synthesize_plain_language_summary(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
+        return await self.fallback.synthesize_plain_language_summary(metrics)
+
+
+# Singleton AI service boundary instance using Gemini provider with safe rules fallback
+ai_provider: BaseAIProvider = GeminiAIProvider()

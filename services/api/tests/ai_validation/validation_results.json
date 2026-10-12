@@ -1,0 +1,239 @@
+{
+  "timestamp": "2026-10-12T11:44:31Z",
+  "total_complaints_evaluated": 100,
+  "total_pairs_evaluated": 4950,
+  "primary_binary_pairs_evaluated": 4005,
+  "ambiguous_pairs_excluded": 945,
+  "pipeline_clustering_metrics": {
+    "tp": 101,
+    "fp": 181,
+    "fn": 5,
+    "tn": 3718,
+    "precision": 0.3582,
+    "recall": 0.9528,
+    "f1_score": 0.5206,
+    "accuracy": 0.9536
+  },
+  "location_only_baseline_metrics": {
+    "tp": 106,
+    "fp": 26,
+    "fn": 0,
+    "tn": 3873,
+    "precision": 0.803,
+    "recall": 1.0,
+    "f1_score": 0.8908,
+    "accuracy": 0.9935
+  },
+  "multimodal_fusion_engine_metrics": {
+    "tp": 106,
+    "fp": 1,
+    "fn": 0,
+    "tn": 3898,
+    "precision": 0.9907,
+    "recall": 1.0,
+    "f1_score": 0.9953,
+    "accuracy": 0.9998
+  },
+  "language_performance": {
+    "haryanvi": {
+      "tp": 44,
+      "fp": 79,
+      "fn": 2,
+      "tn": 1465,
+      "precision": 0.3577,
+      "recall": 0.9565,
+      "f1_score": 0.5207,
+      "accuracy": 0.9491
+    },
+    "hindi": {
+      "tp": 40,
+      "fp": 56,
+      "fn": 1,
+      "tn": 1493,
+      "precision": 0.4167,
+      "recall": 0.9756,
+      "f1_score": 0.5839,
+      "accuracy": 0.9642
+    },
+    "hinglish": {
+      "tp": 36,
+      "fp": 79,
+      "fn": 5,
+      "tn": 1470,
+      "precision": 0.313,
+      "recall": 0.878,
+      "f1_score": 0.4615,
+      "accuracy": 0.9472
+    },
+    "informal_typos": {
+      "tp": 40,
+      "fp": 58,
+      "fn": 1,
+      "tn": 1491,
+      "precision": 0.4082,
+      "recall": 0.9756,
+      "f1_score": 0.5755,
+      "accuracy": 0.9629
+    },
+    "vague_ambiguous": {
+      "tp": 40,
+      "fp": 55,
+      "fn": 1,
+      "tn": 749,
+      "precision": 0.4211,
+      "recall": 0.9756,
+      "f1_score": 0.5882,
+      "accuracy": 0.9337
+    }
+  },
+  "safety_critical_audit": {
+    "total_safety_critical_ground_truth": 32,
+    "correctly_flagged_critical": 8,
+    "detection_rate": 0.25
+  },
+  "category_classification_accuracy": 1.0,
+  "adversarial_same_location_different_problem": {
+    "total_adversarial_pairs": 13,
+    "trinetra_false_merges": 0,
+    "baseline_false_merges": 13,
+    "trinetra_rejection_rate": 1.0,
+    "baseline_rejection_rate": 0.0
+  },
+  "performance_and_latency": {
+    "avg_intake_latency_ms": 22.54,
+    "max_intake_latency_ms": 77.17,
+    "min_intake_latency_ms": 14.42,
+    "gemini_api_latency_ms": 1518.75,
+    "api_errors_count": 0,
+    "estimated_cost_usd": 0.0
+  },
+  "gemini_audit": {
+    "gemini_api_configured": true,
+    "model_queried": "gemini-flash-lite-latest",
+    "live_call_attempted": true,
+    "live_call_success": true,
+    "latency_ms": 1518.75,
+    "response_sample": {
+      "suggested_category": "URBAN_FLOODING",
+      "confidence_score": 0.95,
+      "scored_candidates": [
+        {
+          "category": "URBAN_FLOODING",
+          "confidence": 0.95,
+          "matched_keywords": [
+            "gemini_ai_inferred"
+          ]
+        }
+      ],
+      "top_keywords": [
+        "gemini_api_verified"
+      ],
+      "model_provider": "GOOGLE_GEMINI_LIVE",
+      "is_simulated": false,
+      "timestamp": "2026-10-12T11:44:28.560678+00:00"
+    },
+    "fallback_triggered": false,
+    "vision_model_status": "NOT TESTED (SIMULATED HEURISTIC IN BACKEND)",
+    "vision_model_audit_notes": "Backend currently accepts photo URLs in `attachments` but does not perform deep visual model inference (no YOLO/ViT/Gemini Vision endpoint in complaint ingestion). Fusion engine uses a placeholder visual similarity heuristic (0.05 weight). Reported truthfully as NOT TESTED."
+  },
+  "sample_failure_cases": [
+    {
+      "type": "FALSE_NEGATIVE_MISSED_MERGE",
+      "pair": "CMP-001 <-> CMP-041",
+      "title_a": "Gali mein paani khada se",
+      "title_b": "Road pe heavy water logging hai",
+      "incident_a": "INC-HR-GU-URBA",
+      "incident_b": "INC-HR-GU-CIVI-R001",
+      "reason": "Failed to merge despite being same incident ground truth"
+    },
+    {
+      "type": "FALSE_NEGATIVE_MISSED_MERGE",
+      "pair": "CMP-002 <-> CMP-041",
+      "title_a": "Bhai naali jam se paani bahar aa rya hai",
+      "title_b": "Road pe heavy water logging hai",
+      "incident_a": "INC-HR-GU-URBA",
+      "incident_b": "INC-HR-GU-CIVI-R001",
+      "reason": "Failed to merge despite being same incident ground truth"
+    },
+    {
+      "type": "FALSE_POSITIVE_FALSE_MERGE",
+      "pair": "CMP-003 <-> CMP-010",
+      "title_a": "Bijli ka khamba gir gaya",
+      "title_b": "Streetlight saari band padi se",
+      "incident_assigned": "INC-HR-GU-ELEC",
+      "ground_truth_relation": "DIFFERENT_INCIDENT",
+      "distance_m": 6798.6,
+      "reason": "Incorrectly merged unrelated reports (GT: DIFFERENT_INCIDENT)"
+    },
+    {
+      "type": "FALSE_POSITIVE_FALSE_MERGE",
+      "pair": "CMP-003 <-> CMP-014",
+      "title_a": "Bijli ka khamba gir gaya",
+      "title_b": "Transformer te dhuan uth rya se",
+      "incident_assigned": "INC-HR-GU-ELEC",
+      "ground_truth_relation": "DIFFERENT_INCIDENT",
+      "distance_m": 1957.3,
+      "reason": "Incorrectly merged unrelated reports (GT: DIFFERENT_INCIDENT)"
+    },
+    {
+      "type": "FALSE_POSITIVE_FALSE_MERGE",
+      "pair": "CMP-003 <-> CMP-028",
+      "title_a": "Bijli ka khamba gir gaya",
+      "title_b": "सोहना रोड पर स्ट्रीट लाइट खराब",
+      "incident_assigned": "INC-HR-GU-ELEC",
+      "ground_truth_relation": "DIFFERENT_INCIDENT",
+      "distance_m": 6771.3,
+      "reason": "Incorrectly merged unrelated reports (GT: DIFFERENT_INCIDENT)"
+    },
+    {
+      "type": "FALSE_POSITIVE_FALSE_MERGE",
+      "pair": "CMP-003 <-> CMP-049",
+      "title_a": "Bijli ka khamba gir gaya",
+      "title_b": "Sohna road streetlights totally blacked out",
+      "incident_assigned": "INC-HR-GU-ELEC",
+      "ground_truth_relation": "DIFFERENT_INCIDENT",
+      "distance_m": 6784.9,
+      "reason": "Incorrectly merged unrelated reports (GT: DIFFERENT_INCIDENT)"
+    },
+    {
+      "type": "FALSE_POSITIVE_FALSE_MERGE",
+      "pair": "CMP-003 <-> CMP-068",
+      "title_a": "Bijli ka khamba gir gaya",
+      "title_b": "andhera h sohna rd pe light khrb",
+      "incident_assigned": "INC-HR-GU-ELEC",
+      "ground_truth_relation": "DIFFERENT_INCIDENT",
+      "distance_m": 6781.9,
+      "reason": "Incorrectly merged unrelated reports (GT: DIFFERENT_INCIDENT)"
+    },
+    {
+      "type": "FALSE_POSITIVE_FALSE_MERGE",
+      "pair": "CMP-003 <-> CMP-088",
+      "title_a": "Bijli ka khamba gir gaya",
+      "title_b": "andhera",
+      "incident_assigned": "INC-HR-GU-ELEC",
+      "ground_truth_relation": "DIFFERENT_INCIDENT",
+      "distance_m": 6798.6,
+      "reason": "Incorrectly merged unrelated reports (GT: DIFFERENT_INCIDENT)"
+    },
+    {
+      "type": "FALSE_POSITIVE_FALSE_MERGE",
+      "pair": "CMP-004 <-> CMP-010",
+      "title_a": "Taar toot ke latak rya hai",
+      "title_b": "Streetlight saari band padi se",
+      "incident_assigned": "INC-HR-GU-ELEC",
+      "ground_truth_relation": "DIFFERENT_INCIDENT",
+      "distance_m": 6825.9,
+      "reason": "Incorrectly merged unrelated reports (GT: DIFFERENT_INCIDENT)"
+    },
+    {
+      "type": "FALSE_POSITIVE_FALSE_MERGE",
+      "pair": "CMP-004 <-> CMP-014",
+      "title_a": "Taar toot ke latak rya hai",
+      "title_b": "Transformer te dhuan uth rya se",
+      "incident_assigned": "INC-HR-GU-ELEC",
+      "ground_truth_relation": "DIFFERENT_INCIDENT",
+      "distance_m": 1971.4,
+      "reason": "Incorrectly merged unrelated reports (GT: DIFFERENT_INCIDENT)"
+    }
+  ]
+}

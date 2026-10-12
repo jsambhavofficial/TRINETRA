@@ -339,7 +339,7 @@ export const NexusViewer: React.FC = () => {
           </span>
         ) : (
           <span className="text-[11px] text-slate-400 glass-panel px-2.5 py-1 rounded mono-telemetry">
-            TRINETRA HARYANA TWIN
+            NEXUS CITY (JAIPUR TWIN)
           </span>
         )}
       </div>
@@ -464,7 +464,7 @@ const Tactical2DSpatialCanvas: React.FC<{
     return (
       <div className="flex flex-col items-center justify-center text-slate-400 text-xs">
         <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
-        <span className="mono-telemetry">INITIALIZING TRINETRA WORLD TWIN...</span>
+        <span className="mono-telemetry">INITIALIZING NEXUS WORLD TWIN...</span>
       </div>
     );
   }

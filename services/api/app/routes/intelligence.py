@@ -18,6 +18,7 @@ from app.models.organization import UserModel
 from app.services.intelligence_service import intelligence_service
 from app.services.alert_service import alert_service
 from app.services.ai_provider import ai_provider
+from app.services.triage_service import triage_service
 
 router = APIRouter(prefix="/intelligence", tags=["TRINETRA Governance Intelligence"])
 
@@ -41,6 +42,16 @@ class AIClassifyRequest(BaseModel):
     title: str = Field(min_length=3, max_length=255)
     description: str = Field(min_length=5, max_length=2000)
     district_id: Optional[str] = None
+
+
+class AITriageRequest(BaseModel):
+    text: str = Field(min_length=3, max_length=4000)
+    language: Optional[str] = "en"
+    voice_transcript: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    district_id: Optional[str] = "HR-GU"
+    landmark: Optional[str] = None
 
 
 class AIEscalationRequest(BaseModel):
@@ -225,6 +236,28 @@ async def ai_suggest_classification(
         "routing": routing_res,
         "disclaimer": "AI suggestion provided as decision support for human review. Does not alter record state.",
     }
+
+
+@router.post("/ai/triage")
+async def ai_triage_complaint(
+    req: AITriageRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_optional_user),
+):
+    """
+    Executes full multi-modal explainable AI triage and deterministic routing.
+    Returns structured category, subcategory, priority, safety flags, and duplicate candidates.
+    """
+    return await triage_service.execute_triage(
+        text=req.text,
+        language=req.language or "en",
+        voice_transcript=req.voice_transcript,
+        latitude=req.latitude,
+        longitude=req.longitude,
+        district_id=req.district_id or "HR-GU",
+        landmark=req.landmark,
+        db=db,
+    )
 
 
 @router.post("/ai/draft-escalation")

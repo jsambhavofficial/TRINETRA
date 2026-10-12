@@ -48,7 +48,7 @@ export const CommandBar: React.FC = () => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask TRINETRA anything, or search entities, districts, incidents... (⌘K)"
+            placeholder="Ask NEXUS anything, or search entities, districts, incidents... (⌘K)"
             className="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none mono-telemetry"
           />
           <button

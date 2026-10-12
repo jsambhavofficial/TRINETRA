@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "AEGIS — Living Spatial Intelligence & Operational Twin Architecture",
+    "title": "TRINETRA — State Governance Intelligence & Operational Twin Architecture",
     "output": ".archify/aegis-architecture/aegis-tech-architecture.html",
     "quality_profile": "showcase"
   },
@@ -11,7 +11,7 @@
       "id": "citizen_clients",
       "type": "external",
       "label": "Citizens & Field Crews",
-      "sublabel": "Mobile Web · Field Sensors",
+      "sublabel": "Grievance Reports · Telemetry",
       "pos": [40, 260],
       "size": [160, 70]
     },
@@ -34,7 +34,7 @@
     {
       "id": "spatial_layer",
       "type": "frontend",
-      "label": "AEGIS Spatial Canvas",
+      "label": "Haryana 3D Spatial Canvas",
       "sublabel": "CesiumJS 3D + Mapbox GL 3.32",
       "tag": "components/spatial",
       "pos": [520, 60],
@@ -43,8 +43,8 @@
     {
       "id": "nextjs_web",
       "type": "frontend",
-      "label": "AEGIS Next.js 15 Web App",
-      "sublabel": "React 19 · Zustand · Tailwind",
+      "label": "TRINETRA Multi-Role Portals",
+      "sublabel": "Citizen, Dept, DC, State, Field",
       "tag": "apps/web",
       "pos": [260, 250],
       "size": [180, 95]
@@ -52,8 +52,8 @@
     {
       "id": "voice_engine",
       "type": "frontend",
-      "label": "Voice Command Center",
-      "sublabel": "Web Speech API · TTS Synthesis",
+      "label": "Voice & NLP Commander",
+      "sublabel": "Web Speech API · Hindi/Eng TTS",
       "tag": "components/modals",
       "pos": [510, 255],
       "size": [170, 80]
@@ -61,8 +61,8 @@
     {
       "id": "rbac_guard",
       "type": "security",
-      "label": "Commander RBAC Gate",
-      "sublabel": "L4 Chief Incident Commander Auth",
+      "label": "1-Click Role Switcher & RBAC",
+      "sublabel": "5-Tier Governance Auth Gate",
       "tag": "services/api/app/auth",
       "pos": [750, 60],
       "size": [180, 75]
@@ -70,7 +70,7 @@
     {
       "id": "fastapi_core",
       "type": "backend",
-      "label": "AEGIS Core FastAPI Gateway",
+      "label": "TRINETRA FastAPI Gateway",
       "sublabel": "Uvicorn · Pydantic v2 · 13 Routers",
       "tag": "services/api/app",
       "pos": [740, 240],
@@ -79,8 +79,8 @@
     {
       "id": "multimodal_ai",
       "type": "backend",
-      "label": "Multimodal Perception AI",
-      "sublabel": "YOLOv8 · Grounding DINO · Whisper",
+      "label": "Google Gemini 2.5 Live AI",
+      "sublabel": "gemini-flash-lite · Vision Triage",
       "tag": "services/api/app/services",
       "pos": [450, 460],
       "size": [180, 80]
@@ -88,11 +88,11 @@
     {
       "id": "fusion_engine",
       "type": "backend",
-      "label": "Evidence Fusion Engine",
-      "sublabel": "H3 Hexcells · Spatial/Temporal Match",
+      "label": "AI Deduplication Engine",
+      "sublabel": "50-to-1 Incidents · H3 Hexcells",
       "tag": "services/api/app/services",
-      "pos": [700, 460],
-      "size": [180, 80]
+      "pos": [690, 460],
+      "size": [200, 80]
     },
     {
       "id": "sim_engine",
@@ -132,7 +132,7 @@
   "boundaries": [
     {
       "kind": "region",
-      "label": "Frontend Operational Surface (Docker: aegis-web)",
+      "label": "Frontend Operational Surface (Docker: trinetra-web)",
       "wraps": [
         "nextjs_web",
         "spatial_layer",
@@ -141,7 +141,7 @@
     },
     {
       "kind": "region",
-      "label": "Intelligence & Decision Kernel (Docker: aegis-api)",
+      "label": "AI Intelligence & Governance Kernel (Docker: trinetra-api)",
       "wraps": [
         "fastapi_core",
         "rbac_guard",
@@ -218,7 +218,7 @@
       "id": "conn_api_ai",
       "from": "fastapi_core",
       "to": "multimodal_ai",
-      "label": "AI Pipeline",
+      "label": "Gemini AI",
       "fromSide": "bottom",
       "toSide": "top"
     },
@@ -226,7 +226,7 @@
       "id": "conn_ai_fusion",
       "from": "multimodal_ai",
       "to": "fusion_engine",
-      "label": "H3 Fusion",
+      "label": "Deduplicate",
       "fromSide": "right",
       "toSide": "left"
     },
@@ -258,42 +258,42 @@
   "cards": [
     {
       "dot": "cyan",
-      "title": "Dual Spatial Engine (CesiumJS + Mapbox GL)",
+      "title": "Dual Geospatial Engine (Haryana 3D Twin)",
       "items": [
-        "CesiumJS 1.121: 3D Photogrammetry, extruded buildings, camera fly-to, hazard halos",
-        "Mapbox GL 3.32: Satellite Streets v12 high-res aerial imagery + Dark v11 vector basemap",
-        "Dynamic mode switcher ([Map] [Satellite] [3D Living Twin] [Heatmap])",
-        "Interactive incident, ambulance, and hospital entity markers with live telemetry tracking"
+        "CesiumJS 1.121 + Mapbox GL 3.32: 3D Haryana photogrammetry, high-res satellite streets & vector tiles",
+        "Dynamic View Switcher: [Map] [Satellite] [3D Living Twin] [Heatmap] with collapsible GIS layer drawer",
+        "Interactive incident markers with pop-in mission drawer (RightRail.tsx), auto-sliding on marker selection",
+        "Live ambulance & field unit GPS tracking with automated corridor clearing"
       ]
     },
     {
       "dot": "emerald",
-      "title": "Multimodal AI & Evidence Fusion",
+      "title": "Google Gemini Live AI & Multimodal Triage",
       "items": [
-        "Ingests citizen photos, 4K traffic video, Hindi voice dispatches, and SCADA sensor telemetry",
-        "YOLOv8 + Grounding DINO vision perception and Whisper ASR audio transcription",
-        "H3 Uber Hexcell spatial indexing + cosine vector semantic matching",
-        "Bayesian corroboration scoring and multi-observation candidate fusion"
+        "Live multi-modal classification using Google Gemini 2.5 Flash Lite (gemini-flash-lite-latest) via Google GenAI SDK",
+        "Automated grievance analysis: Extracts category, P1-P4 priority, estimated resolution SLA, and required department",
+        "Zero-downtime deterministic fallback engine (DeterministicRulesAIProvider) guaranteeing 100% offline uptime",
+        "Hindi & English voice command dispatcher via Web Speech API and NLP intent mapping"
       ]
     },
     {
       "dot": "violet",
-      "title": "Contextual Intelligence & What-If Simulation",
+      "title": "AI Deduplication & Spatial Incident Fusion",
       "items": [
-        "Network topology causal impact solver (road severances, hospital ingress cuts)",
-        "Hydrological stormwater runoff model (50mm/hr cloudburst simulation)",
-        "Automated emergency rerouting (Road R14 clear corridor with ETA calculation)",
-        "Autonomous response plan generation, Commander authorization, and closed-loop verification"
+        "50-to-1 Auto-Clustering: Collapses 50 repetitive citizen reports in the same ward/locality into 1 actionable Master Mission",
+        "Spatial proximity matching via Haversine distance (<1000m) & Uber H3 hexcell indexing",
+        "Department incident consolidation (INC-HR-XX-YYYY) with merged citizen count, unified evidence, and Bayesian scoring",
+        "What-If hydrological stormwater simulation (50mm/hr cloudburst) & road severance graph solver"
       ]
     },
     {
       "dot": "amber",
-      "title": "Mission Control & Architecture Standards",
+      "title": "Multi-Role Portals & Operation Standards",
       "items": [
-        "Next.js 15 App Router + React 19 + TypeScript 5.6 + Tailwind CSS",
-        "FastAPI Python 3.11 asynchronous microservices with Pydantic v2 schemas",
-        "PostgreSQL 16 + PostGIS spatial geometry tables with SQLAlchemy 2 asyncio",
-        "Web Speech API audio synthesis with live natural language voice tool dispatch"
+        "Strict role segregation: Citizen Portal (/portal/citizen) vs Authority Command (/portal/department, DC, State)",
+        "1-Click Header Persona Switcher: Instant role-switching across 5 governance tiers without relogin",
+        "FastAPI Python 3.11 asynchronous microservices with Pydantic v2 schemas and SQLAlchemy 2 async",
+        "PostgreSQL 16 + PostGIS spatial geometry tables with Redis 7 state cache and MinIO S3 evidence blobs"
       ]
     }
   ]

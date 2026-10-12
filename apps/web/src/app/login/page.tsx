@@ -457,6 +457,31 @@ export default function LoginPage() {
                   <p className="text-[10px] text-slate-400 mt-1">Field Unit AMB-01 (SOP & Proof Submission)</p>
                   <span className="text-[10px] text-slate-500 font-mono block mt-1">field.amb01@trinetra.gov.in</span>
                 </button>
+
+                {/* 3D Spatial Digital Twin */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.setItem("trinetra_user", JSON.stringify({
+                      id: "usr-cm-haryana",
+                      email: "leadership@trinetra.gov.in",
+                      display_name: "Apex Commander",
+                      role: "COMMANDER",
+                      district_id: "HR-ALL"
+                    }));
+                    router.push("/world");
+                  }}
+                  className="sm:col-span-2 p-2.5 rounded-lg bg-sky-950/40 hover:bg-sky-900/60 border border-sky-500/30 hover:border-sky-400 text-left transition-all flex items-center justify-between group cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Compass className="w-4 h-4 text-sky-400 shrink-0" />
+                    <div>
+                      <span className="font-bold text-sky-300 text-xs">3D Spatial Digital Twin Command Center</span>
+                      <p className="text-[10px] text-slate-400">CesiumJS 3D + Mapbox GIS live operational twin of Haryana</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-sky-400 group-hover:translate-x-1 transition-transform shrink-0" />
+                </button>
               </div>
             </div>
 

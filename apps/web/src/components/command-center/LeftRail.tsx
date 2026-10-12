@@ -21,14 +21,14 @@ import {
   Radio,
   Route,
   Shield,
-  Square,
   Truck,
+  X,
   XCircle,
   Zap,
 } from "lucide-react";
 import Link from "next/link";
 
-export const LeftRail: React.FC = () => {
+export const LeftRail: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState<"layers" | "districts" | "filters" | "candidates">("layers");
   const [candidateFilter, setCandidateFilter] = useState<"ALL" | "PENDING_REVIEW" | "CONFIRMED">("ALL");
 
@@ -131,6 +131,16 @@ export const LeftRail: React.FC = () => {
           <Filter className="w-3 h-3 text-amber-400" />
           Filters
         </button>
+
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition ml-0.5"
+            title="Collapse Sidebar"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-4">

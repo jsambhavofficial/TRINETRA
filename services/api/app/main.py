@@ -28,6 +28,7 @@ from app.routes.auth import router as auth_router
 from app.routes.governance import router as governance_router
 from app.routes.complaints import router as complaints_router
 from app.routes.intelligence import router as intelligence_router
+from app.routes.validation import router as validation_router
 from app.services.job_worker import job_worker
 
 
@@ -35,7 +36,7 @@ from app.services.job_worker import job_worker
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting TRINETRA State Governance & Operational API Engine...")
+    logger.info("Starting NEXUS Operational API Engine (Phase 3)...")
     try:
         await init_db()
     except Exception as e:
@@ -43,12 +44,12 @@ async def lifespan(app: FastAPI):
     # Start Phase 3 background job worker
     job_worker.start()
     yield
-    logger.info("Shutting down TRINETRA Operational API Engine.")
+    logger.info("Shutting down NEXUS Operational API Engine.")
 
 
 app = FastAPI(
-    title="TRINETRA State Governance & Operational Intelligence API",
-    description="The Living Spatial Intelligence & Governance Layer for Haryana - Core State Gateway",
+    title="NEXUS Operational Intelligence API",
+    description="The Living Intelligence Layer for the Physical World - Core State Gateway",
     version="1.0.0-phase3",
     lifespan=lifespan
 )
@@ -137,6 +138,7 @@ app.include_router(field_router, prefix=settings.API_V1_STR)
 app.include_router(intelligence_router, prefix=settings.API_V1_STR)
 app.include_router(voice_router, prefix=settings.API_V1_STR)
 app.include_router(scenarios_router, prefix=settings.API_V1_STR)
+app.include_router(validation_router, prefix=settings.API_V1_STR)
 
 app.include_router(ws_router)
 

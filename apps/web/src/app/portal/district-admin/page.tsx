@@ -20,7 +20,11 @@ import {
   RefreshCw,
   Award,
   Link2,
+  Brain,
+  Sparkles,
 } from "lucide-react";
+import { AIDecisionPanel } from "@/components/complaints/AIDecisionPanel";
+import { HaryanaGovernanceMap } from "@/components/map/HaryanaGovernanceMap";
 
 export default function DistrictAdminPortal() {
   const [authUser, setAuthUser] = useState<any>(null);
@@ -37,6 +41,7 @@ export default function DistrictAdminPortal() {
   // Correlation Modal
   const [correlatingComplaint, setCorrelatingComplaint] = useState<any>(null);
   const [incidentTargetId, setIncidentTargetId] = useState("inc-1047");
+  const [viewingAIComplaint, setViewingAIComplaint] = useState<any | null>(null);
 
   const districtId = authUser?.district_id || "HR-GU";
 
@@ -215,6 +220,11 @@ export default function DistrictAdminPortal() {
           </div>
         </div>
 
+        {/* District Spatial Overview */}
+        <div className="space-y-2">
+          <HaryanaGovernanceMap userRole="DISTRICT_ADMIN" />
+        </div>
+
         {/* Filter Controls */}
         <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-surface-base border border-surface-border text-xs">
           <div className="flex items-center gap-2">
@@ -317,17 +327,26 @@ export default function DistrictAdminPortal() {
                       )}
                     </td>
                     <td className="py-3 px-3 text-right whitespace-nowrap">
-                      {c.status === "SUBMITTED" ? (
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
-                          onClick={() => handleAcknowledge(c.id)}
-                          disabled={submittingAction}
-                          className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold"
+                          onClick={() => setViewingAIComplaint(c)}
+                          className="p-1 rounded bg-indigo-950/80 border border-indigo-800 text-indigo-300 hover:text-white"
+                          title="Explain AI Triage & Routing Decision"
                         >
-                          Acknowledge
+                          <Brain className="w-3.5 h-3.5" />
                         </button>
-                      ) : (
-                        <span className="text-slate-500 font-mono text-[11px]">Tracked</span>
-                      )}
+                        {c.status === "SUBMITTED" ? (
+                          <button
+                            onClick={() => handleAcknowledge(c.id)}
+                            disabled={submittingAction}
+                            className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold"
+                          >
+                            Acknowledge
+                          </button>
+                        ) : (
+                          <span className="text-slate-500 font-mono text-[11px]">Tracked</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -377,6 +396,28 @@ export default function DistrictAdminPortal() {
             </div>
           </div>
         )}
+        {/* Explainable AI Decision Drawer */}
+        <AIDecisionPanel
+          complaint={viewingAIComplaint}
+          isOpen={!!viewingAIComplaint}
+          onClose={() => setViewingAIComplaint(null)}
+          userRole="DISTRICT_ADMIN"
+          onOverrideTriage={async (payload) => {
+            try {
+              await fetch(`http://localhost:8000/api/v1/complaints/${viewingAIComplaint?.id}/override-triage`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify(payload),
+              });
+              loadDistrictData();
+            } catch (e) {
+              console.error(e);
+            }
+          }}
+        />
       </main>
     </div>
   );

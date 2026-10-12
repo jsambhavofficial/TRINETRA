@@ -286,7 +286,7 @@ async def get_district_admin_summary(
 async def get_department_summary(
     department_id: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: Optional[UserModel] = Depends(get_optional_user),
 ):
     """
     Computes incoming queue and field task status for user's assigned department.
@@ -294,7 +294,10 @@ async def get_department_summary(
     from app.models.complaint import ComplaintModel
     from app.auth.dependencies import enforce_department_scope
 
-    effective_dept = enforce_department_scope(current_user, department_id) or "DEPT-HEALTH"
+    if current_user and current_user.role == "DEPARTMENT":
+        effective_dept = enforce_department_scope(current_user, department_id) or "DEPT-PWD"
+    else:
+        effective_dept = department_id if (department_id and department_id != "ALL") else "DEPT-PWD"
 
     stmt = select(ComplaintModel).where(ComplaintModel.department_id == effective_dept)
     res = await db.execute(stmt)

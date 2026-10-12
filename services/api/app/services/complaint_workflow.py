@@ -21,41 +21,65 @@ from app.services.event_hub import event_hub
 # Explicit Status Transition Matrix
 # -----------------------------------------------------------------------------
 ALLOWED_TRANSITIONS: Dict[str, Dict[str, Any]] = {
+    "TRIAGE_PENDING": {
+        "sources": ["SUBMITTED"],
+        "roles": ["CITIZEN", "DISTRICT_ADMIN", "DEPARTMENT", "STATE_LEADERSHIP", "PLATFORM_ADMIN", "SYSTEM"],
+        "description": "Complaint queued for automated AI analysis or human triage.",
+    },
+    "TRIAGED": {
+        "sources": ["SUBMITTED", "TRIAGE_PENDING"],
+        "roles": ["DISTRICT_ADMIN", "DEPARTMENT", "STATE_LEADERSHIP", "PLATFORM_ADMIN", "SYSTEM"],
+        "description": "Category, priority, and jurisdictional department confirmed.",
+    },
     "ACKNOWLEDGED": {
-        "sources": ["SUBMITTED", "REOPENED"],
+        "sources": ["SUBMITTED", "TRIAGED", "TRIAGE_PENDING", "REOPENED"],
         "roles": ["DISTRICT_ADMIN", "DEPARTMENT", "STATE_LEADERSHIP", "PLATFORM_ADMIN"],
         "description": "District or Department receives and acknowledges incoming grievance.",
     },
     "UNDER_REVIEW": {
-        "sources": ["SUBMITTED", "ACKNOWLEDGED", "REOPENED"],
+        "sources": ["SUBMITTED", "ACKNOWLEDGED", "TRIAGED", "REOPENED"],
         "roles": ["DISTRICT_ADMIN", "DEPARTMENT", "STATE_LEADERSHIP", "PLATFORM_ADMIN"],
         "description": "Technical team evaluates feasibility, jurisdiction, and correlation.",
     },
     "VERIFIED": {
-        "sources": ["SUBMITTED", "ACKNOWLEDGED", "UNDER_REVIEW"],
+        "sources": ["SUBMITTED", "ACKNOWLEDGED", "UNDER_REVIEW", "TRIAGED"],
         "roles": ["DISTRICT_ADMIN", "DEPARTMENT", "STATE_LEADERSHIP", "PLATFORM_ADMIN"],
         "description": "Ground situation confirmed as an active actionable incident.",
     },
     "ASSIGNED": {
-        "sources": ["SUBMITTED", "ACKNOWLEDGED", "UNDER_REVIEW", "VERIFIED", "REOPENED"],
+        "sources": ["SUBMITTED", "ACKNOWLEDGED", "UNDER_REVIEW", "VERIFIED", "TRIAGED", "REOPENED", "TRANSFERRED"],
         "roles": ["DISTRICT_ADMIN", "DEPARTMENT", "STATE_LEADERSHIP", "PLATFORM_ADMIN"],
         "description": "Assigned to a specific field response unit or field officer.",
     },
     "IN_PROGRESS": {
-        "sources": ["ASSIGNED", "AWAITING_VALIDATION"],  # Reverts to IN_PROGRESS on supervisor rework
+        "sources": ["ASSIGNED", "AWAITING_VALIDATION", "RESOLUTION_SUBMITTED", "VERIFICATION_PENDING", "NEEDS_INFORMATION"],
         "roles": ["FIELD_OFFICER", "DEPARTMENT", "DISTRICT_ADMIN", "PLATFORM_ADMIN"],
-        "description": "Field responder acknowledged task, en route, or executing on ground.",
+        "description": "Field responder executing remediation on ground.",
     },
-    "AWAITING_VALIDATION": {
+    "RESOLUTION_SUBMITTED": {
         "sources": ["IN_PROGRESS", "ASSIGNED"],
         "roles": ["FIELD_OFFICER", "DEPARTMENT", "PLATFORM_ADMIN"],
         "description": "Field unit completed SOP and submitted photographic evidence of resolution.",
     },
+    "AWAITING_VALIDATION": {
+        "sources": ["IN_PROGRESS", "ASSIGNED", "RESOLUTION_SUBMITTED"],
+        "roles": ["FIELD_OFFICER", "DEPARTMENT", "PLATFORM_ADMIN"],
+        "description": "Awaiting supervisor validation of resolution proof.",
+    },
+    "VERIFICATION_PENDING": {
+        "sources": ["IN_PROGRESS", "ASSIGNED", "RESOLUTION_SUBMITTED", "AWAITING_VALIDATION"],
+        "roles": ["FIELD_OFFICER", "DEPARTMENT", "PLATFORM_ADMIN"],
+        "description": "Supervisor quality inspection pending.",
+    },
     "RESOLVED": {
-        # Strict Rule: FIELD_OFFICER cannot mark RESOLVED directly!
-        "sources": ["AWAITING_VALIDATION", "VERIFIED", "IN_PROGRESS"],
+        "sources": ["AWAITING_VALIDATION", "RESOLUTION_SUBMITTED", "VERIFICATION_PENDING", "VERIFIED", "IN_PROGRESS"],
         "roles": ["DEPARTMENT", "DISTRICT_ADMIN", "STATE_LEADERSHIP", "PLATFORM_ADMIN"],
         "description": "Supervisor approved resolution evidence and officially closed case.",
+    },
+    "NEEDS_INFORMATION": {
+        "sources": ["SUBMITTED", "TRIAGE_PENDING", "TRIAGED", "ACKNOWLEDGED", "UNDER_REVIEW", "ASSIGNED", "IN_PROGRESS"],
+        "roles": ["DISTRICT_ADMIN", "DEPARTMENT", "FIELD_OFFICER", "PLATFORM_ADMIN"],
+        "description": "Citizen requested to provide supplementary information or clarification.",
     },
     "REOPENED": {
         "sources": ["RESOLVED"],
@@ -63,9 +87,29 @@ ALLOWED_TRANSITIONS: Dict[str, Dict[str, Any]] = {
         "description": "Citizen reports issue persists, triggering supervisory review.",
     },
     "REJECTED": {
-        "sources": ["SUBMITTED", "ACKNOWLEDGED", "UNDER_REVIEW"],
+        "sources": ["SUBMITTED", "TRIAGE_PENDING", "ACKNOWLEDGED", "UNDER_REVIEW"],
         "roles": ["DISTRICT_ADMIN", "DEPARTMENT", "STATE_LEADERSHIP", "PLATFORM_ADMIN"],
         "description": "Rejected due to duplication, out-of-scope, or invalid details.",
+    },
+    "REJECTED_WITH_REASON": {
+        "sources": ["SUBMITTED", "TRIAGE_PENDING", "ACKNOWLEDGED", "UNDER_REVIEW"],
+        "roles": ["DISTRICT_ADMIN", "DEPARTMENT", "STATE_LEADERSHIP", "PLATFORM_ADMIN"],
+        "description": "Rejected with official documented explanation sent to citizen.",
+    },
+    "ESCALATED": {
+        "sources": ["SUBMITTED", "TRIAGED", "ASSIGNED", "ACKNOWLEDGED", "IN_PROGRESS", "REOPENED", "AWAITING_VALIDATION"],
+        "roles": ["DISTRICT_ADMIN", "DEPARTMENT", "STATE_LEADERSHIP", "PLATFORM_ADMIN"],
+        "description": "Elevated to higher administrative authority due to SLA breach or criticality.",
+    },
+    "DUPLICATE_LINKED": {
+        "sources": ["SUBMITTED", "TRIAGE_PENDING", "TRIAGED", "ACKNOWLEDGED", "UNDER_REVIEW"],
+        "roles": ["DISTRICT_ADMIN", "DEPARTMENT", "STATE_LEADERSHIP", "PLATFORM_ADMIN"],
+        "description": "Linked as duplicate of an existing primary complaint record.",
+    },
+    "TRANSFERRED": {
+        "sources": ["SUBMITTED", "TRIAGED", "ACKNOWLEDGED", "UNDER_REVIEW", "ASSIGNED"],
+        "roles": ["DISTRICT_ADMIN", "DEPARTMENT", "STATE_LEADERSHIP", "PLATFORM_ADMIN"],
+        "description": "Transferred to another jurisdictional line department or district.",
     },
 }
 

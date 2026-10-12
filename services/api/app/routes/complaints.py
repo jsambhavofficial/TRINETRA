@@ -34,10 +34,63 @@ from app.schemas.complaint import (
     CitizenFeedbackRequest,
     ReopenRequest,
     IncidentCorrelateRequest,
+    RequestInformationRequest,
+    ProvideInformationRequest,
+    EscalationRequest,
+    TransferRequest,
+    LinkDuplicateRequest,
+    OverrideTriageRequest,
+    ViewportResponse,
+    ViewportCluster,
+    ViewportPin,
+    DistrictAggregateItem,
 )
 from app.services.complaint_workflow import complaint_workflow
+from app.services.triage_service import triage_service
+from app.core.haryana import (
+    HARYANA_DISTRICTS,
+    HARYANA_DISTRICTS_BY_ID,
+    is_in_haryana,
+    find_nearest_district,
+)
 
 router = APIRouter(prefix="/complaints", tags=["Complaints & Governance Workflow"])
+
+
+def serialize_complaint_response(
+    complaint: ComplaintModel,
+    user: Optional[UserModel] = None,
+    corr: Optional[dict] = None,
+) -> ComplaintResponse:
+    if complaint.citizen_updates is None:
+        complaint.citizen_updates = []
+    if complaint.internal_notes is None:
+        complaint.internal_notes = []
+    if complaint.attachments is None:
+        complaint.attachments = []
+    if complaint.sop_checklist is None:
+        complaint.sop_checklist = []
+    if complaint.field_notes is None:
+        complaint.field_notes = []
+
+    res = ComplaintResponse.model_validate(complaint)
+    if res.citizen_updates is None:
+        res.citizen_updates = []
+    if res.internal_notes is None:
+        res.internal_notes = []
+    if res.attachments is None:
+        res.attachments = []
+    if res.sop_checklist is None:
+        res.sop_checklist = []
+    if res.field_notes is None:
+        res.field_notes = []
+
+    if corr is not None:
+        res.correlation = corr
+    if user is None or getattr(user, "role", None) == "CITIZEN":
+        res.internal_notes = []
+    return res
+
 
 
 # -----------------------------------------------------------------------------
@@ -57,55 +110,113 @@ async def create_complaint(
     now = datetime.now(timezone.utc)
     district_code = payload.district_id or (user.district_id if user and user.district_id else "HR-GU")
 
-    # Map all 22 Haryana district codes to names
-    district_names = {
-        "HR-GU": "Gurugram",
-        "HR-FA": "Faridabad",
-        "HR-RO": "Rohtak",
-        "HR-AM": "Ambala",
-        "HR-PK": "Panchkula",
-        "HR-HI": "Hisar",
-        "HR-KR": "Karnal",
-        "HR-KA": "Karnal",
-        "HR-SO": "Sonipat",
-        "HR-PP": "Panipat",
-        "HR-RE": "Rewari",
-        "HR-SI": "Sirsa",
-        "HR-YN": "Yamunanagar",
-        "HR-JH": "Jind",
-        "HR-KT": "Kaithal",
-        "HR-KU": "Kurukshetra",
-        "HR-NU": "Nuh",
-        "HR-PW": "Palwal",
-        "HR-JJ": "Jhajjar",
-        "HR-MA": "Mahendragarh",
-        "HR-BW": "Bhiwani",
-        "HR-CD": "Charkhi Dadri",
-        "HR-FT": "Fatehabad",
-    }
-    district_name = district_names.get(district_code, "Haryana District")
+    dist_info = HARYANA_DISTRICTS_BY_ID.get(district_code)
+    district_name = dist_info["name"] if dist_info else "Haryana District"
 
     dept_id, dept_name = complaint_workflow.resolve_department(payload.category, payload.department_id)
+
+    # Determine lat/lng with Haryana boundary verification
+    lat = payload.latitude
+    lng = payload.longitude
+    if lat is None or lng is None:
+        lat = dist_info["lat"] if dist_info else 28.4595
+        lng = dist_info["lng"] if dist_info else 77.0266
+
+    # Execute AI Triage
+    triage_res = await triage_service.execute_triage(
+        text=f"{payload.title} {payload.description}",
+        language=payload.language or "en",
+        voice_transcript=payload.voice_transcript,
+        latitude=lat,
+        longitude=lng,
+        district_id=district_code,
+        landmark=payload.locality or payload.address,
+        db=db,
+    )
+
+    priority = "MEDIUM"
+    if triage_res.get("safety_escalation_flags"):
+        flags = triage_res["safety_escalation_flags"]
+        is_crit = any(
+            (isinstance(f, dict) and f.get("severity") == "CRITICAL") or
+            (isinstance(f, str) and any(kw in f.upper() for kw in ["LIFE_SAFETY", "ELECTRICAL_FIRE", "CRITICAL"]))
+            for f in flags
+        )
+        priority = "CRITICAL" if is_crit else "HIGH"
+    elif triage_res.get("suggested_priority"):
+        priority = triage_res["suggested_priority"]
+
+    sub_cat = payload.sub_category or triage_res.get("suggested_subcategory")
+
+    initial_citizen_updates = [
+        {
+            "timestamp": now.isoformat(),
+            "stage": "SUBMITTED",
+            "title": "Grievance Registered",
+            "message": f"Your grievance has been registered with TRINETRA and assigned to {dept_name} ({district_name}).",
+        }
+    ]
+
+    # Deduplication & Incident Clustering:
+    # If multiple citizens report the same problem in the same area/category, auto-cluster under one Incident ID
+    dup_candidates = triage_res.get("duplicate_candidates") or []
+    assigned_incident_id = None
+    if dup_candidates and isinstance(dup_candidates, list) and len(dup_candidates) > 0:
+        parent_cmp_id = dup_candidates[0].get("id")
+        parent_stmt = select(ComplaintModel).where(ComplaintModel.id == parent_cmp_id)
+        parent_res = await db.execute(parent_stmt)
+        parent_cmp = parent_res.scalar_one_or_none()
+        if parent_cmp:
+            if not parent_cmp.incident_id:
+                parent_cmp.incident_id = f"INC-{district_code}-{payload.category.replace('_', '')[:4]}-{parent_cmp.tracking_id[-4:]}"
+            assigned_incident_id = parent_cmp.incident_id
+    else:
+        existing_stmt = select(ComplaintModel).where(
+            and_(
+                ComplaintModel.district_id == district_code,
+                ComplaintModel.category == payload.category.upper(),
+                ComplaintModel.incident_id.isnot(None),
+                ComplaintModel.status.in_(["SUBMITTED", "ASSIGNED", "IN_PROGRESS", "AWAITING_VALIDATION"])
+            )
+        ).limit(1)
+        existing_res = await db.execute(existing_stmt)
+        existing_cmp = existing_res.scalar_one_or_none()
+        if existing_cmp and existing_cmp.incident_id:
+            assigned_incident_id = existing_cmp.incident_id
+        else:
+            clean_cat = payload.category.replace('_', '')[:4].upper()
+            assigned_incident_id = f"INC-{district_code}-{clean_cat}"
 
     complaint = ComplaintModel(
         citizen_id=user.id if user else None,
         citizen_name=payload.citizen_name or (user.display_name if user else "Citizen Reporter"),
         citizen_phone=payload.citizen_phone or (user.phone if user else None),
         category=payload.category.upper(),
+        sub_category=sub_cat,
+        locality=payload.locality,
+        incident_id=assigned_incident_id,
+        language=payload.language or "en",
+        voice_transcript=payload.voice_transcript,
+        voice_audio_uri=payload.voice_audio_uri,
         title=payload.title,
         description=payload.description,
         district_id=district_code,
         district_name=district_name,
         department_id=dept_id,
         department_name=dept_name,
-        latitude=payload.latitude or 28.4595,
-        longitude=payload.longitude or 77.0266,
+        latitude=lat,
+        longitude=lng,
         address=payload.address or f"{district_name}, Haryana",
         attachments=payload.attachments or [],
         status="SUBMITTED",
-        priority="MEDIUM",
+        priority=priority,
         source="CITIZEN_WEB" if not user else f"{user.role}_PORTAL",
         sop_checklist=complaint_workflow.get_default_sop(payload.category),
+        ai_triage=triage_res,
+        ai_routing_rule=triage_res.get("routing_rule"),
+        citizen_updates=initial_citizen_updates,
+        internal_notes=[],
+        is_demo=bool(payload.is_demo),
         created_at=now,
     )
 
@@ -119,7 +230,7 @@ async def create_complaint(
         actor_id=user.id if user else "anonymous-citizen",
         event_type="COMPLAINT_SUBMITTED",
         complaint=complaint,
-        metadata={"category": complaint.category, "district": complaint.district_id},
+        metadata={"category": complaint.category, "district": complaint.district_id, "priority": priority},
     )
 
     await db.commit()
@@ -130,9 +241,8 @@ async def create_complaint(
 
     # Compute correlation
     corr = await complaint_workflow.correlate_with_fusion(db, complaint)
-    res = ComplaintResponse.model_validate(complaint)
-    res.correlation = corr
-    return res
+    return serialize_complaint_response(complaint, user, corr)
+
 
 
 # -----------------------------------------------------------------------------
@@ -164,9 +274,17 @@ async def list_complaints(
 
     # Enforce Role Scoping
     if user is None:
-        pass  # Unauthenticated public overview
+        if department_id and department_id != "ALL":
+            stmt = stmt.where(ComplaintModel.department_id == department_id)
+        if district_id and district_id != "ALL":
+            stmt = stmt.where(ComplaintModel.district_id == district_id)
     elif user.role == "CITIZEN":
-        stmt = stmt.where(ComplaintModel.citizen_id == user.id)
+        if department_id:
+            # Citizen or guest previewing department operational queue
+            if department_id != "ALL":
+                stmt = stmt.where(ComplaintModel.department_id == department_id)
+        else:
+            stmt = stmt.where(ComplaintModel.citizen_id == user.id)
     elif user.role == "FIELD_OFFICER":
         if user.unit_id:
             stmt = stmt.where(
@@ -178,19 +296,22 @@ async def list_complaints(
         else:
             stmt = stmt.where(ComplaintModel.assigned_officer_id == user.id)
     elif user.role == "DEPARTMENT":
-        effective_dept = enforce_department_scope(user, department_id)
-        stmt = stmt.where(ComplaintModel.department_id == effective_dept)
-        if district_id:
+        if department_id == "ALL" and getattr(user, "is_admin", False):
+            pass
+        else:
+            effective_dept = enforce_department_scope(user, department_id if department_id != "ALL" else None)
+            stmt = stmt.where(ComplaintModel.department_id == effective_dept)
+        if district_id and district_id != "ALL":
             stmt = stmt.where(ComplaintModel.district_id == district_id)
     elif user.role == "DISTRICT_ADMIN":
-        effective_dist = enforce_district_scope(user, district_id)
+        effective_dist = enforce_district_scope(user, district_id if district_id != "ALL" else None)
         stmt = stmt.where(ComplaintModel.district_id == effective_dist)
-        if department_id:
+        if department_id and department_id != "ALL":
             stmt = stmt.where(ComplaintModel.department_id == department_id)
     elif user.role in ("STATE_LEADERSHIP", "PLATFORM_ADMIN"):
-        if district_id:
+        if district_id and district_id != "ALL":
             stmt = stmt.where(ComplaintModel.district_id == district_id)
-        if department_id:
+        if department_id and department_id != "ALL":
             stmt = stmt.where(ComplaintModel.department_id == department_id)
 
     # Common Filters
@@ -209,9 +330,11 @@ async def list_complaints(
             )
         )
 
-    stmt = stmt.order_by(desc(ComplaintModel.created_at)).offset(offset).limit(limit)
+    # Prioritize live citizen reports (is_demo=False) at the top, then newest created_at
+    stmt = stmt.order_by(ComplaintModel.is_demo.asc(), desc(ComplaintModel.created_at)).offset(offset).limit(limit)
     result = await db.execute(stmt)
-    return result.scalars().all()
+    items = result.scalars().all()
+    return [serialize_complaint_response(c, user) for c in items]
 
 
 # -----------------------------------------------------------------------------
@@ -371,9 +494,8 @@ async def get_complaint_detail(
 
     corr = await complaint_workflow.correlate_with_fusion(db, complaint)
 
-    res = ComplaintResponse.model_validate(complaint)
+    res = serialize_complaint_response(complaint, user, corr)
     res.timeline = timeline
-    res.correlation = corr
     return res
 
 
@@ -818,4 +940,564 @@ async def correlate_incident(
 
     await db.commit()
     await db.refresh(complaint)
-    return complaint
+    return serialize_complaint_response(complaint, user)
+
+
+# -----------------------------------------------------------------------------
+# 13. Request Additional Information from Citizen (Officer Action)
+# -----------------------------------------------------------------------------
+@router.post("/{complaint_id}/request-information", response_model=ComplaintResponse)
+async def request_information(
+    complaint_id: str,
+    payload: RequestInformationRequest,
+    db: AsyncSession = Depends(get_db),
+    user: UserModel = Depends(require_role(["DISTRICT_ADMIN", "DEPARTMENT", "FIELD_OFFICER", "PLATFORM_ADMIN", "STATE_LEADERSHIP"])),
+):
+    """
+    Asks citizen for additional information, photos, or clarification.
+    Transitions status to NEEDS_INFORMATION and adds milestone to citizen timeline.
+    """
+    stmt = select(ComplaintModel).where(ComplaintModel.id == complaint_id)
+    res = await db.execute(stmt)
+    complaint = res.scalars().first()
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    complaint_workflow.check_object_scope(complaint, user)
+
+    complaint.status = "NEEDS_INFORMATION"
+    now_str = datetime.now(timezone.utc).isoformat()
+
+    notes = list(complaint.internal_notes or [])
+    notes.append({
+        "timestamp": now_str,
+        "author_id": user.id,
+        "author_role": user.role,
+        "action": "REQUESTED_INFORMATION",
+        "question": payload.question,
+    })
+    complaint.internal_notes = notes
+
+    updates = list(complaint.citizen_updates or [])
+    updates.append({
+        "timestamp": now_str,
+        "stage": "NEEDS_INFORMATION",
+        "title": "Additional Information Requested",
+        "message": f"Officer question: {payload.question}",
+    })
+    complaint.citizen_updates = updates
+
+    await complaint_workflow.log_audit_event(
+        db=db,
+        actor_role=user.role,
+        actor_id=user.id,
+        event_type="INFORMATION_REQUESTED",
+        complaint=complaint,
+        metadata={"question": payload.question},
+    )
+    await db.commit()
+    await db.refresh(complaint)
+    await complaint_workflow.broadcast_complaint_event(
+        "INFORMATION_REQUESTED", complaint, {"question": payload.question}
+    )
+    return serialize_complaint_response(complaint, user)
+
+
+# -----------------------------------------------------------------------------
+# 14. Provide Requested Information (Citizen Action)
+# -----------------------------------------------------------------------------
+@router.post("/{complaint_id}/provide-information", response_model=ComplaintResponse)
+async def provide_information(
+    complaint_id: str,
+    payload: ProvideInformationRequest,
+    db: AsyncSession = Depends(get_db),
+    user: Optional[UserModel] = Depends(get_optional_user),
+):
+    """
+    Citizen submits requested information or clarification.
+    Resumes complaint workflow back to active or triaged status.
+    """
+    stmt = select(ComplaintModel).where(ComplaintModel.id == complaint_id)
+    res = await db.execute(stmt)
+    complaint = res.scalars().first()
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    now_str = datetime.now(timezone.utc).isoformat()
+
+    updates = list(complaint.citizen_updates or [])
+    updates.append({
+        "timestamp": now_str,
+        "stage": "INFORMATION_PROVIDED",
+        "title": "Information Submitted",
+        "message": payload.response_text,
+    })
+    complaint.citizen_updates = updates
+
+    # Return to in-progress or triaged
+    if complaint.assigned_officer_id:
+        complaint.status = "IN_PROGRESS"
+    else:
+        complaint.status = "TRIAGED"
+
+    if payload.attachments:
+        cur_attach = list(complaint.attachments or [])
+        cur_attach.extend(payload.attachments)
+        complaint.attachments = cur_attach
+
+    actor_role = user.role if user else "CITIZEN"
+    actor_id = user.id if user else "citizen"
+
+    await complaint_workflow.log_audit_event(
+        db=db,
+        actor_role=actor_role,
+        actor_id=actor_id,
+        event_type="INFORMATION_PROVIDED",
+        complaint=complaint,
+        metadata={"response": payload.response_text},
+    )
+    await db.commit()
+    await db.refresh(complaint)
+    await complaint_workflow.broadcast_complaint_event(
+        "INFORMATION_PROVIDED", complaint, {"response": payload.response_text}
+    )
+    return serialize_complaint_response(complaint, user)
+
+
+# -----------------------------------------------------------------------------
+# 15. Operational Escalation
+# -----------------------------------------------------------------------------
+@router.post("/{complaint_id}/escalate", response_model=ComplaintResponse)
+async def escalate_complaint(
+    complaint_id: str,
+    payload: EscalationRequest,
+    db: AsyncSession = Depends(get_db),
+    user: UserModel = Depends(require_role(["DISTRICT_ADMIN", "DEPARTMENT", "FIELD_OFFICER", "PLATFORM_ADMIN", "STATE_LEADERSHIP"])),
+):
+    """
+    Escalates a stagnant or high-severity complaint to District HQ or State Disaster Cell.
+    """
+    stmt = select(ComplaintModel).where(ComplaintModel.id == complaint_id)
+    res = await db.execute(stmt)
+    complaint = res.scalars().first()
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    complaint_workflow.check_object_scope(complaint, user)
+
+    complaint.is_escalated = True
+    complaint.status = "ESCALATED"
+    if payload.elevate_priority:
+        complaint.priority = "CRITICAL" if complaint.priority in ["HIGH", "CRITICAL"] else "HIGH"
+
+    now_str = datetime.now(timezone.utc).isoformat()
+    notes = list(complaint.internal_notes or [])
+    notes.append({
+        "timestamp": now_str,
+        "author_id": user.id,
+        "author_role": user.role,
+        "action": "ESCALATED",
+        "reason": payload.reason,
+        "target_level": payload.target_level,
+    })
+    complaint.internal_notes = notes
+
+    updates = list(complaint.citizen_updates or [])
+    updates.append({
+        "timestamp": now_str,
+        "stage": "ESCALATED",
+        "title": "Priority Escalated",
+        "message": f"Escalated to {payload.target_level} for expedited intervention.",
+    })
+    complaint.citizen_updates = updates
+
+    await complaint_workflow.log_audit_event(
+        db=db,
+        actor_role=user.role,
+        actor_id=user.id,
+        event_type="COMPLAINT_ESCALATED",
+        complaint=complaint,
+        metadata={"reason": payload.reason, "target_level": payload.target_level},
+    )
+    await db.commit()
+    await db.refresh(complaint)
+    await complaint_workflow.broadcast_complaint_event(
+        "COMPLAINT_ESCALATED", complaint, {"reason": payload.reason}
+    )
+    return serialize_complaint_response(complaint, user)
+
+
+# -----------------------------------------------------------------------------
+# 16. Jurisdiction / Departmental Transfer
+# -----------------------------------------------------------------------------
+@router.post("/{complaint_id}/transfer", response_model=ComplaintResponse)
+async def transfer_complaint(
+    complaint_id: str,
+    payload: TransferRequest,
+    db: AsyncSession = Depends(get_db),
+    user: UserModel = Depends(require_role(["DISTRICT_ADMIN", "DEPARTMENT", "PLATFORM_ADMIN", "STATE_LEADERSHIP"])),
+):
+    """
+    Transfers complaint to another department or administrative district.
+    """
+    stmt = select(ComplaintModel).where(ComplaintModel.id == complaint_id)
+    res = await db.execute(stmt)
+    complaint = res.scalars().first()
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    complaint_workflow.check_object_scope(complaint, user)
+
+    prev_dept = complaint.department_name
+    prev_dist = complaint.district_name
+
+    if payload.target_district_id:
+        dist_info = HARYANA_DISTRICTS_BY_ID.get(payload.target_district_id)
+        if dist_info:
+            complaint.district_id = dist_info["id"]
+            complaint.district_name = dist_info["name"]
+
+    if payload.target_department_id:
+        dept_id, dept_name = complaint_workflow.resolve_department(complaint.category, payload.target_department_id)
+        complaint.department_id = dept_id
+        complaint.department_name = dept_name
+
+    complaint.status = "TRANSFERRED"
+    complaint.assigned_unit_id = None
+    complaint.assigned_officer_id = None
+    complaint.assigned_officer_name = None
+
+    now_str = datetime.now(timezone.utc).isoformat()
+    notes = list(complaint.internal_notes or [])
+    notes.append({
+        "timestamp": now_str,
+        "author_id": user.id,
+        "author_role": user.role,
+        "action": "TRANSFERRED",
+        "rationale": payload.rationale,
+        "transferred_from": f"{prev_dept} ({prev_dist})",
+        "transferred_to": f"{complaint.department_name} ({complaint.district_name})",
+    })
+    complaint.internal_notes = notes
+
+    updates = list(complaint.citizen_updates or [])
+    updates.append({
+        "timestamp": now_str,
+        "stage": "TRANSFERRED",
+        "title": "Transferred Jurisdiction",
+        "message": f"Transferred to {complaint.department_name} in {complaint.district_name}.",
+    })
+    complaint.citizen_updates = updates
+
+    await complaint_workflow.log_audit_event(
+        db=db,
+        actor_role=user.role,
+        actor_id=user.id,
+        event_type="COMPLAINT_TRANSFERRED",
+        complaint=complaint,
+        metadata={"rationale": payload.rationale, "new_department": complaint.department_id, "new_district": complaint.district_id},
+    )
+    await db.commit()
+    await db.refresh(complaint)
+    await complaint_workflow.broadcast_complaint_event("COMPLAINT_TRANSFERRED", complaint)
+    return serialize_complaint_response(complaint, user)
+
+
+# -----------------------------------------------------------------------------
+# 17. Link Duplicate Complaint
+# -----------------------------------------------------------------------------
+@router.post("/{complaint_id}/link-duplicate", response_model=ComplaintResponse)
+async def link_duplicate(
+    complaint_id: str,
+    payload: LinkDuplicateRequest,
+    db: AsyncSession = Depends(get_db),
+    user: UserModel = Depends(require_role(["DISTRICT_ADMIN", "DEPARTMENT", "PLATFORM_ADMIN", "STATE_LEADERSHIP"])),
+):
+    """
+    Links a duplicate complaint to a primary canonical complaint.
+    """
+    stmt = select(ComplaintModel).where(ComplaintModel.id == complaint_id)
+    res = await db.execute(stmt)
+    complaint = res.scalars().first()
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    complaint_workflow.check_object_scope(complaint, user)
+
+    complaint.status = "DUPLICATE_LINKED"
+    now_str = datetime.now(timezone.utc).isoformat()
+
+    notes = list(complaint.internal_notes or [])
+    notes.append({
+        "timestamp": now_str,
+        "author_id": user.id,
+        "author_role": user.role,
+        "action": "DUPLICATE_LINKED",
+        "parent_complaint_id": payload.parent_complaint_id,
+        "rationale": payload.rationale,
+    })
+    complaint.internal_notes = notes
+
+    updates = list(complaint.citizen_updates or [])
+    updates.append({
+        "timestamp": now_str,
+        "stage": "DUPLICATE_LINKED",
+        "title": "Merged with Related Grievance",
+        "message": f"Linked to primary ticket {payload.parent_complaint_id}.",
+    })
+    complaint.citizen_updates = updates
+
+    await complaint_workflow.log_audit_event(
+        db=db,
+        actor_role=user.role,
+        actor_id=user.id,
+        event_type="DUPLICATE_LINKED",
+        complaint=complaint,
+        metadata={"parent_complaint_id": payload.parent_complaint_id, "rationale": payload.rationale},
+    )
+    await db.commit()
+    await db.refresh(complaint)
+    return serialize_complaint_response(complaint, user)
+
+
+# -----------------------------------------------------------------------------
+# 18. AI Triage Human Override
+# -----------------------------------------------------------------------------
+@router.post("/{complaint_id}/override-triage", response_model=ComplaintResponse)
+async def override_triage(
+    complaint_id: str,
+    payload: OverrideTriageRequest,
+    db: AsyncSession = Depends(get_db),
+    user: UserModel = Depends(require_role(["DISTRICT_ADMIN", "DEPARTMENT", "PLATFORM_ADMIN", "STATE_LEADERSHIP"])),
+):
+    """
+    Allows authorized official to override AI routing, category, or priority with audit record.
+    """
+    stmt = select(ComplaintModel).where(ComplaintModel.id == complaint_id)
+    res = await db.execute(stmt)
+    complaint = res.scalars().first()
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    complaint_workflow.check_object_scope(complaint, user)
+
+    now_str = datetime.now(timezone.utc).isoformat()
+    previous = {
+        "category": complaint.category,
+        "sub_category": complaint.sub_category,
+        "department_id": complaint.department_id,
+        "priority": complaint.priority,
+    }
+
+    if payload.category:
+        complaint.category = payload.category.upper()
+    if payload.sub_category:
+        complaint.sub_category = payload.sub_category
+    if payload.department_id:
+        dept_id, dept_name = complaint_workflow.resolve_department(complaint.category, payload.department_id)
+        complaint.department_id = dept_id
+        complaint.department_name = dept_name
+    if payload.priority:
+        complaint.priority = payload.priority.upper()
+
+    override_record = {
+        "overridden_by_id": user.id,
+        "overridden_by_role": user.role,
+        "timestamp": now_str,
+        "reason": payload.reason,
+        "previous_state": previous,
+        "new_state": {
+            "category": complaint.category,
+            "sub_category": complaint.sub_category,
+            "department_id": complaint.department_id,
+            "priority": complaint.priority,
+        },
+    }
+    complaint.human_override = override_record
+
+    notes = list(complaint.internal_notes or [])
+    notes.append({
+        "timestamp": now_str,
+        "author_id": user.id,
+        "author_role": user.role,
+        "action": "TRIAGE_OVERRIDDEN",
+        "reason": payload.reason,
+        "changes": override_record["new_state"],
+    })
+    complaint.internal_notes = notes
+
+    await complaint_workflow.log_audit_event(
+        db=db,
+        actor_role=user.role,
+        actor_id=user.id,
+        event_type="TRIAGE_OVERRIDDEN",
+        complaint=complaint,
+        metadata=override_record,
+    )
+    await db.commit()
+    await db.refresh(complaint)
+    await complaint_workflow.broadcast_complaint_event("TRIAGE_OVERRIDDEN", complaint)
+    return serialize_complaint_response(complaint, user)
+
+
+# -----------------------------------------------------------------------------
+# 19. Spatial Viewport Query (Clustering & Pin Limiting)
+# -----------------------------------------------------------------------------
+@router.get("/spatial/viewport", response_model=ViewportResponse)
+async def get_spatial_viewport(
+    min_lat: float = Query(27.0),
+    max_lat: float = Query(32.0),
+    min_lng: float = Query(74.0),
+    max_lng: float = Query(78.5),
+    zoom: int = Query(8),
+    category: Optional[str] = Query(None),
+    priority: Optional[str] = Query(None),
+    status_filter: Optional[str] = Query(None, alias="status"),
+    include_demo: bool = Query(True),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Returns zoom-dependent spatial query results:
+    - zoom < 10: Aggregated district clusters with counts and priority breakdown (lightweight)
+    - zoom >= 10: Individual pin coordinates (up to 250 in viewport)
+    """
+    conds = [
+        ComplaintModel.latitude >= min_lat,
+        ComplaintModel.latitude <= max_lat,
+        ComplaintModel.longitude >= min_lng,
+        ComplaintModel.longitude <= max_lng,
+    ]
+    if not include_demo:
+        conds.append(ComplaintModel.is_demo == False)
+    if category:
+        conds.append(ComplaintModel.category == category.upper())
+    if priority:
+        conds.append(ComplaintModel.priority == priority.upper())
+    if status_filter:
+        conds.append(ComplaintModel.status == status_filter.upper())
+
+    if zoom < 10:
+        stmt = select(ComplaintModel).where(and_(*conds))
+        result = await db.execute(stmt)
+        all_comp = result.scalars().all()
+
+        clusters_dict = {}
+        for c in all_comp:
+            d_id = c.district_id
+            if d_id not in clusters_dict:
+                d_info = HARYANA_DISTRICTS_BY_ID.get(d_id, {"name": c.district_name, "lat": c.latitude, "lng": c.longitude})
+                clusters_dict[d_id] = {
+                    "cluster_id": f"cluster-{d_id}",
+                    "name": d_info.get("name", c.district_name),
+                    "district_id": d_id,
+                    "count": 0,
+                    "latitude": d_info.get("lat", c.latitude),
+                    "longitude": d_info.get("lng", c.longitude),
+                    "priority_breakdown": {},
+                    "category_breakdown": {},
+                }
+            cl = clusters_dict[d_id]
+            cl["count"] += 1
+            cl["priority_breakdown"][c.priority] = cl["priority_breakdown"].get(c.priority, 0) + 1
+            cl["category_breakdown"][c.category] = cl["category_breakdown"].get(c.category, 0) + 1
+
+        clusters = [ViewportCluster(**val) for val in clusters_dict.values()]
+        return ViewportResponse(
+            mode="clusters",
+            total_in_viewport=len(all_comp),
+            zoom=zoom,
+            clusters=clusters,
+            pins=[],
+        )
+    else:
+        stmt = (
+            select(ComplaintModel)
+            .where(and_(*conds))
+            .order_by(desc(ComplaintModel.created_at))
+            .limit(250)
+        )
+        result = await db.execute(stmt)
+        pins_data = result.scalars().all()
+
+        pins = [
+            ViewportPin(
+                id=c.id,
+                tracking_id=c.tracking_id,
+                title=c.title,
+                category=c.category,
+                status=c.status,
+                priority=c.priority,
+                latitude=c.latitude,
+                longitude=c.longitude,
+                district_id=c.district_id,
+                created_at=c.created_at,
+                is_demo=bool(c.is_demo),
+            )
+            for c in pins_data
+        ]
+        return ViewportResponse(
+            mode="pins",
+            total_in_viewport=len(pins),
+            zoom=zoom,
+            clusters=[],
+            pins=pins,
+        )
+
+
+# -----------------------------------------------------------------------------
+# 20. District Aggregates (All 22 Haryana Districts)
+# -----------------------------------------------------------------------------
+@router.get("/spatial/districts", response_model=List[DistrictAggregateItem])
+async def get_district_aggregates(
+    include_demo: bool = Query(True),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Returns aggregate operational health and complaint metrics for all 22 Haryana districts.
+    """
+    conds = []
+    if not include_demo:
+        conds.append(ComplaintModel.is_demo == False)
+
+    stmt = select(ComplaintModel)
+    if conds:
+        stmt = stmt.where(and_(*conds))
+
+    result = await db.execute(stmt)
+    complaints = result.scalars().all()
+
+    agg_map = {}
+    for d in HARYANA_DISTRICTS:
+        agg_map[d["id"]] = {
+            "district_code": d["id"],
+            "district_name": d["name"],
+            "latitude": d["lat"],
+            "longitude": d["lng"],
+            "total": 0,
+            "active": 0,
+            "resolved": 0,
+            "escalated": 0,
+            "critical_or_high": 0,
+            "avg_sla_hours": 24.0,
+        }
+
+    for c in complaints:
+        target_id = c.district_id
+        if target_id not in agg_map:
+            if target_id == "HR-KA":
+                target_id = "HR-KR"
+            elif target_id not in agg_map:
+                continue
+        item = agg_map[target_id]
+        item["total"] += 1
+        if c.status in ["RESOLVED", "VALIDATED"]:
+            item["resolved"] += 1
+        else:
+            item["active"] += 1
+        if c.is_escalated or c.status == "ESCALATED":
+            item["escalated"] += 1
+        if c.priority in ["HIGH", "CRITICAL"]:
+            item["critical_or_high"] += 1
+
+    return [DistrictAggregateItem(**val) for val in agg_map.values()]
+

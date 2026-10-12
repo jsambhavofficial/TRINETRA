@@ -1,20 +1,20 @@
 """
-TRINETRA API Configuration Settings
+NEXUS API Configuration Settings
 Loads environment variables with safe defaults for local development.
 """
-from typing import List, Union
+from typing import List, Union, Optional
 from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=[".env", "../../.env", "../.env"],
         env_file_encoding="utf-8",
         extra="ignore"
     )
 
-    APP_NAME: str = "TRINETRA"
+    APP_NAME: str = "NEXUS"
     APP_ENV: str = "development"
     DEBUG: bool = True
     LOG_LEVEL: str = "INFO"
@@ -49,6 +49,14 @@ class Settings(BaseSettings):
     # Default World
     DEFAULT_WORLD_ID: str = "world-nexus-city-01"
     DEMO_MODE: bool = True
+
+    # Voice & Speech-to-Text Providers
+    STT_PROVIDER: str = "demo"  # "demo", "whisper", or "none"
+    UPLOAD_MAX_BYTES: int = 26214400  # 25MB
+
+    # Google Gemini AI Model Integration
+    gemine_api: Optional[str] = None
+    GEMINI_API_KEY: Optional[str] = None
 
     @field_validator("API_CORS_ORIGINS", mode="before")
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:

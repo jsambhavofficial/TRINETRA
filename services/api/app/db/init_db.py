@@ -126,6 +126,25 @@ async def init_db() -> None:
                 except Exception:
                     pass
 
+            # Safe Complaints table Phase 2-7 schema evolution
+            for col, col_type in [
+                ("language", "VARCHAR(16) DEFAULT 'en'"),
+                ("voice_transcript", "TEXT"),
+                ("voice_audio_uri", "VARCHAR(512)"),
+                ("sub_category", "VARCHAR(64)"),
+                ("locality", "VARCHAR(128)"),
+                ("ai_triage", "JSON"),
+                ("ai_routing_rule", "VARCHAR(128)"),
+                ("human_override", "JSON"),
+                ("internal_notes", "JSON DEFAULT '[]'"),
+                ("citizen_updates", "JSON DEFAULT '[]'"),
+                ("is_demo", "BOOLEAN DEFAULT 0"),
+            ]:
+                try:
+                    await conn.execute(text(f"ALTER TABLE complaints ADD COLUMN {col} {col_type}"))
+                except Exception:
+                    pass
+
     async with async_session_factory() as session:
         # Check and populate complaints seed (including CSV dataset for all 22 Haryana districts)
         existing_cmp_ids = {r[0] for r in (await session.execute(select(ComplaintModel.id))).all()}

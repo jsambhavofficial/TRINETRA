@@ -21,6 +21,7 @@ import {
   RefreshCw,
   Search,
 } from "lucide-react";
+import { HaryanaGovernanceMap } from "@/components/map/HaryanaGovernanceMap";
 
 export default function StateLeadershipPortal() {
   const [authUser, setAuthUser] = useState<any>(null);
@@ -149,6 +150,11 @@ export default function StateLeadershipPortal() {
             <p className="text-2xl font-black text-emerald-400 font-mono">{summary.resolutionRatePct}%</p>
             <span className="text-[10px] text-slate-500 font-mono">State SLA Target &gt; 90%</span>
           </div>
+        </div>
+
+        {/* Haryana Spatial Intelligence & GIS Map */}
+        <div className="space-y-2">
+          <HaryanaGovernanceMap userRole="STATE_LEADERSHIP" />
         </div>
 
         {/* 22 Districts Performance & Escalations Grid */}

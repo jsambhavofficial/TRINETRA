@@ -92,3 +92,24 @@ class ComplaintModel(TimeStampedModel):
     escalation_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     sla_deadline: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Multi-lingual & Voice Intake Support
+    language: Mapped[str] = mapped_column(String(16), default="en", nullable=False)
+    voice_transcript: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    voice_audio_uri: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+
+    # Granular Administrative Geography & Taxonomy
+    sub_category: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    locality: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
+
+    # Explainable AI Triage & Routing Decision Metadata
+    ai_triage: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    ai_routing_rule: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    human_override: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Information Segregation (Internal Officer Notes vs Public Citizen Updates)
+    internal_notes: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    citizen_updates: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+
+    # Synthetic Demonstration Flag
+    is_demo: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)

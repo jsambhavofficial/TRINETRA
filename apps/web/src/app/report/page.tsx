@@ -4,13 +4,18 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// Preset landmarks in the fictional NEXUS city
+import { HARYANA_DISTRICTS, findNearestHaryanaDistrict } from "@/lib/haryana";
+
+// Preset landmarks across key Haryana districts
 const CITY_PRESETS = [
-  { name: "Road R17 Bypass Bridge", lat: 26.9180, lng: 75.7920, desc: "Primary north-south river corridor" },
-  { name: "Central Memorial Hospital", lat: 26.9120, lng: 75.7880, desc: "Level 1 Trauma Center & ICU" },
-  { name: "North Industrial Substation", lat: 26.9250, lng: 75.7850, desc: "High-voltage distribution hub" },
-  { name: "Metro River Crossing Pier 4", lat: 26.9150, lng: 75.8010, desc: "Rapid transit bridge structure" },
-  { name: "East Logistics Corridor", lat: 26.9080, lng: 75.7990, desc: "Heavy transport & warehousing artery" },
+  { name: "Gurugram Cyber City / NH-48 Underpass", lat: 28.4721, lng: 77.0725, desc: "Key economic corridor & urban drainage hotspot" },
+  { name: "Faridabad Bata Chowk Flyover", lat: 28.4089, lng: 77.3178, desc: "Industrial and residential highway interchange" },
+  { name: "Sonipat Kundli Logistics Arterial", lat: 28.9931, lng: 77.0151, desc: "High-volume freight corridor" },
+  { name: "Ambala Cantt Railway Station Road", lat: 30.3782, lng: 76.7767, desc: "North Haryana civil transit interchange" },
+  { name: "Karnal GT Road Agriculture Sector", lat: 29.6857, lng: 76.9905, desc: "National Highway 44 primary artery" },
+  { name: "Hisar Cantt Feeder Substation", lat: 29.1492, lng: 75.7217, desc: "Western Haryana power distribution node" },
+  { name: "Rohtak PGIMS Medical Crossing", lat: 28.8955, lng: 76.6066, desc: "Level 1 Emergency & Trauma hospital zone" },
+  { name: "Panchkula Sector 5 MDC Complex", lat: 30.6942, lng: 76.8606, desc: "Shivalik foothills civic administration zone" },
 ];
 
 export default function ReportPage() {
@@ -21,8 +26,8 @@ export default function ReportPage() {
 
   // Form Fields
   const [textContent, setTextContent] = useState("");
-  const [latitude, setLatitude] = useState<number>(26.9180);
-  const [longitude, setLongitude] = useState<number>(75.7920);
+  const [latitude, setLatitude] = useState<number>(28.4595);
+  const [longitude, setLongitude] = useState<number>(77.0266);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
 
@@ -357,17 +362,18 @@ export default function ReportPage() {
           ? "ELECTRICAL_HAZARD"
           : "ROAD_BLOCKAGE";
 
+        const nearestDistrict = findNearestHaryanaDistrict(latitude, longitude);
         await fetch("http://localhost:8000/api/v1/complaints", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             category: cat,
-            title: textContent.slice(0, 80) || "Citizen Observation Report",
+            title: textContent.slice(0, 80) || `Citizen Observation Report (${nearestDistrict.name})`,
             description: textContent || "Citizen reported field hazard observation.",
-            district_id: "HR-GU",
+            district_id: nearestDistrict.id,
             latitude,
             longitude,
-            address: "Reported Observation Site, Gurugram, Haryana",
+            address: `${nearestDistrict.name}, Haryana`,
             citizen_name: "Citizen Reporter",
             citizen_phone: "+91-98100-11223",
           }),
