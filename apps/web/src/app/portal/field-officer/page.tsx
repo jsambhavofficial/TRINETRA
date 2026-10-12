@@ -1,77 +1,89 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/command-center/Header";
 import {
   Truck,
+  CheckSquare,
+  Camera,
+  Upload,
   CheckCircle2,
   Clock,
+  AlertCircle,
   MapPin,
-  Upload,
-  CheckSquare,
-  AlertTriangle,
+  RefreshCw,
   Send,
   Navigation,
   FileText,
   ShieldCheck,
   ChevronRight,
-  RefreshCw,
-  AlertCircle,
-  Camera,
+  ExternalLink,
   Sparkles,
-  Building2,
   Check,
+  Building2,
+  AlertTriangle,
 } from "lucide-react";
 
 const HARYANA_UNITS = [
-  { id: "ALL", name: "All Field Units (सभी फील्ड यूनिट्स — Consolidated)" },
-  { id: "UNIT-AMB-01", name: "UNIT-AMB-01 (Ambala Quick Response Unit)" },
-  { id: "UNIT-PWR-01", name: "UNIT-PWR-01 (Power Feeder Rapid Restoration)" },
-  { id: "UNIT-HLTH-02", name: "UNIT-HLTH-02 (Health & Casualty Mobile Squad)" },
-  { id: "UNIT-PWD-01", name: "UNIT-PWD-01 (PWD Heavy Road Remediation)" },
-  { id: "UNIT-SON-02", name: "UNIT-SON-02 (Sonipat Grid Response Team)" },
-  { id: "UNIT-PAN-01", name: "UNIT-PAN-01 (Panipat Civic Drainage Unit)" },
+  { id: "UNIT-AMB-01", name: "Ambala Emergency Dewatering Unit 1" },
+  { id: "UNIT-HLTH-02", name: "Gurugram Civil Hospital Mobile Triage 2" },
+  { id: "UNIT-PWR-01", name: "Faridabad DHBVN Line Restoration 1" },
+  { id: "UNIT-ROH-03", name: "Rohtak Traffic & Hazard Clearing 3" },
+  { id: "UNIT-DIS-01", name: "State Civil Defence Flying Squad 1" },
 ];
 
 function FieldOfficerPortalContent() {
   const searchParams = useSearchParams();
-  const urlTrackingId = searchParams?.get("tracking_id");
   const urlUnit = searchParams?.get("unit_id");
+  const urlTrackingId = searchParams?.get("tracking_id");
 
   const [authUser, setAuthUser] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [selectedUnit, setSelectedUnit] = useState<string>(urlUnit || "ALL");
+  const [selectedUnit, setSelectedUnit] = useState<string>(urlUnit || "UNIT-AMB-01");
   const [highlightTrackingId, setHighlightTrackingId] = useState<string | null>(urlTrackingId || null);
 
   const [tasks, setTasks] = useState<any[]>([]);
   const [activeTask, setActiveTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Field updates state
+  // Field Note
   const [fieldNote, setFieldNote] = useState("");
-  const [beforePhoto, setBeforePhoto] = useState("https://images.unsplash.com/photo-1547683905-f686c993aae5?w=800");
-  const [afterPhoto, setAfterPhoto] = useState("https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800");
-  const [proofNote, setProofNote] = useState("");
+
+  // Photographic Proof State
+  const [beforePhoto, setBeforePhoto] = useState<string>(
+    "https://images.unsplash.com/photo-1544717305-2782549b5136?w=800"
+  );
+  const [afterPhoto, setAfterPhoto] = useState<string>(
+    "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=800"
+  );
+  const [proofNote, setProofNote] = useState(
+    "Dewatering pump operated at 1400 RPM. Stormwater drained from road carriageway, traffic reopened."
+  );
+  const [locationConfirmed, setLocationConfirmed] = useState(true);
+
   const [submitting, setSubmitting] = useState(false);
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem("trinetra_user");
-      const storedToken = localStorage.getItem("trinetra_token") || localStorage.getItem("token");
-      if (stored) setAuthUser(JSON.parse(stored));
+      const storedToken = localStorage.getItem("trinetra_token");
+      if (stored) {
+        const u = JSON.parse(stored);
+        setAuthUser(u);
+        if (u.unit_id && !urlUnit) setSelectedUnit(u.unit_id);
+      }
       if (storedToken) setToken(storedToken);
     } catch (e) {
       // ignore
     }
-  }, []);
+  }, [urlUnit]);
 
   useEffect(() => {
-    if (urlUnit) setSelectedUnit(urlUnit);
     if (urlTrackingId) setHighlightTrackingId(urlTrackingId);
-  }, [urlUnit, urlTrackingId]);
+  }, [urlTrackingId]);
 
   const loadTasks = async () => {
     try {
@@ -79,13 +91,12 @@ function FieldOfficerPortalContent() {
       const headers: Record<string, string> = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const unitQuery = selectedUnit === "ALL" ? "?unit_id=ALL" : `?unit_id=${selectedUnit}`;
+      const unitQuery = selectedUnit ? `?assigned_unit_id=${selectedUnit}` : "";
       const res = await fetch(`/api/v1/complaints${unitQuery}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setTasks(data);
 
-        // Auto-focus on URL tracking ID if present
         if (highlightTrackingId) {
           const match = data.find((t: any) => t.tracking_id === highlightTrackingId);
           if (match) {
@@ -97,8 +108,8 @@ function FieldOfficerPortalContent() {
         if (data.length > 0 && !activeTask) {
           setActiveTask(data[0]);
         } else if (activeTask) {
-          const fresh = data.find((t: any) => t.id === activeTask.id);
-          if (fresh) setActiveTask(fresh);
+          const updatedActive = data.find((t: any) => t.id === activeTask.id);
+          if (updatedActive) setActiveTask(updatedActive);
         }
       }
     } catch (e) {
@@ -110,13 +121,9 @@ function FieldOfficerPortalContent() {
 
   useEffect(() => {
     loadTasks();
-    const interval = setInterval(() => {
-      loadTasks();
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [token, selectedUnit, highlightTrackingId]);
+  }, [selectedUnit, token]);
 
-  const handleStatusChange = async (newStatus: string) => {
+  const handleToggleSop = async (stepId: string, currentStatus: boolean) => {
     if (!activeTask) return;
     setSubmitting(true);
     try {
@@ -126,33 +133,9 @@ function FieldOfficerPortalContent() {
       const res = await fetch(`/api/v1/complaints/${activeTask.id}/field-progress`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setActiveTask(updated);
-        setSuccessBanner(`Operational status updated to ${newStatus}`);
-        loadTasks();
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleToggleSop = async (stepId: string, currentStatus: boolean) => {
-    if (!activeTask) return;
-    try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-
-      const res = await fetch(`/api/v1/complaints/${activeTask.id}/field-progress`, {
-        method: "POST",
-        headers,
         body: JSON.stringify({
           sop_step_id: stepId,
-          sop_completed: !currentStatus,
+          completed: !currentStatus,
         }),
       });
       if (res.ok) {
@@ -162,6 +145,8 @@ function FieldOfficerPortalContent() {
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -176,13 +161,42 @@ function FieldOfficerPortalContent() {
       const res = await fetch(`/api/v1/complaints/${activeTask.id}/field-progress`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ note: fieldNote.trim() }),
+        body: JSON.stringify({
+          field_note: fieldNote.trim(),
+        }),
       });
       if (res.ok) {
         const updated = await res.json();
         setActiveTask(updated);
         setFieldNote("");
-        setSuccessBanner("Field observation note recorded in operational log.");
+        loadTasks();
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleStatusChange = async (newStatus: "EN_ROUTE" | "ON_SCENE" | "IN_PROGRESS") => {
+    if (!activeTask) return;
+    setSubmitting(true);
+    try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch(`/api/v1/complaints/${activeTask.id}/field-progress`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          status_override: newStatus === "IN_PROGRESS" ? "IN_PROGRESS" : undefined,
+          field_note: `Unit status updated to: ${newStatus.replace("_", " ")}`,
+        }),
+      });
+      if (res.ok) {
+        setSuccessBanner(`Operational status updated to ${newStatus}`);
+        const updated = await res.json();
+        setActiveTask(updated);
         loadTasks();
       }
     } catch (e) {
@@ -206,14 +220,14 @@ function FieldOfficerPortalContent() {
         body: JSON.stringify({
           before_photo: beforePhoto,
           after_photo: afterPhoto,
-          field_note: proofNote || "All SOP steps completed. Physical clearance validated on-ground.",
-          location_confirmed: true,
+          field_note: proofNote,
+          location_confirmed: locationConfirmed,
         }),
       });
       if (res.ok) {
-        const updated = await res.json();
-        setActiveTask(updated);
-        setSuccessBanner("Resolution proof submitted! Status is now AWAITING_VALIDATION pending supervisor signoff.");
+        setSuccessBanner(
+          `Resolution Proof for [${activeTask.tracking_id}] submitted! Task transferred to Supervisor Queue for Signoff.`
+        );
         loadTasks();
       }
     } catch (e) {
@@ -224,39 +238,54 @@ function FieldOfficerPortalContent() {
   };
 
   return (
-    <div className="min-h-screen bg-space-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col font-sans selection:bg-blue-500/20 selection:text-blue-900 pb-12">
       <Header />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Terminal Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-5">
-          <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
-              <Truck className="w-3.5 h-3.5" />
-              <span>FIELD OFFICER MOBILE RESPONSE TERMINAL • HARYANA</span>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Field Officer Hero Banner */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-50/90 via-slate-50 to-blue-50/40 border border-blue-100 p-6 sm:p-7 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          {/* Background watermark */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/haryana_heritage_banner.jpg"
+            alt="Haryana Heritage"
+            className="absolute right-0 top-0 bottom-0 w-full sm:w-1/2 opacity-25 lg:opacity-30 object-cover pointer-events-none mix-blend-multiply [mask-image:linear-gradient(to_left,black_60%,transparent_100%)]"
+          />
+
+          {/* Slogan Graphic on Top Right */}
+          <div className="hidden md:flex flex-col items-center gap-1 absolute right-8 top-6 pointer-events-none z-10">
+            <div className="text-base font-black text-[#1E3A8A] tracking-tight">स्वच्छ हरियाणा</div>
+            <div className="text-base font-black text-[#16A34A] tracking-tight">सशक्त हरियाणा</div>
+            <svg className="w-24 h-2.5" viewBox="0 0 100 10" fill="none">
+              <path d="M0 5C25 1 35 9 60 5C85 1 95 9 100 5" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          <div className="space-y-1.5 z-10 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-100 text-cyan-800 border border-cyan-200">
+              <Truck className="w-3.5 h-3.5 text-cyan-600" />
+              <span>FIELD RESPONSE TERMINAL • HARYANA GROUND SQUAD</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
-              <span>Tactical Mission & Task Execution</span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+              Field Unit Operational Execution
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400">
-              Active Unit Filter: <strong className="text-cyan-300 font-mono">{selectedUnit}</strong> | Responder: <span className="text-slate-200">{authUser?.display_name || "Field Officer"}</span>
+            <p className="text-xs sm:text-sm text-slate-600 font-medium">
+              Ground Protocol Checklist, Geotagged Proof Capture & Supervisor Submission
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Unit Selector */}
-            <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg p-1.5 shadow-sm">
-              <Truck className="w-4 h-4 text-cyan-400 ml-1" />
+          <div className="flex items-center gap-2 z-10 flex-wrap">
+            <div className="relative">
               <select
                 value={selectedUnit}
                 onChange={(e) => {
                   setSelectedUnit(e.target.value);
                   setHighlightTrackingId(null);
                 }}
-                className="bg-transparent text-white text-xs font-semibold outline-none py-1 px-1 cursor-pointer"
+                className="bg-white border border-slate-200 text-slate-800 text-xs font-bold py-2 pl-3 pr-8 rounded-xl shadow-2xs outline-none cursor-pointer"
               >
                 {HARYANA_UNITS.map((u) => (
-                  <option key={u.id} value={u.id} className="bg-slate-900 text-white">
+                  <option key={u.id} value={u.id}>
                     {u.name}
                   </option>
                 ))}
@@ -265,41 +294,26 @@ function FieldOfficerPortalContent() {
 
             <button
               onClick={loadTasks}
-              className="p-2.5 rounded-lg bg-surface-elevated border border-surface-border text-slate-300 hover:text-white transition-colors"
+              className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 shadow-2xs transition-colors"
               title="Refresh Queue"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </button>
-            {activeTask && (
-              <span
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono ${
-                  activeTask.status === "RESOLVED"
-                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                    : activeTask.status === "AWAITING_VALIDATION"
-                    ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                    : activeTask.status === "IN_PROGRESS"
-                    ? "bg-sky-500/20 text-sky-400 border border-sky-500/30"
-                    : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                }`}
-              >
-                STATUS: {activeTask.status}
-              </span>
-            )}
           </div>
         </div>
 
-        {/* Highlight Alert for task assigned from department */}
+        {/* Highlight Alert */}
         {highlightTrackingId && (
-          <div className="p-4 rounded-xl bg-cyan-950/50 border border-cyan-500/50 text-cyan-200 text-xs flex items-center justify-between gap-3 shadow-lg animate-in fade-in">
+          <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-center justify-between gap-3 shadow-xs animate-in fade-in">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse shrink-0" />
+              <Sparkles className="w-4 h-4 text-blue-600 animate-pulse shrink-0" />
               <span>
-                Department Assigned Mission: Task <strong className="font-mono text-white text-xs">{highlightTrackingId}</strong> is selected and ready for field response execution below!
+                Department Assigned Mission: Task <strong className="font-mono text-blue-700">{highlightTrackingId}</strong> is selected and ready for field response execution below!
               </span>
             </div>
             <button
               onClick={() => setHighlightTrackingId(null)}
-              className="text-cyan-400 hover:text-white px-2 py-0.5 rounded bg-cyan-900/40 text-[11px]"
+              className="text-blue-600 hover:text-blue-900 px-2 py-0.5 rounded bg-blue-100 text-[11px] font-bold"
             >
               ✕ Dismiss
             </button>
@@ -308,46 +322,44 @@ function FieldOfficerPortalContent() {
 
         {/* Success Banner */}
         {successBanner && (
-          <div className="p-3.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between">
-            <span>{successBanner}</span>
-            <button onClick={() => setSuccessBanner(null)} className="text-emerald-400 hover:text-white">✕</button>
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>{successBanner}</span>
+            </div>
+            <button onClick={() => setSuccessBanner(null)} className="text-emerald-700 font-bold hover:text-emerald-950">✕</button>
           </div>
         )}
 
-        {/* Task Selection Bar */}
-        <div className="space-y-1.5">
-          <div className="text-[11px] font-mono text-slate-400 flex items-center justify-between">
+        {/* Task Selection Horizontal Bar */}
+        <div className="space-y-2">
+          <div className="text-xs font-bold text-slate-600 flex items-center justify-between">
             <span>Active Field Missions ({tasks.length}):</span>
-            <span className="text-[10px] text-cyan-400">Click a card to execute mission SOP & proof</span>
+            <span className="text-[11px] text-blue-600">Click a card to execute mission SOP & proof</span>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex gap-2.5 overflow-x-auto pb-2">
             {tasks.map((t) => {
-              const isMatch = t.tracking_id === highlightTrackingId;
+              const isMatch = activeTask?.id === t.id;
               return (
                 <button
                   key={t.id}
                   onClick={() => setActiveTask(t)}
-                  className={`px-3.5 py-2.5 rounded-lg border text-xs font-semibold shrink-0 transition-all text-left min-w-[220px] ${
-                    activeTask?.id === t.id
-                      ? "bg-cyan-950/60 border-cyan-400 text-cyan-200 shadow-md ring-1 ring-cyan-500/50"
-                      : "bg-surface-base border-surface-border text-slate-400 hover:text-white"
+                  className={`p-3.5 rounded-2xl border text-xs text-left transition-all min-w-[230px] shrink-0 shadow-2xs ${
+                    isMatch
+                      ? "bg-blue-50 border-blue-400 text-blue-950 ring-2 ring-blue-500/30"
+                      : "bg-white border-slate-200/90 text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  <div className="flex items-center justify-between font-mono text-[10px] pb-1">
-                    <span className="text-emerald-400 font-bold">{t.tracking_id}</span>
-                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
-                      t.status === "RESOLVED" ? "bg-emerald-500/20 text-emerald-400" :
-                      t.status === "AWAITING_VALIDATION" ? "bg-purple-500/20 text-purple-300" :
-                      t.status === "IN_PROGRESS" ? "bg-sky-500/20 text-sky-300" :
-                      "bg-amber-500/20 text-amber-300"
-                    }`}>
+                  <div className="flex items-center justify-between pb-1 font-mono text-[10px]">
+                    <span className="font-bold text-blue-700">{t.tracking_id}</span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700">
                       {t.status}
                     </span>
                   </div>
-                  <div className="truncate text-white font-medium">{t.title}</div>
-                  <div className="text-[10px] text-slate-400 flex items-center justify-between pt-1 font-mono">
+                  <div className="font-bold text-slate-900 truncate">{t.title}</div>
+                  <div className="text-[10px] text-slate-400 flex items-center justify-between pt-1">
                     <span>{t.department_id}</span>
-                    <span className="text-cyan-400">{t.assigned_unit_id || "Unassigned"}</span>
+                    <span className="text-blue-600 font-semibold">{t.assigned_unit_id || "Unassigned"}</span>
                   </div>
                 </button>
               );
@@ -360,34 +372,34 @@ function FieldOfficerPortalContent() {
             {/* Left 2 Cols: Mission Details & SOP Checklist */}
             <div className="lg:col-span-2 space-y-6">
               {/* Mission Details Card */}
-              <div className="p-5 rounded-xl bg-surface-base border border-surface-border space-y-4">
+              <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-elevated text-cyan-300">
+                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                       {activeTask.category} • {activeTask.district_name || activeTask.district_id} • {activeTask.department_name || activeTask.department_id}
                     </span>
-                    <h2 className="text-lg font-bold text-white mt-2">{activeTask.title}</h2>
-                    <p className="text-xs text-slate-300 mt-1 leading-relaxed">{activeTask.description}</p>
+                    <h2 className="text-base sm:text-lg font-extrabold text-slate-900 mt-2">{activeTask.title}</h2>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">{activeTask.description}</p>
                   </div>
-                  <span className="text-xs font-mono font-bold px-2.5 py-1 rounded bg-rose-950 text-rose-300 border border-rose-600/40 shrink-0">
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 shrink-0">
                     {activeTask.priority}
                   </span>
                 </div>
 
-                <div className="p-3 rounded-lg bg-surface-elevated/40 border border-surface-border text-xs text-slate-300 flex items-center justify-between">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <MapPin className="w-4 h-4 text-emerald-400" />
+                    <MapPin className="w-4 h-4 text-blue-600" />
                     <span>{activeTask.address || "Sector Location, Gurugram"}</span>
                   </span>
-                  <span className="font-mono text-[11px] text-slate-400">
+                  <span className="font-mono text-[11px] text-slate-500">
                     GPS: {activeTask.latitude ? activeTask.latitude.toFixed(4) : "28.4595"}, {activeTask.longitude ? activeTask.longitude.toFixed(4) : "77.0266"}
                   </span>
                 </div>
 
-                {/* Supervisor Rejection Notice if Rework Requested */}
+                {/* Supervisor Rejection Notice */}
                 {activeTask.validation_status === "REWORK_REQUESTED" && activeTask.rejection_reason && (
-                  <div className="p-3.5 rounded-lg bg-rose-950/30 border border-rose-500/40 text-xs text-rose-300 space-y-1">
-                    <div className="font-bold flex items-center gap-1.5 text-rose-400">
+                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 space-y-1">
+                    <div className="font-bold flex items-center gap-1.5 text-rose-700">
                       <AlertCircle className="w-4 h-4" />
                       <span>Supervisor Rejection & Rework Instructions:</span>
                     </div>
@@ -396,14 +408,14 @@ function FieldOfficerPortalContent() {
                 )}
 
                 {/* Tactical Status Switcher */}
-                <div className="space-y-1.5 pt-2 border-t border-surface-border/60">
-                  <span className="text-xs font-semibold text-slate-300">Set Tactical Execution Status:</span>
+                <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                  <span className="text-xs font-bold text-slate-700">Set Tactical Execution Status:</span>
                   <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
                       disabled={submitting}
                       onClick={() => handleStatusChange("EN_ROUTE")}
-                      className="py-2 px-3 rounded-lg text-xs font-bold bg-surface-elevated border border-surface-border hover:border-cyan-500 text-slate-300 hover:text-white"
+                      className="py-2.5 px-3 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors"
                     >
                       En Route
                     </button>
@@ -411,7 +423,7 @@ function FieldOfficerPortalContent() {
                       type="button"
                       disabled={submitting}
                       onClick={() => handleStatusChange("ON_SCENE")}
-                      className="py-2 px-3 rounded-lg text-xs font-bold bg-surface-elevated border border-surface-border hover:border-cyan-500 text-slate-300 hover:text-white"
+                      className="py-2.5 px-3 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors"
                     >
                       On Scene
                     </button>
@@ -419,7 +431,7 @@ function FieldOfficerPortalContent() {
                       type="button"
                       disabled={submitting}
                       onClick={() => handleStatusChange("IN_PROGRESS")}
-                      className="py-2 px-3 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-black font-extrabold shadow"
+                      className="py-2.5 px-3 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors"
                     >
                       Executing Work
                     </button>
@@ -428,23 +440,23 @@ function FieldOfficerPortalContent() {
               </div>
 
               {/* SOP Checklist Card */}
-              <div className="p-5 rounded-xl bg-surface-base border border-surface-border space-y-4">
-                <div className="flex items-center justify-between border-b border-surface-border pb-3">
+              <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <CheckSquare className="w-4 h-4 text-emerald-400" />
+                    <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                      <CheckSquare className="w-4 h-4 text-blue-600" />
                       <span>Standard Operating Procedure (SOP) Checklist</span>
                     </h3>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
+                    <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
                       Check each mandatory protocol step as on-ground operations progress
                     </p>
                   </div>
-                  <span className="text-xs font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/30">
+                  <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
                     {activeTask.sop_checklist?.filter((s: any) => s.completed).length || 0} / {activeTask.sop_checklist?.length || 0} Done
                   </span>
                 </div>
 
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   {(activeTask.sop_checklist?.length ? activeTask.sop_checklist : [
                     { id: "sop-1", title: "Site safety perimeter secured and traffic diversion signboards established", completed: false },
                     { id: "sop-2", title: "Physical remediation and defect clearance executed by assigned technicians", completed: false },
@@ -454,10 +466,10 @@ function FieldOfficerPortalContent() {
                     <div
                       key={step.id}
                       onClick={() => handleToggleSop(step.id, step.completed)}
-                      className={`p-3 rounded-lg border text-xs flex items-center justify-between cursor-pointer transition-all ${
+                      className={`p-3 rounded-xl border text-xs flex items-center justify-between cursor-pointer transition-all ${
                         step.completed
-                          ? "bg-emerald-950/20 border-emerald-500/40 text-emerald-300"
-                          : "bg-surface-elevated border-surface-border text-slate-300 hover:border-slate-500"
+                          ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                          : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -465,14 +477,14 @@ function FieldOfficerPortalContent() {
                           type="checkbox"
                           checked={Boolean(step.completed)}
                           onChange={() => {}}
-                          className="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-surface-border pointer-events-none"
+                          className="w-4 h-4 rounded text-blue-600 pointer-events-none"
                         />
-                        <span className={step.completed ? "line-through text-slate-400" : "font-medium"}>
+                        <span className={step.completed ? "line-through text-slate-400" : "font-semibold"}>
                           {step.title}
                         </span>
                       </div>
                       {step.completed && (
-                        <span className="text-[10px] font-mono text-emerald-400 font-bold">✓ Verified</span>
+                        <span className="text-[10px] text-emerald-700 font-bold">✓ Verified</span>
                       )}
                     </div>
                   ))}
@@ -480,9 +492,9 @@ function FieldOfficerPortalContent() {
               </div>
 
               {/* Field Observation Notes */}
-              <div className="p-5 rounded-xl bg-surface-base border border-surface-border space-y-3">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-cyan-400" />
+              <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-3">
+                <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-blue-600" />
                   <span>Real-time Field Observation Log</span>
                 </h3>
 
@@ -492,12 +504,12 @@ function FieldOfficerPortalContent() {
                     value={fieldNote}
                     onChange={(e) => setFieldNote(e.target.value)}
                     placeholder="Log operational update (e.g. Pump speed at 1200 RPM, water receding)..."
-                    className="flex-1 p-2.5 rounded-lg bg-slate-900 border border-surface-border text-xs text-white"
+                    className="flex-1 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button
                     type="submit"
                     disabled={submitting || !fieldNote.trim()}
-                    className="px-4 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-black text-xs font-bold inline-flex items-center gap-1"
+                    className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold inline-flex items-center gap-1 shadow-2xs"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>Log</span>
@@ -505,14 +517,14 @@ function FieldOfficerPortalContent() {
                 </form>
 
                 {activeTask.field_notes?.length > 0 && (
-                  <div className="space-y-2 pt-2">
+                  <div className="space-y-2 pt-1">
                     {activeTask.field_notes.map((n: any, idx: number) => (
-                      <div key={idx} className="p-2.5 rounded-lg bg-surface-elevated border border-surface-border text-xs flex justify-between gap-2">
+                      <div key={idx} className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs flex justify-between gap-2">
                         <div>
-                          <p className="text-slate-200">{n.text}</p>
-                          <p className="text-[10px] text-slate-500 mt-0.5">{n.author} ({n.unit_id})</p>
+                          <p className="text-slate-800 font-medium">{n.text}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">{n.author} ({n.unit_id})</p>
                         </div>
-                        <span className="text-[10px] font-mono text-slate-500 shrink-0">
+                        <span className="text-[10px] font-mono text-slate-400 shrink-0">
                           {new Date(n.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                         </span>
                       </div>
@@ -522,61 +534,95 @@ function FieldOfficerPortalContent() {
               </div>
             </div>
 
-            {/* Right Col: Proof Submission & Supervisor Validation Notice */}
+            {/* Right Col: Photographic Proof & Supervisor Signoff Submission */}
             <div className="space-y-6">
-              <div className="p-5 rounded-xl bg-surface-base border border-surface-border space-y-4">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Camera className="w-4 h-4 text-emerald-400" />
-                  <span>Completion Proof Submission</span>
-                </h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Submit photographic verification of completed work to transition task to <strong>AWAITING_VALIDATION</strong>.
-                </p>
+              <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-4">
+                <div className="border-b border-slate-100 pb-3">
+                  <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-blue-600" />
+                    <span>Resolution Proof Submission</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Before & after geotagged photographic verification for supervisor audit
+                  </p>
+                </div>
 
-                <form onSubmit={handleSubmitProof} className="space-y-3">
+                <form onSubmit={handleSubmitProof} className="space-y-4 text-xs">
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-300">Geotagged Completion Photo URL</label>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      1. Before Work Photo URL:
+                    </label>
+                    <input
+                      type="text"
+                      value={beforePhoto}
+                      onChange={(e) => setBeforePhoto(e.target.value)}
+                      className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs outline-none"
+                    />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={beforePhoto}
+                      alt="Before Work Preview"
+                      className="mt-2 w-full h-32 object-cover rounded-xl border border-slate-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      2. After Remediation Proof Photo URL:
+                    </label>
                     <input
                       type="text"
                       value={afterPhoto}
                       onChange={(e) => setAfterPhoto(e.target.value)}
-                      placeholder="https://... photo url"
-                      className="w-full mt-1 p-2 rounded-lg bg-slate-900 border border-surface-border text-xs text-white font-mono"
+                      className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs outline-none"
+                    />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={afterPhoto}
+                      alt="After Remediation Preview"
+                      className="mt-2 w-full h-32 object-cover rounded-xl border border-slate-200"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-300">Final Clearance Note</label>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      Final Officer Remediation Note:
+                    </label>
                     <textarea
                       rows={3}
                       value={proofNote}
                       onChange={(e) => setProofNote(e.target.value)}
-                      placeholder="e.g. Ground remediation completed; road clearance validated; civic disruption cleared."
-                      className="w-full mt-1 p-2 rounded-lg bg-slate-900 border border-surface-border text-xs text-white"
+                      className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs outline-none leading-relaxed"
                     />
                   </div>
 
+                  <label className="flex items-center gap-2 text-slate-700 font-bold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={locationConfirmed}
+                      onChange={(e) => setLocationConfirmed(e.target.checked)}
+                      className="w-4 h-4 rounded text-blue-600"
+                    />
+                    <span>GPS On-Scene Location Match Verified</span>
+                  </label>
+
                   <button
                     type="submit"
-                    disabled={submitting || activeTask.status === "RESOLVED"}
-                    className="w-full py-2.5 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-black text-xs font-bold transition-all shadow disabled:opacity-50"
+                    disabled={submitting}
+                    className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
                   >
-                    {submitting ? "Submitting Proof..." : "Submit for Supervisor Validation"}
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Submit Proof for Supervisor Validation</span>
                   </button>
                 </form>
-
-                <div className="p-3 rounded-lg bg-amber-950/20 border border-amber-500/30 text-[11px] text-amber-300 leading-relaxed">
-                  <strong>Validation Protocol:</strong> Submitting proof transitions state to <em>AWAITING_VALIDATION</em>. The complaint cannot be marked <em>RESOLVED</em> until authorized department supervisor validates clearance proof in Department Portal.
-                </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="p-12 text-center bg-surface-base rounded-xl border border-surface-border text-xs text-slate-400 font-mono space-y-2">
-            <p>No active field tasks assigned to unit {selectedUnit}.</p>
-            <p className="text-[11px] text-slate-500">
-              Select <strong>&quot;All Field Units&quot;</strong> in the dropdown above or assign incoming complaints from the Department Portal.
-            </p>
+          <div className="p-12 text-center rounded-2xl bg-white border border-slate-200 text-slate-500 space-y-2">
+            <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-600" />
+            <p className="font-bold text-slate-800">No Active Tasks Assigned</p>
+            <p className="text-xs">Select another unit or wait for department dispatch assignment.</p>
           </div>
         )}
       </main>
@@ -586,7 +632,13 @@ function FieldOfficerPortalContent() {
 
 export default function FieldOfficerPortal() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-space-950 flex items-center justify-center text-xs text-slate-400 font-mono">Loading Field Terminal...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center text-slate-500 font-mono text-xs">
+          Loading Field Response Terminal...
+        </div>
+      }
+    >
       <FieldOfficerPortalContent />
     </Suspense>
   );
