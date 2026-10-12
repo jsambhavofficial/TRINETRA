@@ -3,8 +3,8 @@ import "./globals.css";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 export const metadata: Metadata = {
-  title: "NEXUS — The Living Intelligence Layer for the Physical World",
-  description: "Live operational world model, spatial intelligence, and automated response orchestration.",
+  title: "TRINETRA — State Governance Intelligence & Response Platform",
+  description: "State Governance Intelligence & Response Platform for Haryana, India. Spatial digital twin, multimodal evidence fusion, and role-based operational response.",
 };
 
 import { JudgeDemoController } from "@/components/command-center/JudgeDemoController";

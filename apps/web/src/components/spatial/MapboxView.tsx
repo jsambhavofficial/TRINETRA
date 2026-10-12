@@ -61,11 +61,11 @@ export const MapboxView: React.FC = () => {
   const [isOrbiting, setIsOrbiting] = useState(false);
   const [pitchMode, setPitchMode] = useState<"3D" | "2D">("3D");
   const [telemetry, setTelemetry] = useState({
-    lat: 26.9124,
-    lng: 75.7873,
-    zoom: 13.5,
-    pitch: 52,
-    bearing: -15,
+    lat: 29.0588,
+    lng: 76.0856,
+    zoom: 8.2,
+    pitch: 45,
+    bearing: 0,
   });
 
   // Determine Mapbox style URL based on mode
@@ -421,10 +421,10 @@ export const MapboxView: React.FC = () => {
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: styleUrl,
-      center: [75.7873, 26.9124], // Jaipur Twin / Nexus City center
-      zoom: 13.5,
-      pitch: 52, // 3D Isometric View
-      bearing: -15,
+      center: [76.0856, 29.0588], // Haryana State Center
+      zoom: 8.0,
+      pitch: 45, // Topographic angle
+      bearing: 0,
       antialias: true,
       maxPitch: 85,
     });

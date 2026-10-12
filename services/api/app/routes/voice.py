@@ -10,6 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.services.voice_service import voice_service
 
+from app.auth.dependencies import get_optional_user
+from app.models.organization import UserModel
+
 router = APIRouter(prefix="", tags=["Voice Command Center"])
 
 
@@ -21,7 +24,8 @@ class VoiceCommandRequest(BaseModel):
 @router.post("/voice/command")
 async def execute_voice_command(
     req: VoiceCommandRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_optional_user),
 ):
     """
     Processes spoken or textual commander commands via authorized typed tools.
@@ -29,6 +33,8 @@ async def execute_voice_command(
     """
     return await voice_service.process_command(
         text_query=req.query,
-        actor=req.actor or "Commander Vikram Malhotra",
-        db=db
+        actor=req.actor or (current_user.display_name if current_user else "Commander Vikram Malhotra"),
+        db=db,
+        user=current_user,
     )
+

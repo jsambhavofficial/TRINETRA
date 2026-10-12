@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useWorldStore } from "@/store/useWorldStore";
 import { Badge } from "@/components/ui/Badge";
-import { StatusIndicator } from "@/components/ui/StatusIndicator";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
   Bell,
@@ -26,33 +25,28 @@ import {
   User,
   Users,
   Zap,
+  LogOut,
+  LogIn,
+  Landmark,
 } from "lucide-react";
 import Link from "next/link";
-import { OperationalRole } from "../../../../../packages/shared-types";
-
 import { AegisLogo } from "@/components/ui/AegisLogo";
 
 export const Header: React.FC = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const {
     worldMode,
     setWorldMode,
-    operationalRole,
-    setOperationalRole,
     snapshot,
     candidates,
     isDrillRunning,
     runFullFlagshipDrill,
     resetFlagshipScenario,
     toggleVoiceModal,
-    isJudgeMode,
-    toggleJudgeMode,
-    toggleJudgeBriefing,
-    isRightRailOpen,
-    toggleRightRail,
   } = useWorldStore();
   const [utcTime, setUtcTime] = useState("");
-  const [systemHealth, setSystemHealth] = useState<any>(null);
+  const [authUser, setAuthUser] = useState<any>(null);
 
   // Live UTC Clock
   useEffect(() => {
@@ -65,35 +59,41 @@ export const Header: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch real system health
+  // Check current session from localStorage / backend
   useEffect(() => {
-    async function checkHealth() {
-      try {
-        const res = await fetch("http://localhost:8000/health/dependencies");
-        if (res.ok) {
-          const data = await res.json();
-          setSystemHealth(data);
-        }
-      } catch (err) {
-        // Handled silently
+    try {
+      const stored = localStorage.getItem("trinetra_user");
+      if (stored) {
+        setAuthUser(JSON.parse(stored));
       }
+    } catch (e) {
+      // ignore
     }
-    checkHealth();
-    const interval = setInterval(checkHealth, 10000);
-    return () => clearInterval(interval);
-  }, []);
+  }, [pathname]);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/v1/auth/logout", { method: "POST" });
+    } catch (e) {
+      // ignore
+    }
+    localStorage.removeItem("trinetra_user");
+    localStorage.removeItem("trinetra_token");
+    setAuthUser(null);
+    router.push("/login");
+  };
 
   const isCommandCenter = pathname === "/world" || pathname === "/";
-  const isIntelligence = pathname === "/intelligence";
-  const isCitizen = pathname === "/report" || pathname === "/track";
-  const isFieldOps = pathname === "/field" || pathname === "/review";
-  const isArch = pathname === "/architecture";
+  const isStatePortal = pathname === "/portal/state-leadership";
+  const isDistrictPortal = pathname === "/portal/district-admin";
+  const isDeptPortal = pathname === "/portal/department";
+  const isFieldPortal = pathname === "/portal/field-officer" || pathname === "/field";
+  const isCitizenPortal = pathname === "/portal/citizen" || pathname === "/report" || pathname === "/track";
 
   return (
     <header className="h-14 min-h-[56px] border-b border-surface-border bg-surface-base/95 backdrop-blur px-3 sm:px-4 flex items-center justify-between shrink-0 select-none z-30 gap-2 overflow-x-hidden">
-      {/* Brand & AEGIS Navigation Tabs */}
+      {/* Brand & TRINETRA Portal Navigation Tabs */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Official Cybernetic AEGIS Logo */}
         <AegisLogo />
 
         <div className="h-6 w-px bg-surface-border hidden sm:block" />
@@ -102,204 +102,144 @@ export const Header: React.FC = () => {
         <nav className="flex items-center gap-1">
           <Link
             href="/world"
-            className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+            className={`px-2 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
               isCommandCenter
-                ? "bg-cyan-600/20 text-cyan-300 border border-cyan-500/30"
+                ? "bg-sky-600/20 text-sky-300 border border-sky-500/30"
                 : "text-slate-400 hover:text-slate-200 hover:bg-surface-elevated"
             }`}
           >
-            <LayoutGrid className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden xl:inline">Command Center</span>
-            <span className="xl:hidden">Command</span>
+            <Globe2 className="w-3.5 h-3.5 text-sky-400" />
+            <span className="hidden xl:inline">3D Spatial Twin</span>
+            <span className="xl:hidden">Twin</span>
           </Link>
+
           <Link
-            href="/intelligence"
-            className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
-              isIntelligence
-                ? "bg-cyan-600/20 text-cyan-300 border border-cyan-500/30"
+            href="/portal/state-leadership"
+            className={`px-2 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              isStatePortal
+                ? "bg-sky-600/20 text-sky-300 border border-sky-500/30"
                 : "text-slate-400 hover:text-slate-200 hover:bg-surface-elevated"
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-            <span className="hidden 2xl:inline">Contextual Intelligence</span>
-            <span className="2xl:hidden">Intel</span>
+            <Landmark className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden xl:inline">State Leadership</span>
+            <span className="xl:hidden">State</span>
           </Link>
+
           <Link
-            href="/report"
-            className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
-              isCitizen
-                ? "bg-cyan-600/20 text-cyan-300 border border-cyan-500/30"
+            href="/portal/district-admin"
+            className={`px-2 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              isDistrictPortal
+                ? "bg-sky-600/20 text-sky-300 border border-sky-500/30"
                 : "text-slate-400 hover:text-slate-200 hover:bg-surface-elevated"
             }`}
           >
-            <User className="w-3.5 h-3.5" />
-            <span className="hidden xl:inline">Citizen Portal</span>
-            <span className="xl:hidden">Citizen</span>
+            <Building2 className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden xl:inline">District Admin</span>
+            <span className="xl:hidden">District</span>
           </Link>
+
           <Link
-            href="/field"
-            className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
-              isFieldOps
-                ? "bg-cyan-600/20 text-cyan-300 border border-cyan-500/30"
+            href="/portal/department"
+            className={`px-2 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              isDeptPortal
+                ? "bg-sky-600/20 text-sky-300 border border-sky-500/30"
                 : "text-slate-400 hover:text-slate-200 hover:bg-surface-elevated"
             }`}
           >
-            <Truck className="w-3.5 h-3.5" />
-            <span className="hidden xl:inline">Field Operations</span>
+            <Activity className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="hidden xl:inline">Department</span>
+            <span className="xl:hidden">Dept</span>
+          </Link>
+
+          <Link
+            href="/portal/field-officer"
+            className={`px-2 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              isFieldPortal
+                ? "bg-sky-600/20 text-sky-300 border border-sky-500/30"
+                : "text-slate-400 hover:text-slate-200 hover:bg-surface-elevated"
+            }`}
+          >
+            <Truck className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden xl:inline">Field Ops</span>
             <span className="xl:hidden">Field</span>
           </Link>
+
           <Link
-            href="/architecture"
-            className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
-              isArch
-                ? "bg-cyan-600/20 text-cyan-300 border border-cyan-500/30"
+            href="/portal/citizen"
+            className={`px-2 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              isCitizenPortal
+                ? "bg-sky-600/20 text-sky-300 border border-sky-500/30"
                 : "text-slate-400 hover:text-slate-200 hover:bg-surface-elevated"
             }`}
           >
-            <Layers className="w-3.5 h-3.5 text-purple-400" />
-            <span className="hidden lg:inline">Architecture</span>
+            <User className="w-3.5 h-3.5 text-blue-400" />
+            <span className="hidden xl:inline">Citizen Portal</span>
+            <span className="xl:hidden">Citizen</span>
           </Link>
         </nav>
       </div>
 
       {/* Mode Switcher & Operational Telemetry (Center) */}
       <div className="flex items-center gap-2 shrink-0">
-        {/* World Mode Switcher */}
-        <div className="flex items-center p-0.5 rounded bg-surface-elevated/70 border border-surface-border text-xs">
-          <button
-            onClick={() => setWorldMode("LIVE")}
-            className={`px-2 py-1 rounded flex items-center gap-1 font-medium transition-colors ${
-              worldMode === "LIVE"
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
-            <span>LIVE</span>
-          </button>
-          <button
-            onClick={() => setWorldMode("SIMULATION")}
-            className={`px-2 py-1 rounded flex items-center gap-1 font-medium transition-colors ${
-              worldMode === "SIMULATION"
-                ? "bg-purple-600 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <SlidersHorizontal className="w-3 h-3 text-purple-300" />
-            <span className="hidden sm:inline">SIM</span>
-          </button>
-          <button
-            onClick={() => setWorldMode("REPLAY")}
-            className={`px-2 py-1 rounded flex items-center gap-1 font-medium transition-colors ${
-              worldMode === "REPLAY"
-                ? "bg-cyan-700 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span className="hidden sm:inline">REPLAY</span>
-          </button>
+        {/* Environment Badge */}
+        <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded bg-slate-900 border border-slate-700/80 text-[10px] text-slate-300 mono-telemetry">
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+          <span>HARYANA [DEV PROTOTYPE]</span>
         </div>
 
-        {/* Real-time System Status Pill */}
-        <div
-          title={`Database: ${systemHealth?.dependencies?.database?.status || "HEALTHY"}`}
-          className="hidden md:flex items-center gap-2 glass-panel px-2.5 py-1 rounded text-xs cursor-pointer hover:border-surface-borderHover transition-colors"
-        >
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <div className="leading-tight">
-            <div className="text-[10px] font-semibold text-slate-200">System Operational</div>
-            <div className="text-[8.5px] text-slate-400 font-mono">Live • 2m ago</div>
-          </div>
+        {/* UTC Clock */}
+        <div className="hidden 2xl:flex items-center gap-1.5 text-slate-400 text-xs font-mono px-2 py-1 rounded bg-slate-900/60 border border-slate-800">
+          <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
+          <span>{utcTime || "UTC CLOCK"}</span>
         </div>
       </div>
 
-      {/* Actions & Role Controls (Right) */}
-      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-        {/* Voice Assistant Trigger (Prominent First Action) */}
+      {/* Right Controls & Auth Profile */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Voice Ops Button */}
         <button
           onClick={() => toggleVoiceModal(true)}
-          title="Open Voice Command Center (Speech & Audio Tools)"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/20 border border-cyan-400 hover:bg-cyan-500/30 text-cyan-200 hover:text-white text-xs font-bold font-mono tracking-wider transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] animate-pulse"
+          title="Open Voice Command Center"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-sky-500/20 border border-sky-400 hover:bg-sky-500/30 text-sky-200 text-xs font-bold font-mono tracking-wider transition-all"
         >
-          <Mic className="w-3.5 h-3.5 text-cyan-300" />
-          <span>VOICE OPS</span>
+          <Mic className="w-3.5 h-3.5 text-sky-300" />
+          <span className="hidden sm:inline">VOICE</span>
         </button>
-
-        {/* Subtle Judge Mode Indicator */}
-        {isJudgeMode ? (
-          <button
-            onClick={() => toggleJudgeBriefing(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-950/60 border border-amber-500/50 hover:border-amber-400 text-amber-300 text-xs font-mono font-bold transition-all shadow-[0_0_12px_rgba(245,158,11,0.25)]"
-            title="Click to view 7-Question Judge Briefing Card"
-          >
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            <span className="hidden sm:inline">JUDGE MODE</span>
-          </button>
-        ) : (
-          <button
-            onClick={() => toggleJudgeMode(true)}
-            className="flex items-center gap-1 px-2 py-1 rounded glass-panel hover:bg-slate-800 text-slate-400 hover:text-amber-300 text-xs transition-colors"
-          >
-            <Sparkles className="w-3 h-3 text-amber-400" />
-            <span className="text-[11px]">Judge Mode</span>
-          </button>
-        )}
-
-        {/* Flagship Drill Runner */}
-        <button
-          onClick={runFullFlagshipDrill}
-          disabled={isDrillRunning}
-          title="Executes the full 10-step flagship scenario"
-          className="flex items-center gap-1 px-2.5 py-1 rounded bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white text-xs font-bold tracking-wide transition-all shadow-[0_0_12px_rgba(6,182,212,0.35)] disabled:opacity-50"
-        >
-          <Zap className={`w-3 h-3 text-yellow-300 ${isDrillRunning ? "animate-spin" : ""}`} />
-          <span>{isDrillRunning ? "Running..." : "Drill"}</span>
-        </button>
-
-        {/* Reset Scenario Button */}
-        <button
-          onClick={resetFlagshipScenario}
-          title="Reset World back to initial Active Flood on R17"
-          className="p-1 rounded glass-panel hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-        </button>
-
-        {/* Notification Bell */}
-        <div className="relative p-1 rounded glass-panel text-slate-400 hover:text-slate-200 cursor-pointer hidden sm:block">
-          <Bell className="w-3.5 h-3.5" />
-          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center">
-            2
-          </span>
-        </div>
 
         <div className="h-5 w-px bg-surface-border hidden sm:block" />
 
-        {/* Officer Profile Badge & Role Switcher */}
-        <div className="flex items-center gap-1.5 glass-panel px-2 py-0.5 rounded border border-slate-700/60">
-          <div className="w-5 h-5 rounded bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 text-[9px] font-bold">
-            VM
+        {/* Authenticated Profile / Logout */}
+        {authUser ? (
+          <div className="flex items-center gap-2 glass-panel px-2.5 py-1 rounded border border-slate-700/60">
+            <div className="w-6 h-6 rounded-full bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-300 text-[10px] font-bold">
+              {authUser.display_name ? authUser.display_name.slice(0, 2).toUpperCase() : "U"}
+            </div>
+            <div className="hidden md:flex flex-col text-left">
+              <span className="text-[11px] font-semibold text-slate-200 leading-tight">
+                {authUser.display_name}
+              </span>
+              <span className="text-[9px] text-sky-400 mono-telemetry leading-tight">
+                {authUser.role} {authUser.district_id ? `(${authUser.district_id})` : ""}
+              </span>
+            </div>
+            <button
+              onClick={handleLogout}
+              title="Secure Logout"
+              className="ml-1 p-1 rounded text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <select
-            value={operationalRole}
-            onChange={(e) => setOperationalRole(e.target.value as OperationalRole)}
-            className="bg-transparent text-[10px] font-semibold text-cyan-400 outline-none cursor-pointer tracking-wider mono-telemetry"
+        ) : (
+          <Link
+            href="/login"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition-all shadow-[0_0_10px_rgba(2,132,199,0.3)]"
           >
-            <option value="AUTHORITY" className="bg-slate-900 text-slate-200">
-              Commander
-            </option>
-            <option value="RESPONDER" className="bg-slate-900 text-slate-200">
-              Unit 4
-            </option>
-            <option value="CITIZEN" className="bg-slate-900 text-slate-200">
-              Citizen
-            </option>
-            <option value="ADMIN" className="bg-slate-900 text-slate-200">
-              Admin
-            </option>
-          </select>
-        </div>
+            <LogIn className="w-3.5 h-3.5" />
+            <span>Sign In</span>
+          </Link>
+        )}
       </div>
     </header>
   );

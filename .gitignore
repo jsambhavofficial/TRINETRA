@@ -1,15 +1,4 @@
-# Dependencies
-node_modules/
-.pnp
-.pnp.js
 
-# Next.js & Web Builds
-.next/
-out/
-build/
-dist/
-.turbo/
-.vercel/
 
 # Environment Variables & Secrets
 .env
@@ -19,41 +8,32 @@ dist/
 .env.test.local
 .env.production.local
 !.env.example
+!.env.production.example
 
-# Python Virtual Environments & Caches
-.venv/
-venv/
-ENV/
-env/
+# Next.js & Node
+apps/web/.next/
+apps/web/node_modules/
+node_modules/
+*.tsbuildinfo
+
+# Python & Pytest
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
+*.pyc
+*.pyo
+*.pyd
 .pytest_cache/
-.coverage
-htmlcov/
-.mypy_cache/
+services/api/.venv/
+services/api/__pycache__/
+services/api/app/**/__pycache__/
+services/api/tests/**/__pycache__/
 
-# Databases & Local State
+# Storage & Temporary test uploads
+services/api/data/storage/
+
+# Database backups & local ephemeral sqlite
 *.db
-*.sqlite
-*.sqlite3
-data/db/*.sqlite3
+*.db.backup
+nexus_test_isolated.db
+nexus_test.db
 
-# Logs & Diagnostics
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
 
-# System & OS Files
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# IDE & Editors
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace

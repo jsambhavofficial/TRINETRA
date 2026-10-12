@@ -6,9 +6,24 @@ import { Header } from "@/components/command-center/Header";
 import { LeftRail } from "@/components/command-center/LeftRail";
 import { RightRail } from "@/components/command-center/RightRail";
 import { BottomBar } from "@/components/command-center/BottomBar";
-import { NexusViewer } from "@/components/spatial/NexusViewer";
+import dynamic from "next/dynamic";
 import { CommandBar } from "@/components/ui/CommandBar";
 import { VoiceAssistantModal } from "@/components/command-center/VoiceAssistantModal";
+
+const NexusViewer = dynamic(
+  () => import("@/components/spatial/NexusViewer").then((mod) => mod.NexusViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full w-full items-center justify-center bg-space-950 text-slate-400">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+          <span className="font-mono text-xs tracking-wider text-slate-300">INITIALIZING HARYANA GIS SPATIAL ENGINE...</span>
+        </div>
+      </div>
+    ),
+  }
+);
 
 export default function WorldPage() {
   const { fetchSnapshot } = useWorldStore();

@@ -348,6 +348,33 @@ export default function ReportPage() {
         resolvedEntity: matchedCand?.resolved_entity_id || "Road R17 Bypass Bridge",
         detectedObjects: ["standing_water", "hazard_zone", "vehicle_impediment"],
       });
+
+      // Also create corresponding complaint record in TRINETRA Haryana governance workflow
+      try {
+        const cat = textContent.toLowerCase().includes("flood")
+          ? "URBAN_FLOODING"
+          : textContent.toLowerCase().includes("power") || textContent.toLowerCase().includes("generator")
+          ? "ELECTRICAL_HAZARD"
+          : "ROAD_BLOCKAGE";
+
+        await fetch("http://localhost:8000/api/v1/complaints", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            category: cat,
+            title: textContent.slice(0, 80) || "Citizen Observation Report",
+            description: textContent || "Citizen reported field hazard observation.",
+            district_id: "HR-GU",
+            latitude,
+            longitude,
+            address: "Reported Observation Site, Gurugram, Haryana",
+            citizen_name: "Citizen Reporter",
+            citizen_phone: "+91-98100-11223",
+          }),
+        });
+      } catch (err) {
+        console.warn("Shared complaint workflow sync notice:", err);
+      }
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Failed to submit evidence");

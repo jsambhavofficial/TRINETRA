@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY services/api/pyproject.toml services/api/README.md /app/services/api/
 RUN pip install --no-cache-dir \
-    fastapi uvicorn pydantic pydantic-settings sqlalchemy asyncpg aiosqlite python-multipart redis httpx
+    fastapi uvicorn pydantic pydantic-settings sqlalchemy asyncpg aiosqlite python-multipart redis httpx \
+    numpy h3 passlib bcrypt pyjwt
 
 COPY data /app/data
 COPY services/api /app/services/api

@@ -50,10 +50,18 @@ async def upload_evidence(
     file_size = len(file_data)  
     if file_size > MAX_FILE_SIZE_MB * 1024 * 1024:  
         raise HTTPException(status_code=413, detail='File too large. Maximum 50MB.')  
+
+    filename = file.filename or 'upload'
+    ext = filename.lower().rsplit('.', 1)[-1] if '.' in filename else ''
+    DISALLOWED_EXTENSIONS = {'exe', 'sh', 'bat', 'cmd', 'ps1', 'php', 'py', 'pl', 'jsp', 'asp', 'aspx', 'dll', 'so'}
+    if ext in DISALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail=f'File type .{ext} is prohibited for security reasons.')
+
     mime = file.content_type or 'application/octet-stream'  
-    evidence_type = _detect_type(mime, file.filename or 'upload')  
+    evidence_type = _detect_type(mime, filename)  
     evidence_id = 'ev-' + uuid.uuid4().hex[:16]  
     sha256 = hashlib.sha256(file_data).hexdigest()  
+
     now = datetime.now(timezone.utc)  
     object_key = 'evidence/' + evidence_id + '/original'  
     object_uri = await storage_service.upload_file('nexus-evidence', object_key, file_data, mime)  

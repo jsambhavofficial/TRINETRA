@@ -1,8 +1,9 @@
 """
 Organization, Role, and User SQLAlchemy Models.
+Extended for TRINETRA with real authentication, district/department/unit scoping, and RBAC.
 """
 from typing import List, Optional
-from sqlalchemy import ForeignKey, JSON, String
+from sqlalchemy import Boolean, ForeignKey, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import TimeStampedModel
 
@@ -37,31 +38,45 @@ class RoleModel(TimeStampedModel):
 
     users: Mapped[List["UserModel"]] = relationship(
         "UserModel",
-        back_populates="role"
+        back_populates="role_rel"
     )
 
 
 class UserModel(TimeStampedModel):
     __tablename__ = "users"
 
-    organization_id: Mapped[str] = mapped_column(
+    # Legacy foreign keys (nullable for backwards compatibility)
+    organization_id: Mapped[Optional[str]] = mapped_column(
         String(64),
         ForeignKey("organizations.id"),
-        nullable=False
+        nullable=True
     )
-    role_id: Mapped[str] = mapped_column(
+    role_id: Mapped[Optional[str]] = mapped_column(
         String(64),
         ForeignKey("roles.id"),
-        nullable=False
+        nullable=True
     )
+
+    # Core TRINETRA Identity & Credentials
     display_name: Mapped[str] = mapped_column(String(128), nullable=False)
     email: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
+    hashed_password: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
 
-    organization: Mapped["OrganizationModel"] = relationship(
+    # Server-enforced Role: STATE_LEADERSHIP, DISTRICT_ADMIN, DEPARTMENT, FIELD_OFFICER, CITIZEN, PLATFORM_ADMIN
+    role: Mapped[str] = mapped_column(String(32), default="CITIZEN", nullable=False)
+
+    # Authorized Governance Scopes
+    district_id: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)     # e.g., 'HR-GU' (Gurugram)
+    department_id: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)   # e.g., 'DEPT-HEALTH'
+    unit_id: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)         # e.g., 'UNIT-AMB-01'
+    phone: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    organization: Mapped[Optional["OrganizationModel"]] = relationship(
         "OrganizationModel",
         back_populates="users"
     )
-    role: Mapped["RoleModel"] = relationship(
+    role_rel: Mapped[Optional["RoleModel"]] = relationship(
         "RoleModel",
         back_populates="users"
     )

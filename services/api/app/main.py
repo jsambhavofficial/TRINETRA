@@ -24,7 +24,13 @@ from app.routes.citizen import router as citizen_router
 from app.routes.voice import router as voice_router
 from app.routes.scenarios import router as scenarios_router
 from app.routes.field import router as field_router
+from app.routes.auth import router as auth_router
+from app.routes.governance import router as governance_router
+from app.routes.complaints import router as complaints_router
+from app.routes.intelligence import router as intelligence_router
 from app.services.job_worker import job_worker
+
+
 
 
 @asynccontextmanager
@@ -58,6 +64,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
 
 
 # 3. Standardized Error Handling
@@ -104,6 +121,9 @@ app.include_router(health_router)
 
 # Versioned API routes
 app.include_router(health_router, prefix=settings.API_V1_STR)
+app.include_router(auth_router, prefix=settings.API_V1_STR)
+app.include_router(governance_router, prefix=settings.API_V1_STR)
+app.include_router(complaints_router, prefix=settings.API_V1_STR)
 app.include_router(orgs_router, prefix=settings.API_V1_STR)
 app.include_router(reports_router, prefix=settings.API_V1_STR)  # Phase 3: BEFORE worlds/incidents to prevent path shadowing
 app.include_router(fusion_router, prefix=settings.API_V1_STR)   # Phase 4: Fusion & Incident Intelligence
@@ -114,16 +134,19 @@ app.include_router(simulation_router, prefix=settings.API_V1_STR)
 app.include_router(response_router, prefix=settings.API_V1_STR)
 app.include_router(citizen_router, prefix=settings.API_V1_STR)
 app.include_router(field_router, prefix=settings.API_V1_STR)
+app.include_router(intelligence_router, prefix=settings.API_V1_STR)
 app.include_router(voice_router, prefix=settings.API_V1_STR)
 app.include_router(scenarios_router, prefix=settings.API_V1_STR)
+
 app.include_router(ws_router)
 
 
 @app.get("/")
 async def root():
     return {
-        "product": "NEXUS",
-        "tagline": "The Living Intelligence Layer for the Physical World",
+        "product": "TRINETRA",
+        "tagline": "State Governance Intelligence & Response Platform",
+        "state": "Haryana, India",
         "status": "operational",
         "docs_url": "/docs",
         "health_url": "/health"

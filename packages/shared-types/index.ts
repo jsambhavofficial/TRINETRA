@@ -7,6 +7,14 @@ export type EpistemicStatus = 'OBSERVED' | 'INFERRED' | 'PREDICTED' | 'SIMULATED
 
 export type OrganizationType = 'GOVERNMENT' | 'ENTERPRISE' | 'REGIONAL' | 'MUNICIPAL' | 'FACILITY';
 
+export type TrinetraRole =
+  | 'STATE_LEADERSHIP'
+  | 'DISTRICT_ADMIN'
+  | 'DEPARTMENT'
+  | 'FIELD_OFFICER'
+  | 'CITIZEN'
+  | 'PLATFORM_ADMIN';
+
 export type UserRole =
   | 'SUPER_ADMIN'
   | 'COMMANDER'
@@ -14,7 +22,40 @@ export type UserRole =
   | 'FACILITY_MANAGER'
   | 'FIELD_RESPONDER'
   | 'VIEWER'
-  | 'REPORTER';
+  | 'REPORTER'
+  | TrinetraRole;
+
+export interface DistrictInfo {
+  id: string;
+  name: string;
+  division: string;
+  headquarters: string;
+  latitude: number;
+  longitude: number;
+  population_tier: string;
+  risk_index: number;
+  is_assigned_district?: boolean;
+}
+
+export interface DepartmentInfo {
+  id: string;
+  code: string;
+  name: string;
+  category: string;
+  lead_title: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  display_name: string;
+  role: TrinetraRole | string;
+  district_id?: string | null;
+  department_id?: string | null;
+  unit_id?: string | null;
+  phone?: string | null;
+  is_active: boolean;
+}
 
 export type EntityType =
   | 'ROAD'
