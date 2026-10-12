@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { Header } from "@/components/command-center/Header";
 import {
   User,
   FilePlus2,
@@ -28,12 +27,21 @@ import {
   Video,
   Image as ImageIcon,
   Trash2,
-  Play,
-  Volume2,
   PhoneCall,
   ExternalLink,
   Copy,
   Layers,
+  ChevronDown,
+  Droplets,
+  Zap,
+  Flame,
+  AlertTriangle,
+  FileText,
+  ListOrdered,
+  Home,
+  Globe,
+  MoreVertical,
+  CheckCircle,
 } from "lucide-react";
 import {
   HARYANA_DISTRICTS,
@@ -45,55 +53,132 @@ import {
 const QUICK_PRESETS = [
   {
     id: "waterlogging",
-    icon: "🌊",
+    iconType: "water",
     label: "जलभराव",
     sub: "Waterlogging",
     title: "Severe Underpass & Road Waterlogging",
-    desc: "अंडरपास और मुख्य सड़क पर भारी जलभराव हो गया है। गाड़ियां फंसी हैं और यातायात पूरी तरह ठप है।",
+    desc: "सड़क पर पानी, बारिश का जल भराव",
+    fullDesc: "अंडरपास और मुख्य सड़क पर भारी जलभराव हो गया है। गाड़ियां फंसी हैं और यातायात पूरी तरह ठप है।",
     category: "URBAN_FLOODING",
     deptId: "DEPT-PWD",
+    badgeColor: "bg-blue-100 text-blue-600",
   },
   {
     id: "electric",
-    icon: "⚡",
+    iconType: "zap",
     label: "बिजली तार / फॉल्ट",
     sub: "Live Wire / Power",
     title: "Broken Live Electric Wire Sparking on Road",
-    desc: "सड़क पर बिजली का तार टूटकर लटक रहा है और चिंगारी निकल रही है। तुरंत बिजली आपूर्ति बंद कर तार ठीक करें।",
+    desc: "बिजली आपूर्ति से संबंधित समस्या",
+    fullDesc: "सड़क पर बिजली का तार टूटकर लटक रहा है और चिंगारी निकल रही है। तुरंत बिजली आपूर्ति बंद कर तार ठीक करें।",
     category: "ELECTRICAL_HAZARD",
     deptId: "DEPT-POWER",
+    badgeColor: "bg-amber-100 text-amber-600",
   },
   {
     id: "pothole",
-    icon: "🕳️",
+    iconType: "road",
     label: "सड़क पर गड्ढा",
     sub: "Dangerous Pothole",
     title: "Deep Crater Pothole on Main Road",
-    desc: "मुख्य मार्ग पर गहरा जानलेवा गड्ढा है जिससे दोपहिया वाहन गिर रहे हैं। तुरंत पेचवर्क और मरम्मत की आवश्यकता है।",
+    desc: "सड़क क्षतिग्रस्त या गड्ढे",
+    fullDesc: "मुख्य मार्ग पर गहरा जानलेवा गड्ढा है जिससे दोपहिया वाहन गिर रहे हैं। तुरंत पेचवर्क और मरम्मत की आवश्यकता है।",
     category: "ROAD_BLOCKAGE",
     deptId: "DEPT-PWD",
+    badgeColor: "bg-slate-200 text-slate-700",
   },
   {
     id: "sewage",
-    icon: "🚰",
+    iconType: "pipe",
     label: "सीवर चोक / रिसाव",
     sub: "Sewer Overflow",
     title: "Sewage Pipeline Burst & Road Overflow",
-    desc: "सीवर लाइन बंद होने से सड़क पर गंदा बदबूदार पानी बह रहा है। तुरंत सीवर सफाई मशीन भेजें।",
+    desc: "सीवर जाम या गंदा पानी",
+    fullDesc: "सीवर लाइन बंद होने से सड़क पर गंदा बदबूदार पानी बह रहा है। तुरंत सीवर सफाई मशीन भेजें।",
     category: "SEWERAGE_OVERFLOW",
     deptId: "DEPT-PWD",
+    badgeColor: "bg-sky-100 text-sky-600",
   },
   {
     id: "garbage",
-    icon: "🦟",
+    iconType: "trash",
     label: "कचरा व गंदगी",
     sub: "Garbage Dump",
     title: "Unattended Garbage Dump & Health Hazard",
-    desc: "कॉलोनी के मुख्य मोड़ पर कई दिनों से कचरा नहीं उठाया गया है। बदबू और मच्छरों से बीमारी का खतरा है।",
+    desc: "कचरा नहीं उठाया जाना, गंदगी",
+    fullDesc: "कॉलोनी के मुख्य मोड़ पर कई दिनों से कचरा नहीं उठाया गया है। बदबू और मच्छरों से बीमारी का खतरा है।",
     category: "HEALTH_HAZARD",
     deptId: "DEPT-HEALTH",
+    badgeColor: "bg-emerald-100 text-emerald-600",
   },
 ];
+
+function formatHindiDate(isoStr?: string) {
+  if (!isoStr) return "हाल ही में";
+  try {
+    const d = new Date(isoStr);
+    const months = [
+      "जनवरी", "फरवरी", "मार्च", "अप्रैल", "मई", "जून",
+      "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"
+    ];
+    const day = d.getDate();
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+    let hours = d.getHours();
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    return `${day} ${month} ${year}, ${hours.toString().padStart(2, "0")}:${minutes} ${ampm}`;
+  } catch (e) {
+    return isoStr;
+  }
+}
+
+function getCategoryDisplay(cat: string) {
+  switch (cat) {
+    case "URBAN_FLOODING":
+      return { label: "जलभराव", icon: "💧", color: "text-blue-600" };
+    case "ELECTRICAL_HAZARD":
+    case "POWER_OUTAGE":
+      return { label: "बिजली तार / फॉल्ट", icon: "⚡", color: "text-amber-600" };
+    case "ROAD_BLOCKAGE":
+      return { label: "सड़क पर गड्ढा", icon: "🛣️", color: "text-slate-600" };
+    case "SEWERAGE_OVERFLOW":
+      return { label: "सीवर चोक / रिसाव", icon: "🚰", color: "text-sky-600" };
+    case "HEALTH_HAZARD":
+    case "PUBLIC_HEALTH":
+      return { label: "कचरा व गंदगी", icon: "🗑️", color: "text-emerald-600" };
+    default:
+      return { label: cat.replace(/_/g, " "), icon: "⚠️", color: "text-slate-600" };
+  }
+}
+
+function getStatusBadge(status: string) {
+  switch (status) {
+    case "RESOLVED":
+      return {
+        label: "स्वीकृत / समाधान",
+        bg: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        dot: "bg-emerald-500",
+      };
+    case "IN_PROGRESS":
+    case "ASSIGNED":
+      return {
+        label: "प्रगति पर",
+        bg: "bg-blue-50 text-blue-700 border-blue-200",
+        dot: "bg-blue-500",
+      };
+    case "AWAITING_VALIDATION":
+    case "UNDER_REVIEW":
+    case "SUBMITTED":
+    default:
+      return {
+        label: "समीक्षा में",
+        bg: "bg-amber-50 text-amber-700 border-amber-200",
+        dot: "bg-amber-500",
+      };
+  }
+}
 
 export default function CitizenPortal() {
   const [authUser, setAuthUser] = useState<any>(null);
@@ -107,6 +192,7 @@ export default function CitizenPortal() {
   const [trackingError, setTrackingError] = useState<string | null>(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showTrackModal, setShowTrackModal] = useState(false);
 
   // New Grievance Form State & Modal
   const [showLodgeModal, setShowLodgeModal] = useState(false);
@@ -202,7 +288,9 @@ export default function CitizenPortal() {
           }
           return false;
         });
-        setComplaints(myFiltered);
+
+        // If citizen has personal complaints show them, otherwise show recent Haryana complaints
+        setComplaints(myFiltered.length > 0 ? myFiltered : allData.slice(0, 10));
       }
     } catch (e) {
       console.error(e);
@@ -273,11 +361,11 @@ export default function CitizenPortal() {
   // Quick Preset Selection
   const handleSelectPreset = (p: typeof QUICK_PRESETS[0]) => {
     setTitle(p.title);
-    setDescription(p.desc);
+    setDescription(p.fullDesc);
     setCategory(p.category);
     setDepartmentId(p.deptId);
     setShowLodgeModal(true);
-    triggerAiAnalysis(p.title, p.desc, districtId);
+    triggerAiAnalysis(p.title, p.fullDesc, districtId);
   };
 
   // Voice Dictation
@@ -303,43 +391,44 @@ export default function CitizenPortal() {
 
       recognition.onstart = () => {
         setIsListening(true);
-        setSpeechNotice(
-          speechLang === "hi-IN"
-            ? "🎙️ सुन रहे हैं... कृपया अपनी समस्या बोलें"
-            : "🎙️ Listening... Please speak your grievance"
-        );
+        setSpeechNotice("आवाज़ सुनी जा रही है... कृपया अपनी समस्या बताएं।");
       };
 
       recognition.onresult = (event: any) => {
-        let transcript = "";
-        for (let i = 0; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
-        }
-
-        if (transcript.trim()) {
-          setDescription(transcript);
-          if (!title.trim() || title.length < 5) {
-            setTitle(transcript.slice(0, 50));
+        let finalTrans = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTrans += event.results[i][0].transcript;
           }
-          triggerAiAnalysis(title || transcript.slice(0, 40), transcript, districtId);
+        }
+        if (finalTrans) {
+          setDescription((prev) => {
+            const updated = prev ? `${prev} ${finalTrans}` : finalTrans;
+            triggerAiAnalysis(title, updated, districtId);
+            return updated;
+          });
+          if (!title) {
+            const shortHeading = finalTrans.split(".")[0]?.slice(0, 70);
+            setTitle(shortHeading);
+          }
         }
       };
 
-      recognition.onerror = (e: any) => {
-        console.warn("Speech recognition error:", e);
+      recognition.onerror = (event: any) => {
+        console.warn("Speech recognition error:", event.error);
         setIsListening(false);
-        setSpeechNotice("आवाज़ पहचानने में समस्या आई। पुनः प्रयास करें।");
-        setTimeout(() => setSpeechNotice(null), 3000);
+        setSpeechNotice("माइक से आवाज़ नहीं मिली। कृपया पुनः प्रयास करें।");
+        setTimeout(() => setSpeechNotice(null), 3500);
       };
 
       recognition.onend = () => {
         setIsListening(false);
       };
 
-      recognition.start();
       recognitionRef.current = recognition;
-    } catch (err) {
-      console.error("SpeechRecognition error:", err);
+      recognition.start();
+    } catch (e) {
+      console.error(e);
       setIsListening(false);
     }
   };
@@ -352,46 +441,42 @@ export default function CitizenPortal() {
     setSpeechNotice(null);
   };
 
-  // Media Upload (Photo/Video)
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, mediaType: "IMAGE" | "VIDEO") => {
+  // Attach Media
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "video") => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        setAttachments((prev) => [
-          ...prev,
-          {
-            uri: result,
-            filename: file.name,
-            mime: file.type || (mediaType === "IMAGE" ? "image/jpeg" : "video/mp4"),
-            type: mediaType,
-          },
-        ]);
-      };
-      reader.readAsDataURL(file);
-    });
-    e.target.value = "";
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const previewUrl = URL.createObjectURL(file);
+      setAttachments((prev) => [
+        ...prev,
+        {
+          id: `att-${Date.now()}-${i}`,
+          type,
+          name: file.name,
+          url: previewUrl,
+          size: (file.size / (1024 * 1024)).toFixed(1) + " MB",
+        },
+      ]);
+    }
   };
 
-  const removeAttachment = (index: number) => {
-    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  const handleRemoveAttachment = (id: string) => {
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
   };
 
-  // GPS Auto-Detect Location
+  // GPS Auto-Detect
   const handleDetectLocation = () => {
-    if (!("geolocation" in navigator)) {
-      alert("GPS आपके ब्राउज़र में उपलब्ध नहीं है।");
+    if (!navigator.geolocation) {
+      alert("आपके डिवाइस में GPS सुविधा समर्थित नहीं है।");
       return;
     }
-
     setGpsDetecting(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const lat = parseFloat(pos.coords.latitude.toFixed(6));
-        const lng = parseFloat(pos.coords.longitude.toFixed(6));
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
         setLatitude(lat);
         setLongitude(lng);
 
@@ -475,6 +560,7 @@ export default function CitizenPortal() {
 
   // Quick Tracker
   const handleQuickTrack = async (targetRef: string) => {
+    if (!targetRef.trim()) return;
     setTrackQuery(targetRef);
     setTrackingLoading(true);
     setTrackingError(null);
@@ -487,6 +573,7 @@ export default function CitizenPortal() {
       }
       const data = await res.json();
       setTrackedRecord(data);
+      setShowTrackModal(true);
     } catch (err: any) {
       setTrackingError(err.message || "शिकायत खोजने में असमर्थ।");
     } finally {
@@ -561,7 +648,6 @@ export default function CitizenPortal() {
     }
   };
 
-  // Filter complaints based on tab
   const filteredComplaints = complaints.filter((c) => {
     if (statusTab === "ACTIVE") return c.status !== "RESOLVED";
     if (statusTab === "RESOLVED") return c.status === "RESOLVED";
@@ -569,118 +655,273 @@ export default function CitizenPortal() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans pb-20 sm:pb-8 selection:bg-emerald-500/30 selection:text-white">
-      <Header />
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col font-sans selection:bg-blue-500/20 selection:text-blue-900 pb-12">
+      {/* ========================================================================= */}
+      {/* 1. TOP NAVBAR (Matches Screenshot exactly) */}
+      {/* ========================================================================= */}
+      <header className="bg-white border-b border-slate-200/90 sticky top-0 z-40 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
+          {/* Left Brand */}
+          <div className="flex items-center gap-3 shrink-0">
+            <Link href="/world" className="flex items-center gap-2.5 group select-none">
+              <div className="w-9 h-9 relative flex items-center justify-center">
+                <svg viewBox="0 0 44 44" className="w-full h-full drop-shadow-sm" fill="none">
+                  <path
+                    d="M22 2.5L38.5 9V22.5C38.5 32.5 31.5 39.5 22 42C12.5 39.5 5.5 32.5 5.5 22.5V9L22 2.5Z"
+                    fill="#0F172A"
+                    stroke="#2563EB"
+                    strokeWidth="1.8"
+                  />
+                  <path d="M11 18.5Q22 16.5 33 18.5" stroke="#38BDF8" strokeWidth="1.4" strokeLinecap="round" />
+                  <path d="M9 22.5Q22 20.5 35 22.5" stroke="#F59E0B" strokeWidth="1.4" strokeLinecap="round" />
+                  <path d="M11 26.5Q22 24.5 33 26.5" stroke="#38BDF8" strokeWidth="1.4" strokeLinecap="round" />
+                  <circle cx="22" cy="22.5" r="3.5" fill="#38BDF8" />
+                  <circle cx="22" cy="22.5" r="1.5" fill="#0F172A" />
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5 leading-tight">
+                  <span className="font-extrabold text-base tracking-wider text-slate-900">
+                    TRINETRA
+                  </span>
+                  <span className="text-[10px] text-white font-bold px-1.5 py-0.2 rounded bg-blue-600 tracking-wide">
+                    HARYANA
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium">
+                  State Governance Intelligence Platform
+                </p>
+              </div>
+            </Link>
 
-      <main className="flex-1 max-w-4xl w-full mx-auto px-3.5 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        {/* ========================================================================= */}
-        {/* 1. SIMPLE HERO BANNER (Clean, welcoming, mobile-first) */}
-        {/* ========================================================================= */}
-        <div className="rounded-2xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>हरियाणा जन-संवाद पोर्टल • Citizen Services</span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              नमस्ते! नागरिक शिकायत निवारण
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-xl">
-              सड़क, पानी, बिजली या सीवर जैसी किसी भी नागरिक समस्या को 1-क्लिक में दर्ज करें। AI द्वारा तुरंत सही विभाग को प्रेषित किया जाएगा।
-            </p>
+            <div className="h-7 w-px bg-slate-200 mx-2 hidden md:block" />
 
-            {/* Helpline quick buttons */}
-            <div className="pt-1 flex items-center gap-2 flex-wrap text-[11px]">
-              <a
-                href="tel:112"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-colors font-semibold"
-              >
-                <PhoneCall className="w-3 h-3" />
-                <span>आपातकाल: 112</span>
-              </a>
-              <a
-                href="tel:1070"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-colors font-semibold"
-              >
-                <PhoneCall className="w-3 h-3" />
-                <span>आपदा नियंत्रण: 1070</span>
-              </a>
-              {authUser && (
-                <span className="text-slate-400 hidden sm:inline">
-                  • लॉगिन: <strong className="text-slate-200">{authUser.display_name}</strong>
-                </span>
-              )}
+            <div className="hidden md:flex flex-col">
+              <span className="text-xs font-bold text-slate-800 leading-tight">नागरिक जन-संवाद</span>
+              <span className="text-xs font-extrabold text-teal-600 tracking-wider leading-tight">TRINETRA</span>
             </div>
           </div>
 
-          <div className="flex sm:flex-col gap-2 shrink-0">
+          {/* Center Nav Tabs */}
+          <nav className="hidden lg:flex items-center gap-2">
+            <button
+              onClick={() => {}}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0F172A] text-white shadow-sm font-semibold text-xs"
+            >
+              <Home className="w-4 h-4 text-white" />
+              <div className="text-left leading-tight">
+                <div className="text-[11px] font-bold">नागरिक पोर्टल</div>
+                <div className="text-[9px] text-slate-300">Citizen Portal</div>
+              </div>
+            </button>
+
             <button
               onClick={() => setShowLodgeModal(true)}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs sm:text-sm font-bold shadow-md shadow-emerald-500/15 transition-all active:scale-95"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-slate-700 hover:bg-slate-100 font-medium text-xs transition-colors"
             >
-              <FilePlus2 className="w-4 h-4" />
-              <span>+ नई शिकायत दर्ज करें</span>
+              <FilePlus2 className="w-4 h-4 text-slate-500" />
+              <div className="text-left leading-tight">
+                <div className="text-[11px] font-bold text-slate-800">नई शिकायत दर्ज करें</div>
+                <div className="text-[9px] text-slate-400">Lodge Grievance</div>
+              </div>
             </button>
+
             <button
               onClick={() => {
-                setShowLodgeModal(true);
-                setTimeout(() => startVoiceInput(), 400);
+                const el = document.getElementById("tracking-section");
+                el?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs sm:text-sm font-semibold transition-all active:scale-95"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-slate-700 hover:bg-slate-100 font-medium text-xs transition-colors"
             >
-              <Mic className="w-4 h-4 text-emerald-400" />
-              <span>बोलकर बताएं</span>
+              <Search className="w-4 h-4 text-slate-500" />
+              <div className="text-left leading-tight">
+                <div className="text-[11px] font-bold text-slate-800">शिकायत की स्थिति देखें</div>
+                <div className="text-[9px] text-slate-400">Track Status</div>
+              </div>
             </button>
+          </nav>
+
+          {/* Right Controls */}
+          <div className="flex items-center gap-3">
+            {/* Language toggle */}
+            <button
+              onClick={() => setSpeechLang(speechLang === "hi-IN" ? "en-IN" : "hi-IN")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-2xs transition-colors"
+            >
+              <Globe className="w-3.5 h-3.5 text-blue-600" />
+              <span>{speechLang === "hi-IN" ? "हिंदी" : "English"}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+
+            {/* User Profile Pill */}
+            <div className="flex items-center gap-2 pl-1 border-l border-slate-200">
+              <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
+                {authUser?.display_name ? authUser.display_name.slice(0, 2).toUpperCase() : "RV"}
+              </div>
+              <div className="hidden sm:flex flex-col text-left leading-tight">
+                <span className="text-xs font-bold text-slate-900">
+                  {authUser?.display_name || "Rohit Verma"}
+                </span>
+                <span className="text-[10px] text-slate-500 font-medium">
+                  {authUser?.district_name ? `नागरिक, ${authUser.district_name}` : "नागरिक, गुरुग्राम"}
+                </span>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Container */}
+      <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-6">
+        {/* ========================================================================= */}
+        {/* 2. HERO BANNER WITH HARYANA HERITAGE & HOTLINES (Matches Screenshot) */}
+        {/* ========================================================================= */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-50/90 via-slate-50 to-blue-50/40 border border-blue-100 p-6 sm:p-8 shadow-xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          {/* Background Heritage Skyline */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/haryana_heritage_banner.jpg"
+            alt="Haryana Heritage"
+            className="absolute right-0 top-0 bottom-0 w-full sm:w-1/2 opacity-25 lg:opacity-35 object-cover pointer-events-none mix-blend-multiply [mask-image:linear-gradient(to_left,black_60%,transparent_100%)]"
+          />
+
+          {/* Slogan Graphic on Top Right */}
+          <div className="hidden md:flex flex-col items-center gap-1 absolute right-8 top-6 pointer-events-none z-10">
+            <div className="text-base font-black text-[#1E3A8A] tracking-tight">स्वच्छ हरियाणा</div>
+            <div className="text-base font-black text-[#16A34A] tracking-tight">सशक्त हरियाणा</div>
+            <svg className="w-24 h-2.5" viewBox="0 0 100 10" fill="none">
+              <path d="M0 5C25 1 35 9 60 5C85 1 95 9 100 5" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          {/* Left Hero Content */}
+          <div className="space-y-3 z-10 max-w-2xl">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-blue-100/90 text-blue-700 border border-blue-200/80">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+              <span>हरियाणा नागरिक सेवाएं • TRINETRA</span>
+            </div>
+
+            <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              नमस्ते! <span className="text-blue-600">नागरिक शिकायत निवारण</span>
+            </h1>
+
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+              सड़क, पानी, बिजली या सीवर जैसी किसी भी नागरिक समस्या को 1-क्लिक में दर्ज करें। आपकी शिकायत संबंधित विभाग तक पहुँचाई जाएगी और आप इसकी स्थिति आसानी से देख सकते हैं।
+            </p>
+
+            {/* Actions & Hotlines Row */}
+            <div className="pt-2 flex flex-wrap items-center gap-3">
+              {/* Primary Action Button */}
+              <button
+                onClick={() => setShowLodgeModal(true)}
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/25 transition-all transform active:scale-95"
+              >
+                <FilePlus2 className="w-4 h-4" />
+                <span>नई शिकायत दर्ज करें</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              {/* Voice Action Button */}
+              <button
+                onClick={() => {
+                  setShowLodgeModal(true);
+                  setTimeout(() => startVoiceInput(), 450);
+                }}
+                className="inline-flex items-center gap-3 px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 shadow-2xs transition-all active:scale-95"
+              >
+                <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
+                  <Mic className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <div className="font-bold text-xs text-slate-900">बोलकर बताएं</div>
+                  <div className="text-[10px] text-slate-500 font-medium">अपनी समस्या आवाज में बताएं</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Right Emergency Cards */}
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 z-10 shrink-0 w-full lg:w-auto">
+            {/* 112 Hotline */}
+            <a
+              href="tel:112"
+              className="flex items-center gap-3.5 px-4 py-3 rounded-2xl bg-[#FFF1F2] border border-[#FFE4E6] hover:bg-rose-100/70 transition-all text-left shadow-2xs min-w-[210px]"
+            >
+              <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                <PhoneCall className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-rose-600 leading-tight">आपातकाल</div>
+                <div className="text-xl font-black text-rose-950 tracking-tight leading-tight">112</div>
+                <div className="text-[10px] text-slate-500 font-medium leading-tight">तुरंत सहायता के लिए कॉल करें</div>
+              </div>
+            </a>
+
+            {/* 1070 Disaster Hotline */}
+            <a
+              href="tel:1070"
+              className="flex items-center gap-3.5 px-4 py-3 rounded-2xl bg-[#FFFBEB] border border-[#FEF3C7] hover:bg-amber-100/70 transition-all text-left shadow-2xs min-w-[210px]"
+            >
+              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                <PhoneCall className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-amber-700 leading-tight">आपदा नियंत्रण कक्ष</div>
+                <div className="text-xl font-black text-amber-950 tracking-tight leading-tight">1070</div>
+                <div className="text-[10px] text-slate-500 font-medium leading-tight">प्राकृतिक आपदा की स्थिति में संपर्क करें</div>
+              </div>
+            </a>
           </div>
         </div>
 
         {/* Success Banner when complaint is filed */}
         {lodgeSuccess && (
-          <div className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md animate-in fade-in">
+          <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs animate-in fade-in">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span className="font-bold text-sm text-white">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span className="font-bold text-sm text-emerald-950">
                   शिकायत सफलतापूर्वक दर्ज हो गई!
                 </span>
               </div>
-              <p className="text-xs text-slate-300">
+              <p className="text-xs text-slate-600">
                 संदर्भ संख्या (Reference ID):{" "}
                 <button
                   onClick={() => handleCopyId(lodgeSuccess.tracking_id)}
-                  className="inline-flex items-center gap-1 font-mono text-emerald-300 font-bold bg-emerald-900/40 px-2 py-0.5 rounded border border-emerald-500/30 hover:bg-emerald-800/40 transition-colors"
+                  className="inline-flex items-center gap-1 font-mono text-emerald-700 font-bold bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300 hover:bg-emerald-200 transition-colors"
                 >
                   <span>{lodgeSuccess.tracking_id}</span>
                   <Copy className="w-3 h-3" />
-                  {copiedId === lodgeSuccess.tracking_id && <span className="text-[10px] text-emerald-400">कॉपी हुआ</span>}
+                  {copiedId === lodgeSuccess.tracking_id && <span className="text-[10px] text-emerald-700">कॉपी हुआ</span>}
                 </button>
               </p>
-              <p className="text-[11px] text-slate-400">
-                विभाग: <strong className="text-slate-200">{lodgeSuccess.department_name || lodgeSuccess.department_id}</strong> • फील्ड टीम को सूचित किया गया है।
+              <p className="text-[11px] text-slate-500">
+                विभाग: <strong className="text-slate-800">{lodgeSuccess.department_name || lodgeSuccess.department_id}</strong> • संबंधित टीम को सूचित किया गया है।
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Link
                 href={`/portal/department?department_id=${lodgeSuccess.department_id || "ALL"}&tracking_id=${lodgeSuccess.tracking_id}`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all active:scale-95"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Building2 className="w-3.5 h-3.5 text-purple-200" />
-                <span>🏢 विभाग पोर्टल पर लाइव देखें →</span>
+                <Building2 className="w-3.5 h-3.5 text-blue-100" />
+                <span>🏢 विभाग पोर्टल पर देखें →</span>
               </Link>
               <button
                 onClick={() => {
                   setTrackQuery(lodgeSuccess.tracking_id);
                   handleQuickTrack(lodgeSuccess.tracking_id);
                 }}
-                className="px-3.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors"
+                className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors"
               >
                 स्थिति जांचें (Track)
               </button>
               <button
                 onClick={() => setLodgeSuccess(null)}
-                className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white"
+                className="p-2 rounded-lg text-slate-400 hover:text-slate-600"
                 title="Dismiss"
               >
                 ✕
@@ -689,542 +930,504 @@ export default function CitizenPortal() {
           </div>
         )}
 
-        {/* Notice banners */}
+        {/* Feedback / Reopen Notice banners */}
         {feedbackSuccess && (
-          <div className="p-3 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between">
-            <span>{feedbackSuccess}</span>
-            <button onClick={() => setFeedbackSuccess(null)} className="text-emerald-400 hover:text-white">✕</button>
+          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-600" />
+              <span>{feedbackSuccess}</span>
+            </div>
+            <button onClick={() => setFeedbackSuccess(null)} className="text-emerald-700 font-bold hover:text-emerald-950">✕</button>
           </div>
         )}
         {reopenSuccess && (
-          <div className="p-3 rounded-lg bg-amber-950/30 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between">
-            <span>{reopenSuccess}</span>
-            <button onClick={() => setReopenSuccess(null)} className="text-amber-400 hover:text-white">✕</button>
+          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 text-amber-600" />
+              <span>{reopenSuccess}</span>
+            </div>
+            <button onClick={() => setReopenSuccess(null)} className="text-amber-700 font-bold hover:text-amber-950">✕</button>
           </div>
         )}
 
         {/* ========================================================================= */}
-        {/* 2. QUICK 1-TAP ISSUE PRESETS (Mobile-friendly big tap cards) */}
+        {/* 3. COMMON ISSUES (1-CLICK SELECTION) (Matches Screenshot) */}
         {/* ========================================================================= */}
-        <div className="space-y-2.5">
+        <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs sm:text-sm font-bold text-slate-300 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              <span>सामान्य समस्याएं (1-क्लिक में चुनें)</span>
-            </h2>
-            <span className="text-[11px] text-slate-500">त्वरित समाधान हेतु</span>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-blue-600" />
+              <h2 className="text-sm sm:text-base font-extrabold text-slate-900">
+                सामान्य समस्याएं (1-क्लिक में चुनें)
+              </h2>
+            </div>
+            <span className="text-xs text-slate-500 font-medium">अपनी समस्या का प्रकार चुनें</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
             {QUICK_PRESETS.map((p) => (
               <button
                 key={p.id}
                 onClick={() => handleSelectPreset(p)}
-                className="p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-850 transition-all text-left group flex flex-col justify-between space-y-2 active:scale-95 shadow-sm min-h-[82px]"
+                className="bg-white border border-slate-200/90 hover:border-blue-300 hover:shadow-md transition-all rounded-2xl p-4 text-left group flex flex-col justify-between active:scale-98 cursor-pointer shadow-2xs"
               >
                 <div className="flex items-center justify-between w-full">
-                  <span className="text-2xl">{p.icon}</span>
-                  <span className="text-[10px] font-bold text-emerald-400/90 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                    चुनें →
-                  </span>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${p.badgeColor}`}>
+                    {p.iconType === "water" && <Droplets className="w-5 h-5 text-blue-600" />}
+                    {p.iconType === "zap" && <Zap className="w-5 h-5 text-amber-600" />}
+                    {p.iconType === "road" && (
+                      <span className="font-black text-base text-slate-700">☲</span>
+                    )}
+                    {p.iconType === "pipe" && (
+                      <span className="font-black text-base text-sky-600">🚰</span>
+                    )}
+                    {p.iconType === "trash" && (
+                      <span className="font-black text-base text-emerald-600">🗑️</span>
+                    )}
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-600 transition-colors" />
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-white group-hover:text-emerald-300 leading-snug">
+
+                <div className="mt-3">
+                  <h3 className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">
                     {p.label}
-                  </p>
-                  <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                    {p.sub}
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-medium">{p.sub}</p>
+                  <p className="text-[11px] text-slate-500 mt-2 line-clamp-1 leading-snug font-normal">
+                    {p.desc}
                   </p>
                 </div>
               </button>
             ))}
           </div>
-        </div>
+        </section>
 
         {/* ========================================================================= */}
-        {/* 3. SIMPLE COMPLAINT TRACKER */}
+        {/* 4. TRACK GRIEVANCE STATUS BAR (Matches Screenshot) */}
         {/* ========================================================================= */}
-        <div className="rounded-2xl bg-slate-900 border border-slate-800 p-4 sm:p-5 space-y-3 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
-              <Search className="w-4 h-4 text-emerald-400" />
-              <span>शिकायत की स्थिति जांचें (Track Grievance Status)</span>
-            </h2>
-            <button
-              onClick={() => handleQuickTrack("TRN-2026-6B21E2")}
-              className="text-[11px] text-emerald-400 hover:underline hidden sm:inline"
-            >
-              नमूना आईडी देखें (Demo ID)
-            </button>
+        <section
+          id="tracking-section"
+          className="rounded-2xl bg-[#EFF6FF] border border-[#DBEAFE] p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+              <Search className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                शिकायत की स्थिति जानें (Track Grievance Status)
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                अपनी शिकायत की वर्तमान स्थिति जानने के लिए शिकायत संख्या दर्ज करें।
+              </p>
+            </div>
           </div>
 
-          <form onSubmit={handleTrackSearch} className="flex flex-col sm:flex-row gap-2">
-            <input
-              type="text"
-              value={trackQuery}
-              onChange={(e) => setTrackQuery(e.target.value)}
-              placeholder="संदर्भ संख्या दर्ज करें (जैसे TRN-2026-GUR001)"
-              className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs sm:text-sm text-white placeholder-slate-500 outline-none focus:border-emerald-500 font-mono"
-            />
+          <div className="flex flex-col sm:items-end gap-1.5 w-full md:w-auto">
             <button
-              type="submit"
-              disabled={trackingLoading || !trackQuery.trim()}
-              className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 shrink-0"
+              onClick={() => {
+                setTrackQuery("TRN-2026-GUR001");
+                handleQuickTrack("TRN-2026-GUR001");
+              }}
+              className="text-[11px] text-blue-600 hover:text-blue-700 font-semibold inline-flex items-center gap-1 self-end"
             >
-              <span>{trackingLoading ? "जांच हो रही है..." : "स्थिति देखें"}</span>
-              <ChevronRight className="w-4 h-4" />
+              <span>नमूना आईडी देखें (Demo ID)</span>
+              <span className="w-3.5 h-3.5 rounded-full border border-blue-400 flex items-center justify-center text-[9px] font-bold">i</span>
             </button>
-          </form>
 
-          {trackingError && (
-            <p className="text-xs text-rose-400 bg-rose-950/20 border border-rose-900/40 p-2.5 rounded-lg">
-              {trackingError}
-            </p>
-          )}
+            <form onSubmit={handleTrackSearch} className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-72">
+                <FileText className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={trackQuery}
+                  onChange={(e) => setTrackQuery(e.target.value)}
+                  placeholder="उदाहरण: TRN-2026-GUR001"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-800 text-xs sm:text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs font-medium"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={trackingLoading || !trackQuery.trim()}
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 transition-all shrink-0 active:scale-95"
+              >
+                <span>{trackingLoading ? "जांच रहे हैं..." : "स्थिति देखें"}</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </form>
+          </div>
+        </section>
 
-          {/* Tracked Record Result Card */}
-          {trackedRecord && (
-            <div className="mt-3 p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-sm font-bold text-emerald-400">
-                      {trackedRecord.tracking_id}
-                    </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-medium">
-                      {trackedRecord.category}
-                    </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-                      {trackedRecord.district_name || trackedRecord.district_id}
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-bold text-white">{trackedRecord.title}</h3>
-                </div>
+        {trackingError && (
+          <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center justify-between">
+            <span>{trackingError}</span>
+            <button onClick={() => setTrackingError(null)} className="text-rose-600 font-bold">✕</button>
+          </div>
+        )}
 
-                <div className="flex sm:flex-col items-center sm:items-end justify-between gap-1">
-                  <span
-                    className={`text-xs font-bold px-2.5 py-1 rounded border ${
-                      trackedRecord.status === "RESOLVED"
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                        : trackedRecord.status === "IN_PROGRESS"
-                        ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
-                        : "bg-sky-500/10 border-sky-500/30 text-sky-400"
-                    }`}
-                  >
-                    {trackedRecord.status === "RESOLVED"
-                      ? "✓ समाधान हो गया"
-                      : trackedRecord.status === "IN_PROGRESS"
-                      ? "⏳ कार्य प्रगति पर"
-                      : "📝 दर्ज / समीक्षा जारी"}
-                  </span>
-                  <span className="text-[11px] text-slate-400 font-medium">
-                    विभाग: {trackedRecord.department_name}
-                  </span>
-                </div>
+        {/* ========================================================================= */}
+        {/* 5. MY GRIEVANCES TABLE (Matches Screenshot exactly) */}
+        {/* ========================================================================= */}
+        <section className="bg-white border border-slate-200/90 rounded-2xl shadow-xs overflow-hidden">
+          {/* Table Header Row */}
+          <div className="p-5 flex items-center justify-between border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                <ListOrdered className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                  मेरी दर्ज शिकायतें (My Grievances)
+                </h3>
+                <p className="text-xs text-slate-500 font-medium">
+                  आपके द्वारा दर्ज की गई शिकायतों की सूची और उनकी वर्तमान स्थिति
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl text-xs">
+                <button
+                  onClick={() => setStatusTab("ALL")}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                    statusTab === "ALL" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  सभी
+                </button>
+                <button
+                  onClick={() => setStatusTab("ACTIVE")}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                    statusTab === "ACTIVE" ? "bg-white text-blue-600 shadow-2xs" : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  सक्रिय
+                </button>
+                <button
+                  onClick={() => setStatusTab("RESOLVED")}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                    statusTab === "RESOLVED" ? "bg-white text-emerald-600 shadow-2xs" : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  समाधान
+                </button>
               </div>
 
-              {/* Friendly 4-Step Milestone Progression */}
-              <div className="space-y-2">
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  समाधान चरण (Resolution Progress)
+              <button
+                onClick={() => setStatusTab("ALL")}
+                className="px-3.5 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold inline-flex items-center gap-1 transition-colors"
+              >
+                <span>सभी देखें</span>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+            </div>
+          </div>
+
+          {/* Table Container */}
+          <div className="overflow-x-auto">
+            {loading ? (
+              <div className="p-8 text-center text-slate-500 text-xs">
+                <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-blue-600" />
+                <span>शिकायतें लोड हो रही हैं...</span>
+              </div>
+            ) : filteredComplaints.length === 0 ? (
+              <div className="p-8 text-center text-slate-500 text-xs space-y-2">
+                <p className="font-semibold text-slate-700">कोई शिकायत नहीं मिली</p>
+                <button
+                  onClick={() => setShowLodgeModal(true)}
+                  className="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs"
+                >
+                  + नई शिकायत दर्ज करें
+                </button>
+              </div>
+            ) : (
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-slate-50/80 text-slate-500 border-b border-slate-200/80 font-bold uppercase tracking-wider text-[11px]">
+                    <th className="py-3 px-5">शिकायत संख्या</th>
+                    <th className="py-3 px-5">समस्या का प्रकार</th>
+                    <th className="py-3 px-5">स्थान</th>
+                    <th className="py-3 px-5">स्थिति</th>
+                    <th className="py-3 px-5">दर्ज की गई तारीख</th>
+                    <th className="py-3 px-5 text-right">कार्रवाई</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredComplaints.map((c) => {
+                    const catInfo = getCategoryDisplay(c.category);
+                    const statusInfo = getStatusBadge(c.status);
+
+                    return (
+                      <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
+                        {/* ID */}
+                        <td className="py-4 px-5">
+                          <button
+                            onClick={() => {
+                              handleCopyId(c.tracking_id);
+                              handleQuickTrack(c.tracking_id);
+                            }}
+                            className="font-mono font-bold text-slate-900 hover:text-blue-600 flex items-center gap-1.5"
+                          >
+                            <span>{c.tracking_id}</span>
+                            <Copy className="w-3 h-3 text-slate-400 hover:text-blue-600" />
+                          </button>
+                        </td>
+
+                        {/* Category */}
+                        <td className="py-4 px-5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-base">{catInfo.icon}</span>
+                            <span className="font-bold text-slate-800">{catInfo.label}</span>
+                          </div>
+                        </td>
+
+                        {/* Location */}
+                        <td className="py-4 px-5">
+                          <div className="flex items-center gap-1.5 text-slate-600 max-w-xs truncate">
+                            <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="truncate">{c.address || `${c.district_name || c.district_id}, हरियाणा`}</span>
+                          </div>
+                        </td>
+
+                        {/* Status Badge */}
+                        <td className="py-4 px-5">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${statusInfo.bg}`}>
+                            <span className={`w-2 h-2 rounded-full ${statusInfo.dot}`} />
+                            <span>{statusInfo.label}</span>
+                          </span>
+                        </td>
+
+                        {/* Date */}
+                        <td className="py-4 px-5 text-slate-500 font-medium">
+                          {formatHindiDate(c.created_at)}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-4 px-5 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => {
+                                setTrackQuery(c.tracking_id);
+                                handleQuickTrack(c.tracking_id);
+                              }}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors"
+                            >
+                              <span>विवरण देखें</span>
+                              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setTrackQuery(c.tracking_id);
+                                handleQuickTrack(c.tracking_id);
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </section>
+      </main>
+
+      {/* ========================================================================= */}
+      {/* 6. TRACK DETAILS MODAL */}
+      {/* ========================================================================= */}
+      {showTrackModal && trackedRecord && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-center items-center p-4 overflow-y-auto animate-in fade-in">
+          <div className="bg-white rounded-2xl border border-slate-200 w-full max-w-2xl max-h-[90vh] shadow-2xl flex flex-col overflow-hidden text-slate-800">
+            {/* Header */}
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                  <Search className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-base font-extrabold text-slate-900">
+                      {trackedRecord.tracking_id}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                      {trackedRecord.category}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {trackedRecord.district_name || trackedRecord.district_id} • {trackedRecord.department_name}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowTrackModal(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-5 text-xs">
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 mb-1">{trackedRecord.title}</h4>
+                <p className="text-slate-600 leading-relaxed">{trackedRecord.description}</p>
+              </div>
+
+              {/* Status Milestone Tracker */}
+              <div className="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                <p className="font-bold text-slate-700 uppercase tracking-wider text-[11px]">
+                  समाधान चरण (Resolution Milestones)
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                   {trackedRecord.milestones && trackedRecord.milestones.length > 0 ? (
-                    trackedRecord.milestones.map((m: any, i: number) => (
+                    trackedRecord.milestones.map((m: any, idx: number) => (
                       <div
-                        key={i}
+                        key={idx}
                         className={`p-2.5 rounded-lg border text-xs flex items-start gap-2 ${
                           m.completed
-                            ? "bg-emerald-950/20 border-emerald-500/40 text-emerald-300"
-                            : "bg-slate-900 border-slate-800 text-slate-500"
+                            ? "bg-emerald-50 border-emerald-300 text-emerald-800"
+                            : "bg-white border-slate-200 text-slate-500"
                         }`}
                       >
                         <CheckCircle2
                           className={`w-4 h-4 shrink-0 mt-0.5 ${
-                            m.completed ? "text-emerald-400" : "text-slate-600"
+                            m.completed ? "text-emerald-600" : "text-slate-300"
                           }`}
                         />
                         <div className="min-w-0">
-                          <p className="font-semibold truncate">{m.label}</p>
+                          <p className="font-bold truncate">{m.label}</p>
                           <p className="text-[10px] text-slate-400">{m.actor_label}</p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="p-3 rounded-lg bg-slate-900 text-xs text-slate-400 col-span-full">
+                    <div className="p-3 rounded-lg bg-white text-xs text-slate-500 col-span-full border border-slate-200">
                       शिकायत संबंधित विभाग को आवंटित कर दी गई है। फील्ड टीम शीघ्र निवारण करेगी।
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800/80 gap-1">
-                <span>स्थान: <strong className="text-slate-300">{trackedRecord.address}</strong></span>
-                <span className="font-mono text-slate-400">
-                  अनुमानित समय: {trackedRecord.estimated_resolution || "24-48 घंटे"}
-                </span>
+              {/* Details grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl border border-slate-200 bg-white">
+                <div>
+                  <span className="text-slate-400">स्थान: </span>
+                  <strong className="text-slate-800">{trackedRecord.address}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-400">अनुमानित समय: </span>
+                  <strong className="text-slate-800">{trackedRecord.estimated_resolution || "24-48 घंटे"}</strong>
+                </div>
+                {trackedRecord.assigned_officer_name && (
+                  <div>
+                    <span className="text-slate-400">जिम्मेदार अधिकारी: </span>
+                    <strong className="text-blue-600">{trackedRecord.assigned_officer_name}</strong>
+                  </div>
+                )}
+                <div>
+                  <span className="text-slate-400">प्राथमिकता: </span>
+                  <strong className="text-amber-600">{trackedRecord.priority || "सामान्य"}</strong>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
 
-        {/* ========================================================================= */}
-        {/* 4. MY COMPLAINTS LIST (Clean, clear cards with status tabs) */}
-        {/* ========================================================================= */}
-        <div className="space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h2 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                <span>मेरी दर्ज शिकायतें (My Grievances)</span>
-                <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-slate-800 text-emerald-400 border border-slate-700">
-                  {complaints.length}
-                </span>
-              </h2>
-              <p className="text-[11px] sm:text-xs text-slate-400">
-                आपके द्वारा दर्ज की गई सभी समस्याओं की स्थिति
-              </p>
-            </div>
-
-            {/* Filter Tabs */}
-            <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
-              <button
-                onClick={() => setStatusTab("ALL")}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                  statusTab === "ALL" ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                सभी ({complaints.length})
-              </button>
-              <button
-                onClick={() => setStatusTab("ACTIVE")}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                  statusTab === "ACTIVE" ? "bg-amber-500/20 text-amber-300" : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                सक्रिय ({complaints.filter((c) => c.status !== "RESOLVED").length})
-              </button>
-              <button
-                onClick={() => setStatusTab("RESOLVED")}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                  statusTab === "RESOLVED" ? "bg-emerald-500/20 text-emerald-300" : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                समाधान ({complaints.filter((c) => c.status === "RESOLVED").length})
-              </button>
-              <button
-                onClick={loadComplaints}
-                className="p-1 rounded-lg text-slate-400 hover:text-white ml-1"
-                title="रिफ्रेश करें"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-              </button>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="p-8 text-center text-slate-500 text-xs">
-              <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-slate-600" />
-              <span>शिकायतें लोड हो रही हैं...</span>
-            </div>
-          ) : filteredComplaints.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-              <CheckCircle2 className="w-10 h-10 text-emerald-500/40 mx-auto" />
-              <p className="text-sm font-bold text-slate-200">
-                {statusTab === "RESOLVED"
-                  ? "कोई समाधानित शिकायत नहीं है।"
-                  : statusTab === "ACTIVE"
-                  ? "कोई सक्रिय शिकायत लंबित नहीं है।"
-                  : "आपने अभी तक कोई शिकायत दर्ज नहीं की है।"}
-              </p>
-              <p className="text-xs text-slate-400 max-w-md mx-auto">
-                सड़क, पानी, सीवर या बिजली की किसी भी समस्या को दर्ज करने के लिए नीचे दिया गया बटन दबाएं।
-              </p>
-              <button
-                onClick={() => setShowLodgeModal(true)}
-                className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold inline-flex items-center gap-1.5 shadow"
-              >
-                <FilePlus2 className="w-4 h-4" />
-                <span>+ नई शिकायत दर्ज करें</span>
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredComplaints.map((c) => {
-                const isResolved = c.status === "RESOLVED";
-                const hasProof = c.resolution_proof && (c.resolution_proof.before_photo || c.resolution_proof.after_photo);
-
-                return (
-                  <div
-                    key={c.id}
-                    className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all space-y-3 shadow-sm"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <button
-                            onClick={() => handleCopyId(c.tracking_id)}
-                            className="inline-flex items-center gap-1 font-mono text-xs font-bold text-emerald-400 hover:underline"
-                            title="आईडी कॉपी करें"
-                          >
-                            <span>{c.tracking_id}</span>
-                            <Copy className="w-3 h-3 text-emerald-500" />
-                            {copiedId === c.tracking_id && <span className="text-[10px] text-emerald-400">कॉपी</span>}
-                          </button>
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-medium">
-                            {c.category}
-                          </span>
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400">
-                            {c.district_name || c.district_id}
-                          </span>
-                        </div>
-                        <h3 className="text-sm font-bold text-white">{c.title}</h3>
-                      </div>
-
-                      <div className="flex items-center gap-2 self-start sm:self-auto">
-                        <span
-                          className={`text-xs font-bold px-2.5 py-1 rounded border ${
-                            c.status === "RESOLVED"
-                              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                              : c.status === "IN_PROGRESS"
-                              ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
-                              : c.status === "REOPENED"
-                              ? "bg-rose-500/10 border-rose-500/30 text-rose-400"
-                              : "bg-sky-500/10 border-sky-500/30 text-sky-400"
-                          }`}
-                        >
-                          {c.status === "RESOLVED"
-                            ? "✓ समाधान हो गया"
-                            : c.status === "IN_PROGRESS"
-                            ? "⏳ कार्य प्रगति पर"
-                            : c.status === "REOPENED"
-                            ? "🔄 पुनः खुला"
-                            : "📝 दर्ज / समीक्षा"}
-                        </span>
-                      </div>
+              {/* Resolution Proof */}
+              {trackedRecord.resolution_proof && (
+                <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-emerald-800">
+                    <div className="flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      <span>कार्य पूर्ण होने का प्रमाण (Resolution Proof)</span>
                     </div>
-
-                    <p className="text-xs text-slate-300 leading-relaxed">{c.description}</p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-slate-400">
+                  </div>
+                  {trackedRecord.resolution_proof.field_note && (
+                    <p className="text-slate-600 italic">&quot;{trackedRecord.resolution_proof.field_note}&quot;</p>
+                  )}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    {trackedRecord.resolution_proof.before_photo && (
                       <div>
-                        <span>विभाग: </span>
-                        <strong className="text-slate-200">{c.department_name || c.department_id}</strong>
-                      </div>
-                      <div>
-                        <span>स्थान: </span>
-                        <span className="text-slate-300 truncate">{c.address}</span>
-                      </div>
-                      <div>
-                        <span>तारीख: </span>
-                        <span className="text-slate-400">{new Date(c.created_at).toLocaleDateString("hi-IN")}</span>
-                      </div>
-                      {c.assigned_officer_name && (
-                        <div>
-                          <span>अधिकारी: </span>
-                          <strong className="text-emerald-400">{c.assigned_officer_name}</strong>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Resolution Proof Card (Before / After Photo Proof) */}
-                    {hasProof && (
-                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                        <div className="flex items-center justify-between text-xs font-semibold text-emerald-300">
-                          <div className="flex items-center gap-1.5">
-                            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                            <span>कार्य पूर्ण होने का प्रमाण (Resolution Proof)</span>
-                          </div>
-                          {c.validation_status === "APPROVED" && (
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
-                              ✓ सत्यापित
-                            </span>
-                          )}
-                        </div>
-
-                        {c.resolution_proof.field_note && (
-                          <p className="text-xs text-slate-300 italic">
-                            &quot;{c.resolution_proof.field_note}&quot;
-                          </p>
-                        )}
-
-                        <div className="grid grid-cols-2 gap-2 pt-1">
-                          {c.resolution_proof.before_photo && (
-                            <div className="space-y-1">
-                              <span className="text-[10px] text-slate-400">कार्य से पहले:</span>
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={c.resolution_proof.before_photo}
-                                alt="Before Repair"
-                                className="w-full h-24 object-cover rounded-lg border border-slate-800"
-                              />
-                            </div>
-                          )}
-                          {c.resolution_proof.after_photo && (
-                            <div className="space-y-1">
-                              <span className="text-[10px] text-emerald-400 font-bold">समाधान के बाद:</span>
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={c.resolution_proof.after_photo}
-                                alt="After Repair"
-                                className="w-full h-24 object-cover rounded-lg border border-emerald-500/40"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Citizen Action Bar: Feedback or Reopen */}
-                    {isResolved && (
-                      <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 flex-wrap">
-                        <div className="text-xs text-slate-400">
-                          {c.feedback_rating ? (
-                            <span className="text-emerald-400 flex items-center gap-1 font-semibold">
-                              ★ रेटिंग दी गई: {c.feedback_rating}/5 {c.feedback_comments && `("${c.feedback_comments}")`}
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => setFeedbackComplaintId(c.id)}
-                              className="text-xs text-emerald-400 hover:text-emerald-300 underline font-semibold flex items-center gap-1"
-                            >
-                              <Star className="w-3.5 h-3.5" />
-                              <span>रेटिंग व प्रतिक्रिया दें</span>
-                            </button>
-                          )}
-                        </div>
-
-                        <button
-                          onClick={() => setReopenComplaintId(c.id)}
-                          className="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
-                        >
-                          <RotateCcw className="w-3.5 h-3.5" />
-                          <span>संतुष्ट नहीं? दोबारा खोलें</span>
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Feedback Form Drawer */}
-                    {feedbackComplaintId === c.id && (
-                      <div className="mt-2 p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
-                        <span className="font-bold text-white block">समाधान से कितने संतुष्ट हैं? (1 से 5 स्टार):</span>
-                        <div className="flex gap-1.5 text-base">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              type="button"
-                              onClick={() => setFeedbackRating(star)}
-                              className={`p-1 transition-transform hover:scale-110 ${
-                                feedbackRating >= star ? "text-amber-400" : "text-slate-600"
-                              }`}
-                            >
-                              ★
-                            </button>
-                          ))}
-                        </div>
-                        <input
-                          type="text"
-                          value={feedbackComment}
-                          onChange={(e) => setFeedbackComment(e.target.value)}
-                          placeholder="अपनी टिप्पणी लिखें (वैकल्पिक)..."
-                          className="w-full p-2 rounded-lg bg-slate-900 border border-slate-800 text-white outline-none"
+                        <span className="text-[10px] text-slate-500 font-semibold">कार्य से पहले:</span>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={trackedRecord.resolution_proof.before_photo}
+                          alt="Before"
+                          className="w-full h-24 object-cover rounded-lg border border-slate-200"
                         />
-                        <div className="flex justify-end gap-2 pt-1">
-                          <button
-                            onClick={() => setFeedbackComplaintId(null)}
-                            className="px-3 py-1 rounded-lg bg-slate-800 text-slate-300"
-                          >
-                            रद्द करें
-                          </button>
-                          <button
-                            onClick={() => handleSendFeedback(c.id)}
-                            disabled={submittingAction}
-                            className="px-3.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold"
-                          >
-                            रेटिंग सबमिट करें
-                          </button>
-                        </div>
                       </div>
                     )}
-
-                    {/* Reopen Form Drawer */}
-                    {reopenComplaintId === c.id && (
-                      <div className="mt-2 p-3 rounded-xl bg-rose-950/20 border border-rose-900/40 space-y-2 text-xs">
-                        <span className="font-bold text-rose-300 block">दोबारा खोलने का कारण बताएं:</span>
-                        <input
-                          type="text"
-                          value={reopenReason}
-                          onChange={(e) => setReopenReason(e.target.value)}
-                          placeholder="जैसे गड्ढे की मरम्मत 2 दिन में फिर टूट गई..."
-                          className="w-full p-2 rounded-lg bg-slate-950 border border-rose-900/40 text-white outline-none"
+                    {trackedRecord.resolution_proof.after_photo && (
+                      <div>
+                        <span className="text-[10px] text-emerald-700 font-bold">समाधान के बाद:</span>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={trackedRecord.resolution_proof.after_photo}
+                          alt="After"
+                          className="w-full h-24 object-cover rounded-lg border border-emerald-300"
                         />
-                        <div className="flex justify-end gap-2 pt-1">
-                          <button
-                            onClick={() => setReopenComplaintId(null)}
-                            className="px-3 py-1 rounded-lg bg-slate-800 text-slate-300"
-                          >
-                            रद्द करें
-                          </button>
-                          <button
-                            onClick={() => handleReopen(c.id)}
-                            disabled={submittingAction || !reopenReason.trim()}
-                            className="px-3.5 py-1 rounded-lg bg-rose-600 text-white font-bold"
-                          >
-                            पुनः खोलें (Reopen)
-                          </button>
-                        </div>
                       </div>
                     )}
                   </div>
-                );
-              })}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Footer */}
+            <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+              {trackedRecord.status === "RESOLVED" ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setFeedbackComplaintId(trackedRecord.id);
+                      setShowTrackModal(false);
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-2xs hover:bg-emerald-700"
+                  >
+                    ★ रेटिंग दें
+                  </button>
+                  <button
+                    onClick={() => {
+                      setReopenComplaintId(trackedRecord.id);
+                      setShowTrackModal(false);
+                    }}
+                    className="px-3.5 py-2 rounded-xl border border-rose-300 bg-rose-50 text-rose-700 font-bold text-xs hover:bg-rose-100"
+                  >
+                    दोबारा खोलें
+                  </button>
+                </div>
+              ) : (
+                <span className="text-xs text-slate-500">स्थिति नियमित रूप से अपडेट की जाती है।</span>
+              )}
+              <button
+                onClick={() => setShowTrackModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-200 text-slate-800 font-bold text-xs hover:bg-slate-300"
+              >
+                बंद करें
+              </button>
+            </div>
+          </div>
         </div>
-      </main>
+      )}
 
       {/* ========================================================================= */}
-      {/* 5. MOBILE STICKY BOTTOM ACTION BAR (Thumb friendly on mobile phones) */}
-      {/* ========================================================================= */}
-      <div className="sm:hidden fixed bottom-3 left-3 right-3 z-40">
-        <div className="p-1.5 rounded-2xl bg-slate-900/95 backdrop-blur-lg border border-slate-700/80 shadow-2xl flex items-center gap-2">
-          <button
-            onClick={() => setShowLodgeModal(true)}
-            className="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
-          >
-            <FilePlus2 className="w-4 h-4" />
-            <span>+ शिकायत दर्ज करें</span>
-          </button>
-          <button
-            onClick={() => {
-              setShowLodgeModal(true);
-              setTimeout(() => startVoiceInput(), 400);
-            }}
-            className="py-3 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 font-bold text-xs flex items-center justify-center gap-1 active:scale-95"
-            title="बोलकर बताएं"
-          >
-            <Mic className="w-4 h-4" />
-            <span>बोलें</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 6. LODGE NEW GRIEVANCE MODAL (Mobile-first bottom sheet/dialog) */}
+      {/* 7. LODGE COMPLAINT MODAL (Preserving 100% functionality with clean aesthetic) */}
       {/* ========================================================================= */}
       {showLodgeModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 overflow-y-auto animate-in fade-in">
-          <div className="bg-slate-900 border-t sm:border border-slate-800 w-full sm:max-w-xl max-h-[95vh] sm:max-h-[90vh] rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-            {/* STICKY HEADER */}
-            <div className="p-4 sm:p-5 border-b border-slate-800 bg-slate-900 flex items-center justify-between shrink-0 z-10">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-center items-end sm:items-center p-0 sm:p-4 overflow-y-auto animate-in fade-in">
+          <div className="bg-white border-t sm:border border-slate-200 w-full sm:max-w-xl max-h-[95vh] sm:max-h-[90vh] rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-800">
+            {/* Header */}
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/60">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+                <div className="p-2 rounded-xl bg-blue-100 text-blue-600 shrink-0">
                   <FilePlus2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-white flex items-center gap-2">
-                    <span>नई नागरिक शिकायत दर्ज करें</span>
+                  <h2 className="text-base font-bold text-slate-900">
+                    नई नागरिक शिकायत दर्ज करें
                   </h2>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-slate-500 font-medium">
                     बोलकर या लिखकर बताएं — AI सही विभाग में भेजेगा
                   </p>
                 </div>
@@ -1235,29 +1438,28 @@ export default function CitizenPortal() {
                   stopVoiceInput();
                   setShowLodgeModal(false);
                 }}
-                className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors"
-                title="बंद करें"
+                className="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* SCROLLABLE FORM BODY */}
-            <form id="lodge-form" onSubmit={handleLodgeGrievance} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs">
-              {/* VOICE INPUT PROMINENT CARD */}
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleLodgeGrievance} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+              {/* Voice input card */}
+              <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200/80 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-white flex items-center gap-1.5">
-                    <Mic className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                    <Mic className="w-4 h-4 text-blue-600" />
                     <span>आवाज़ से बोलकर बताएं (Voice Input)</span>
                   </span>
 
-                  <div className="flex items-center bg-slate-900 rounded-lg p-0.5 border border-slate-800 text-[10px]">
+                  <div className="flex items-center bg-white rounded-lg p-0.5 border border-slate-200 text-[10px]">
                     <button
                       type="button"
                       onClick={() => setSpeechLang("hi-IN")}
-                      className={`px-2 py-0.5 rounded font-bold transition-colors ${
-                        speechLang === "hi-IN" ? "bg-emerald-500 text-slate-950" : "text-slate-400"
+                      className={`px-2.5 py-0.5 rounded font-bold transition-colors ${
+                        speechLang === "hi-IN" ? "bg-blue-600 text-white" : "text-slate-600"
                       }`}
                     >
                       हिंदी
@@ -1265,8 +1467,8 @@ export default function CitizenPortal() {
                     <button
                       type="button"
                       onClick={() => setSpeechLang("en-IN")}
-                      className={`px-2 py-0.5 rounded font-bold transition-colors ${
-                        speechLang === "en-IN" ? "bg-emerald-500 text-slate-950" : "text-slate-400"
+                      className={`px-2.5 py-0.5 rounded font-bold transition-colors ${
+                        speechLang === "en-IN" ? "bg-blue-600 text-white" : "text-slate-600"
                       }`}
                     >
                       English
@@ -1278,7 +1480,7 @@ export default function CitizenPortal() {
                   <button
                     type="button"
                     onClick={stopVoiceInput}
-                    className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center justify-center gap-2 animate-pulse shadow-md transition-all"
+                    className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center justify-center gap-2 animate-pulse shadow-xs"
                   >
                     <MicOff className="w-4 h-4" />
                     <span>सुन रहे हैं... रिकॉर्डिंग रोकें (Stop)</span>
@@ -1287,84 +1489,55 @@ export default function CitizenPortal() {
                   <button
                     type="button"
                     onClick={startVoiceInput}
-                    className="w-full py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95"
+                    className="w-full py-2.5 rounded-xl bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-98 shadow-2xs"
                   >
-                    <Mic className="w-4 h-4" />
+                    <Mic className="w-4 h-4 text-blue-600" />
                     <span>🎙️ माइक दबाकर अपनी समस्या बोलें</span>
                   </button>
                 )}
 
                 {speechNotice && (
-                  <p className="text-[11px] text-emerald-300 font-medium text-center animate-pulse">
+                  <p className="text-[11px] text-blue-700 font-medium text-center animate-pulse">
                     {speechNotice}
                   </p>
                 )}
               </div>
 
-              {/* QUICK CHIPS */}
+              {/* Title input */}
               <div>
-                <span className="block text-[11px] font-semibold text-slate-400 mb-1.5">
-                  त्वरित श्रेणी चुनें (Quick Issue):
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {QUICK_PRESETS.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => {
-                        setTitle(p.title);
-                        setDescription(p.desc);
-                        setCategory(p.category);
-                        setDepartmentId(p.deptId);
-                      }}
-                      className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-medium flex items-center gap-1 transition-all ${
-                        category === p.category
-                          ? "bg-emerald-500/15 border-emerald-500/50 text-emerald-300"
-                          : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700"
-                      }`}
-                    >
-                      <span>{p.icon}</span>
-                      <span>{p.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* TITLE */}
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">
-                  समस्या का शीर्षक (Title) <span className="text-rose-400">*</span>
+                <label className="block text-slate-800 font-bold mb-1">
+                  समस्या का शीर्षक (Title) <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => handleTitleChange(e.target.value)}
                   placeholder="जैसे: मुख्य सड़क पर 3 फीट जलभराव या बिजली का तार टूटा"
-                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 outline-none focus:border-emerald-500 text-xs sm:text-sm font-medium"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-xs sm:text-sm font-medium"
                   required
                 />
               </div>
 
-              {/* DESCRIPTION */}
+              {/* Description input */}
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">
-                  विस्तृत विवरण (Details) <span className="text-rose-400">*</span>
+                <label className="block text-slate-800 font-bold mb-1">
+                  विस्तृत विवरण (Details) <span className="text-rose-500">*</span>
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => handleDescriptionChange(e.target.value)}
                   rows={3}
                   placeholder="समस्या का ब्यौरा दें: स्थिति कितनी गंभीर है, गाड़ियां फंसी हैं या नहीं..."
-                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 outline-none focus:border-emerald-500 text-xs sm:text-sm leading-relaxed"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-xs sm:text-sm leading-relaxed"
                   required
                 />
               </div>
 
-              {/* LOCATION DETAILS & GPS */}
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5">
+              {/* Location details */}
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-blue-600" />
                     <span>स्थान (Location)</span>
                   </span>
 
@@ -1372,7 +1545,7 @@ export default function CitizenPortal() {
                     type="button"
                     onClick={handleDetectLocation}
                     disabled={gpsDetecting}
-                    className="px-3 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold flex items-center gap-1.5 transition-all active:scale-95"
+                    className="px-3 py-1 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-300 text-[11px] font-bold flex items-center gap-1.5 transition-all"
                   >
                     <Navigation className={`w-3 h-3 ${gpsDetecting ? "animate-spin" : ""}`} />
                     <span>{gpsDetecting ? "खोज रहे हैं..." : "📍 मेरा स्थान लें (GPS)"}</span>
@@ -1380,14 +1553,12 @@ export default function CitizenPortal() {
                 </div>
 
                 {gpsDetectedBadge && (
-                  <p className="text-[11px] text-emerald-400 font-medium">
-                    ✓ {gpsDetectedBadge}
-                  </p>
+                  <p className="text-[11px] text-blue-700 font-medium">✓ {gpsDetectedBadge}</p>
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1">हरियाणा जिला</label>
+                    <label className="block text-[11px] text-slate-500 mb-1">हरियाणा जिला</label>
                     <select
                       value={districtId}
                       onChange={(e) => {
@@ -1397,11 +1568,11 @@ export default function CitizenPortal() {
                         if (dist) {
                           setLatitude(dist.lat);
                           setLongitude(dist.lng);
-                          setGpsDetectedBadge(`स्थान: ${dist.name} (${dist.lat.toFixed(4)}° N, ${dist.lng.toFixed(4)}° E)`);
+                          setGpsDetectedBadge(`स्थान: ${dist.name} (${dist.lat.toFixed(3)}° N, ${dist.lng.toFixed(3)}° E)`);
                         }
                         triggerAiAnalysis(title, description, newDistId);
                       }}
-                      className="w-full p-2 rounded-lg bg-slate-900 border border-slate-800 text-white outline-none focus:border-emerald-500 text-xs"
+                      className="w-full p-2 rounded-lg bg-white border border-slate-300 text-slate-800 font-medium outline-none"
                     >
                       {HARYANA_DISTRICTS.map((d) => (
                         <option key={d.id} value={d.id}>
@@ -1412,189 +1583,198 @@ export default function CitizenPortal() {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1">सड़क / लैंडमार्क पता</label>
-                    <input
-                      type="text"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="जैसे सुभाष चौक, सेक्टर 38, मुख्य मोड़"
-                      className="w-full p-2 rounded-lg bg-slate-900 border border-slate-800 text-white outline-none focus:border-emerald-500 text-xs"
-                      required
-                    />
+                    <label className="block text-[11px] text-slate-500 mb-1">संबंधित विभाग</label>
+                    <select
+                      value={departmentId}
+                      onChange={(e) => setDepartmentId(e.target.value)}
+                      className="w-full p-2 rounded-lg bg-white border border-slate-300 text-slate-800 font-medium outline-none"
+                    >
+                      {HARYANA_DEPARTMENTS.map((dept) => (
+                        <option key={dept.id} value={dept.id}>
+                          {dept.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
-                {/* Exact GPS Coordinates Row */}
-                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-900">
-                  <div>
-                    <label className="block text-[10px] text-slate-400 mb-0.5 font-mono">Latitude (अक्षांश)</label>
-                    <input
-                      type="number"
-                      step="0.000001"
-                      value={latitude || ""}
-                      onChange={(e) => setLatitude(parseFloat(e.target.value))}
-                      placeholder="28.4595"
-                      className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-cyan-300 font-mono text-xs outline-none focus:border-cyan-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-slate-400 mb-0.5 font-mono">Longitude (देशांतर)</label>
-                    <input
-                      type="number"
-                      step="0.000001"
-                      value={longitude || ""}
-                      onChange={(e) => setLongitude(parseFloat(e.target.value))}
-                      placeholder="77.0266"
-                      className="w-full p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-cyan-300 font-mono text-xs outline-none focus:border-cyan-500"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-[11px] text-slate-500 mb-1">सटीक पता / लैंडमार्क</label>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="जैसे: सुभाष चौक, सोहना रोड, सेक्टर 38"
+                    className="w-full p-2 rounded-lg bg-white border border-slate-300 text-slate-800 outline-none"
+                  />
                 </div>
               </div>
 
-              {/* MEDIA ATTACHMENTS (PHOTO / VIDEO) */}
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-                    <Camera className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>फोटो या वीडियो प्रमाण (वैकल्पिक)</span>
-                  </span>
-
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      ref={photoInputRef}
-                      onChange={(e) => handleFileUpload(e, "IMAGE")}
-                      className="hidden"
-                    />
-                    <input
-                      type="file"
-                      accept="video/*"
-                      ref={videoInputRef}
-                      onChange={(e) => handleFileUpload(e, "VIDEO")}
-                      className="hidden"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => photoInputRef.current?.click()}
-                      className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-emerald-300 text-[11px] font-bold flex items-center gap-1"
-                    >
-                      <ImageIcon className="w-3 h-3" />
-                      <span>+ फोटो</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => videoInputRef.current?.click()}
-                      className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-sky-300 text-[11px] font-bold flex items-center gap-1"
-                    >
-                      <Video className="w-3 h-3" />
-                      <span>+ वीडियो</span>
-                    </button>
-                  </div>
+              {/* Attachments */}
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <span className="font-bold text-slate-800 block">फोटो या वीडियो जोड़ें (वैकल्पिक)</span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => photoInputRef.current?.click()}
+                    className="flex-1 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 flex items-center justify-center gap-1.5 font-bold text-slate-700"
+                  >
+                    <Camera className="w-4 h-4 text-blue-600" />
+                    <span>फोटो जोड़ें</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => videoInputRef.current?.click()}
+                    className="flex-1 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 flex items-center justify-center gap-1.5 font-bold text-slate-700"
+                  >
+                    <Video className="w-4 h-4 text-amber-600" />
+                    <span>वीडियो जोड़ें</span>
+                  </button>
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleFileUpload(e, "image")}
+                  />
+                  <input
+                    ref={videoInputRef}
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={(e) => handleFileUpload(e, "video")}
+                  />
                 </div>
 
-                {attachments.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
-                    {attachments.map((att, idx) => (
-                      <div
-                        key={idx}
-                        className="relative group p-1.5 rounded-lg bg-slate-900 border border-slate-800 flex flex-col items-center overflow-hidden"
-                      >
-                        {att.type === "VIDEO" ? (
-                          <div className="w-full h-16 bg-slate-950 rounded flex items-center justify-center relative">
-                            <Play className="w-5 h-5 text-white" />
-                          </div>
-                        ) : (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={att.uri}
-                            alt={att.filename}
-                            className="w-full h-16 object-cover rounded bg-slate-950"
-                          />
-                        )}
-                        <div className="w-full flex items-center justify-between mt-1 text-[10px] text-slate-400 px-1">
-                          <span className="truncate max-w-[80px]">{att.filename}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeAttachment(idx)}
-                            className="text-rose-400 hover:text-rose-300 p-0.5"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
+                {attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {attachments.map((att) => (
+                      <div key={att.id} className="relative group">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={att.url}
+                          alt="Attachment"
+                          className="w-16 h-16 object-cover rounded-lg border border-slate-300"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAttachment(att.id)}
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px]"
+                        >
+                          ✕
+                        </button>
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-[11px] text-slate-500">
-                    घटना स्थल की फोटो या वीडियो जोड़ने से विभाग शीघ्र समाधान करता है।
-                  </p>
                 )}
               </div>
 
-              {/* AI ROUTING NOTICE */}
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-start gap-2.5">
-                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <p className="text-xs font-bold text-white">
-                    {aiAnalyzing
-                      ? "AI द्वारा सही विभाग का निर्धारण हो रहा है..."
-                      : `स्वतः प्रेषित: ${HARYANA_DEPARTMENTS.find((d) => d.id === departmentId)?.name || departmentId}`}
-                  </p>
-                  <p className="text-[11px] text-slate-400 leading-snug">
-                    शिकायत दर्ज होते ही संबंधित लाइन विभाग के कंट्रोल रूम में लाइव अलर्ट पहुंचेगा।
-                  </p>
-                </div>
-              </div>
-
-              {/* CITIZEN CONTACT */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-slate-400 text-[11px] mb-1">आपका नाम (Citizen Name)</label>
-                  <input
-                    type="text"
-                    value={citizenName}
-                    onChange={(e) => setCitizenName(e.target.value)}
-                    placeholder="जैसे: रोहित वर्मा"
-                    className="w-full p-2 rounded-lg bg-slate-950 border border-slate-800 text-white outline-none text-xs"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-400 text-[11px] mb-1">संपर्क मोबाइल (Mobile No.)</label>
-                  <input
-                    type="tel"
-                    value={citizenPhone}
-                    onChange={(e) => setCitizenPhone(e.target.value)}
-                    placeholder="+91-98100-11223"
-                    className="w-full p-2 rounded-lg bg-slate-950 border border-slate-800 text-white outline-none text-xs"
-                    required
-                  />
-                </div>
+              {/* Submit Buttons */}
+              <div className="pt-2 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowLodgeModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-100 transition-colors"
+                >
+                  रद्द करें
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingGrievance || !title.trim() || !description.trim()}
+                  className="flex-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/25 transition-all flex items-center justify-center gap-2"
+                >
+                  {submittingGrievance ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>दर्ज हो रही है...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>शिकायत सबमिट करें</span>
+                    </>
+                  )}
+                </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
 
-            {/* STICKY MODAL FOOTER */}
-            <div className="p-3.5 sm:p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-between gap-2 shrink-0 z-10">
+      {/* ========================================================================= */}
+      {/* 8. FEEDBACK & REOPEN MODALS */}
+      {/* ========================================================================= */}
+      {feedbackComplaintId && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-center items-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl border border-slate-200 w-full max-w-md p-5 shadow-2xl space-y-4">
+            <h3 className="font-bold text-base text-slate-900">समाधान संतुष्टि रेटिंग (Rating & Feedback)</h3>
+            <p className="text-xs text-slate-500">समाधान कार्य से आप कितने संतुष्ट हैं? (1 से 5 स्टार):</p>
+            <div className="flex gap-2 text-2xl justify-center py-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setFeedbackRating(star)}
+                  className={`transition-transform hover:scale-120 ${
+                    feedbackRating >= star ? "text-amber-400" : "text-slate-300"
+                  }`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+            <input
+              type="text"
+              value={feedbackComment}
+              onChange={(e) => setFeedbackComment(e.target.value)}
+              placeholder="अपनी टिप्पणी या अनुभव लिखें (वैकल्पिक)..."
+              className="w-full p-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 outline-none"
+            />
+            <div className="flex justify-end gap-2 pt-2">
               <button
-                type="button"
-                onClick={() => {
-                  stopVoiceInput();
-                  setShowLodgeModal(false);
-                }}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors"
+                onClick={() => setFeedbackComplaintId(null)}
+                className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs font-semibold"
               >
-                रद्द करें (Cancel)
+                रद्द करें
               </button>
               <button
-                type="submit"
-                form="lodge-form"
-                disabled={submittingGrievance || !title.trim() || !description.trim()}
-                className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-95 transition-all"
+                onClick={() => handleSendFeedback(feedbackComplaintId)}
+                disabled={submittingAction}
+                className="px-5 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700"
               >
-                <Send className="w-4 h-4" />
-                <span>{submittingGrievance ? "दर्ज हो रहा है..." : "शिकायत दर्ज करें"}</span>
+                सबमिट करें
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {reopenComplaintId && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-center items-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl border border-slate-200 w-full max-w-md p-5 shadow-2xl space-y-4">
+            <h3 className="font-bold text-base text-rose-700">शिकायत दोबारा खोलें (Reopen Grievance)</h3>
+            <p className="text-xs text-slate-500">कृपया कारण बताएं कि आप कार्य से असंतुष्ट क्यों हैं:</p>
+            <textarea
+              rows={3}
+              value={reopenReason}
+              onChange={(e) => setReopenReason(e.target.value)}
+              placeholder="जैसे गड्ढे की मरम्मत 2 दिन में फिर टूट गई या पानी की निकासी अभी भी रुकी है..."
+              className="w-full p-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 outline-none"
+            />
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setReopenComplaintId(null)}
+                className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs font-semibold"
+              >
+                रद्द करें
+              </button>
+              <button
+                onClick={() => handleReopen(reopenComplaintId)}
+                disabled={submittingAction || !reopenReason.trim()}
+                className="px-5 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700"
+              >
+                पुनः खोलें (Reopen)
               </button>
             </div>
           </div>

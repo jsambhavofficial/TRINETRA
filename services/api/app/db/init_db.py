@@ -42,6 +42,7 @@ def load_csv_complaints() -> list:
     """Loads complete Haryana governance dataset from CSV file if present."""
     candidates = [
         Path(__file__).resolve().parents[2] / "data" / "seed" / "haryana_full_governance.csv",
+        Path(__file__).resolve().parents[3] / "data" / "seed" / "haryana_full_governance.csv",
         Path(__file__).resolve().parents[4] / "data" / "seed" / "haryana_full_governance.csv",
         Path("services/api/data/seed/haryana_full_governance.csv"),
         Path("data/seed/haryana_full_governance.csv"),
@@ -50,6 +51,7 @@ def load_csv_complaints() -> list:
     ]
     csv_path = next((p for p in candidates if p.exists()), None)
     if not csv_path or not csv_path.exists():
+        logger.warning(f"No CSV complaints seed found. Checked candidates: {[str(p) for p in candidates]}")
         return []
     import csv
     complaints = []
@@ -85,6 +87,7 @@ def load_csv_complaints() -> list:
                     validation_status="APPROVED" if row["status"] == "RESOLVED" else ("PENDING" if row["status"] == "AWAITING_VALIDATION" else None),
                 )
             )
+    logger.info(f"Loaded {len(complaints)} Haryana complaints from CSV at {csv_path}")
     return complaints
 
 
