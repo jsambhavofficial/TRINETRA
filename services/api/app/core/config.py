@@ -1,5 +1,5 @@
 """
-NEXUS API Configuration Settings
+TRINETRA API Configuration Settings
 Loads environment variables with safe defaults for local development.
 """
 from typing import List, Union
@@ -14,7 +14,7 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
-    APP_NAME: str = "NEXUS"
+    APP_NAME: str = "TRINETRA"
     APP_ENV: str = "development"
     DEBUG: bool = True
     LOG_LEVEL: str = "INFO"

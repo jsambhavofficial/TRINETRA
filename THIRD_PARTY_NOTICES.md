@@ -1,12 +1,12 @@
 # THIRD-PARTY SOFTWARE NOTICES AND LICENSES
 
-This file documents third-party open-source components, libraries, services, and datasets utilized in **NEXUS — The Living Intelligence Layer for the Physical World**.
+This file documents third-party open-source components, libraries, services, and datasets utilized in **TRINETRA — State Governance Intelligence & Operational Platform**.
 
 ---
 
 ## 1. Third-Party Dependency Ledger
 
-| Component | Version / Commit | License | Repository / Origin | Role in NEXUS | Attribution & Compliance Requirements |
+| Component | Version / Commit | License | Repository / Origin | Role in TRINETRA | Attribution & Compliance Requirements |
 |---|---|---|---|---|---|
 | **Next.js** | `^15.0.0` | MIT | https://github.com/vercel/next.js | Core web application framework, SSR/CSR hydration, routing. | Copyright (c) 2026 Vercel, Inc. License notice retained. |
 | **React** | `^19.0.0` | MIT | https://github.com/facebook/react | UI component architecture and virtual DOM. | Copyright (c) Meta Platforms, Inc. License notice retained. |

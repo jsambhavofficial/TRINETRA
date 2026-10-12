@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -6,14 +7,15 @@ import Link from "next/link";
 interface AegisLogoProps {
   size?: "sm" | "md" | "lg";
   showSubtitle?: boolean;
+  className?: string;
 }
 
-export const AegisLogo: React.FC<AegisLogoProps> = ({ size = "md", showSubtitle = true }) => {
+export const AegisLogo: React.FC<AegisLogoProps> = ({ size = "md", showSubtitle = true, className = "" }) => {
   const iconSize = size === "sm" ? "w-7 h-7" : size === "lg" ? "w-10 h-10" : "w-8 h-8";
   const titleSize = size === "sm" ? "text-xs" : size === "lg" ? "text-base" : "text-sm";
 
   return (
-    <Link href="/world" className="flex items-center gap-2.5 group select-none">
+    <Link href="/world" className={`flex items-center gap-2.5 group select-none ${className}`}>
       {/* TRINETRA State Governance Emblem Shield */}
       <div className={`relative ${iconSize} flex items-center justify-center shrink-0`}>
         <svg

@@ -35,7 +35,7 @@ from app.services.job_worker import job_worker
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting NEXUS Operational API Engine (Phase 3)...")
+    logger.info("Starting TRINETRA State Governance & Operational API Engine...")
     try:
         await init_db()
     except Exception as e:
@@ -43,12 +43,12 @@ async def lifespan(app: FastAPI):
     # Start Phase 3 background job worker
     job_worker.start()
     yield
-    logger.info("Shutting down NEXUS Operational API Engine.")
+    logger.info("Shutting down TRINETRA Operational API Engine.")
 
 
 app = FastAPI(
-    title="NEXUS Operational Intelligence API",
-    description="The Living Intelligence Layer for the Physical World - Core State Gateway",
+    title="TRINETRA State Governance & Operational Intelligence API",
+    description="The Living Spatial Intelligence & Governance Layer for Haryana - Core State Gateway",
     version="1.0.0-phase3",
     lifespan=lifespan
 )

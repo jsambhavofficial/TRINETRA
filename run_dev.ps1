@@ -1,9 +1,9 @@
 # ==============================================================================
-# NEXUS — SINGLE COMMAND LOCAL DEVELOPMENT RUNNER (WINDOWS POWERSHELL)
+# TRINETRA — SINGLE COMMAND LOCAL DEVELOPMENT RUNNER (WINDOWS POWERSHELL)
 # ==============================================================================
 
 Write-Host "=================================================================" -ForegroundColor Cyan
-Write-Host "  NEXUS — The Living Intelligence Layer for the Physical World  " -ForegroundColor Cyan
+Write-Host "  TRINETRA — State Governance Intelligence & Operational Platform " -ForegroundColor Cyan
 Write-Host "=================================================================" -ForegroundColor Cyan
 
 $WorkspaceRoot = $PSScriptRoot
@@ -19,7 +19,7 @@ $BackendJob = Start-Job -ScriptBlock {
 Start-Sleep -Seconds 3
 
 # 2. Start Frontend Mission Control App
-Write-Host "[2/2] Starting Frontend Mission Control (Next.js) on Port 3000..." -ForegroundColor Green
+Write-Host "[2/2] Starting Frontend Governance Platform (Next.js) on Port 3000..." -ForegroundColor Green
 $FrontendJob = Start-Job -ScriptBlock {
     param($root)
     Set-Location "$root\apps\web"
@@ -28,11 +28,15 @@ $FrontendJob = Start-Job -ScriptBlock {
 
 Write-Host ""
 Write-Host "=================================================================" -ForegroundColor Green
-Write-Host "  NEXUS SYSTEM IS LIVE!                                          " -ForegroundColor Green
-Write-Host "  Mission Control:   http://localhost:3000                      " -ForegroundColor White
+Write-Host "  TRINETRA SYSTEM IS LIVE!                                       " -ForegroundColor Green
+Write-Host "  Portal Gateway:    http://localhost:3000                      " -ForegroundColor White
+Write-Host "  State Leadership:  http://localhost:3000/portal/state-leadership" -ForegroundColor White
+Write-Host "  District Admin:    http://localhost:3000/portal/district-admin" -ForegroundColor White
+Write-Host "  Department Hub:    http://localhost:3000/portal/department    " -ForegroundColor White
+Write-Host "  Citizen Portal:    http://localhost:3000/portal/citizen       " -ForegroundColor White
 Write-Host "  3D World Twin:     http://localhost:3000/world                " -ForegroundColor White
 Write-Host "  Backend API Docs:  http://localhost:8000/docs                 " -ForegroundColor White
-Write-Host "  Health Probe:      http://localhost:8000/health/dependencies  " -ForegroundColor White
+Write-Host "  Health Probe:      http://localhost:8000/health               " -ForegroundColor White
 Write-Host "=================================================================" -ForegroundColor Green
 Write-Host "Press Ctrl+C to stop all services..." -ForegroundColor Yellow
 
@@ -43,7 +47,7 @@ try {
         Start-Sleep -Seconds 2
     }
 } finally {
-    Write-Host "Stopping all NEXUS services..." -ForegroundColor Red
+    Write-Host "Stopping all TRINETRA services..." -ForegroundColor Red
     Stop-Job $BackendJob -ErrorAction SilentlyContinue
     Remove-Job $BackendJob -ErrorAction SilentlyContinue
     Stop-Job $FrontendJob -ErrorAction SilentlyContinue
