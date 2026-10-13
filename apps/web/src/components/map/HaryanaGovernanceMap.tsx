@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import {
   MapPin,
   Layers,
@@ -28,6 +30,11 @@ import {
 } from "lucide-react";
 import { HARYANA_DISTRICTS, HaryanaDistrict } from "@/lib/haryana";
 import { AIDecisionPanel } from "@/components/complaints/AIDecisionPanel";
+
+// User's provided Mapbox API Token
+const MAPBOX_TOKEN =
+  process.env.NEXT_PUBLIC_MAPBOX_TOKEN ||
+  "pk.eyJ1IjoianNhbWJoYXYiLCJhIjoiY211NWxpZjh0MDJhdTJ3czdhOHVoZmNzaCJ9.LVqTGSLBaee5wmHeovxU9g";
 
 export interface IncidentPin {
   id: string;
@@ -838,6 +845,13 @@ export const HaryanaGovernanceMap: React.FC<{
   const [isDecisionPanelOpen, setIsDecisionPanelOpen] = useState(false);
   const [actionSuccessNotice, setActionSuccessNotice] = useState<string | null>(null);
 
+  // Mapbox GL State & Refs
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [mapStyle, setMapStyle] = useState<string>("mapbox://styles/mapbox/light-v11");
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+
   // Load real-time complaints and incidents from backend with micro-dispersion for co-located reports
   // Polls automatically so newly lodged complaints appear live, and resolved complaints are automatically removed!
   useEffect(() => {
@@ -974,6 +988,165 @@ export const HaryanaGovernanceMap: React.FC<{
       setActionSuccessNotice(`Escalation registered for [${pin.tracking_id}]`);
     }
   };
+
+  // 1. Initialize Mapbox GL Map Canvas
+  useEffect(() => {
+    if (viewMode !== "map" || !mapContainerRef.current) return;
+
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+
+    const map = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: mapStyle,
+      center: [76.85, 29.20],
+      zoom: 7.6,
+      minZoom: 6.8,
+      maxZoom: 18,
+      maxBounds: [
+        [73.5, 26.8],
+        [78.8, 31.8],
+      ],
+      attributionControl: false,
+    });
+
+    map.on("load", () => {
+      setIsMapLoaded(true);
+      map.resize();
+    });
+
+    mapRef.current = map;
+
+    return () => {
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
+      map.remove();
+      mapRef.current = null;
+      setIsMapLoaded(false);
+    };
+  }, [viewMode, mapStyle]);
+
+  // 2. Render Dynamic Incident Markers on Mapbox
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isMapLoaded || viewMode !== "map") return;
+
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current = [];
+
+    filteredIncidents.forEach((inc) => {
+      if (!inc.latitude || !inc.longitude) return;
+
+      const isSelected = selectedPin?.id === inc.id;
+      const isCrit = inc.priority === "CRITICAL";
+      const isHigh = inc.priority === "HIGH";
+      const cfg = INCIDENT_CATEGORIES_CONFIG[inc.category] || INCIDENT_CATEGORIES_CONFIG.URBAN_FLOODING;
+
+      const prioColor = isCrit ? "#ef4444" : isHigh ? "#f59e0b" : "#10b981";
+      const shortTag = inc.tracking_id?.slice(-6) || inc.id?.slice(-6);
+
+      const el = document.createElement("div");
+      el.className = `relative cursor-pointer select-none transition-all duration-200 ${
+        isSelected ? "scale-125 z-40" : "hover:scale-115 hover:z-30 z-20"
+      }`;
+
+      el.innerHTML = `
+        <div style="position:relative; display:flex; flex-direction:column; align-items:center;">
+          ${
+            isCrit || isHigh
+              ? `<div style="position:absolute; width:44px; height:44px; border-radius:9999px; background:${
+                  isCrit ? "rgba(239,68,68,0.3)" : "rgba(245,158,11,0.25)"
+                }; pointer-events:none; animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>`
+              : ""
+          }
+
+          ${
+            isSelected
+              ? `<div style="position:absolute; width:48px; height:48px; border-radius:9999px; background:rgba(37,99,235,0.35); pointer-events:none; animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>`
+              : ""
+          }
+
+          <div style="
+            padding: 4px 8px;
+            border-radius: 9999px;
+            background: ${isSelected ? "#2563eb" : "#ffffff"};
+            border: 2px solid ${isSelected ? "#93c5fd" : "#e2e8f0"};
+            box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: ${isSelected ? "#ffffff" : "#1e293b"};
+            font-family: monospace;
+            font-weight: 800;
+            font-size: 10px;
+            transition: all 0.2s ease;
+          ">
+            <span style="font-size:12px; line-height:1;">${cfg.icon}</span>
+            <span style="font-size:9px; letter-spacing:-0.02em;">${shortTag}</span>
+            <span style="width:6px; height:6px; border-radius:9999px; background:${prioColor}; border:1px solid #fff;"></span>
+          </div>
+        </div>
+      `;
+
+      // Popup on hover
+      const popup = new mapboxgl.Popup({
+        offset: 16,
+        closeButton: false,
+        closeOnClick: false,
+      }).setHTML(`
+        <div style="font-family: sans-serif; font-size:11px; padding:4px 6px; color:#1e293b; max-width:220px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; font-weight:800; font-family:monospace; margin-bottom:2px;">
+            <span style="color:#2563eb;">${inc.tracking_id}</span>
+            <span style="padding:1px 4px; border-radius:4px; font-size:9px; font-weight:700; background:${
+              isCrit ? "#fee2e2" : isHigh ? "#fef3c7" : "#ecfdf5"
+            }; color:${isCrit ? "#991b1b" : isHigh ? "#92400e" : "#065f46"};">${inc.priority}</span>
+          </div>
+          <div style="font-weight:700; color:#0f172a; line-height:1.2; margin-bottom:4px;">${inc.title}</div>
+          <div style="font-size:10px; color:#64748b; display:flex; justify-content:space-between;">
+            <span>📍 ${inc.district_name}</span>
+            <span style="color:#16a34a; font-weight:700;">${inc.status}</span>
+          </div>
+        </div>
+      `);
+
+      el.addEventListener("mouseenter", () => {
+        popup.setLngLat([inc.longitude, inc.latitude]).addTo(map);
+      });
+      el.addEventListener("mouseleave", () => {
+        popup.remove();
+      });
+
+      el.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        setSelectedPin(inc);
+        map.flyTo({
+          center: [inc.longitude, inc.latitude],
+          zoom: 14.5,
+          duration: 1100,
+        });
+      });
+
+      const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
+        .setLngLat([inc.longitude, inc.latitude])
+        .addTo(map);
+
+      markersRef.current.push(marker);
+    });
+  }, [isMapLoaded, filteredIncidents, selectedPin, viewMode]);
+
+  // 3. Camera fly-to when district selection changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isMapLoaded || viewMode !== "map") return;
+
+    if (selectedDistrictId === "ALL") {
+      map.flyTo({ center: [76.85, 29.20], zoom: 7.6, duration: 1200 });
+    } else {
+      const dist = HARYANA_DISTRICTS.find((d) => d.id === selectedDistrictId);
+      if (dist) {
+        map.flyTo({ center: [dist.lng, dist.lat], zoom: 11.5, duration: 1200 });
+      }
+    }
+  }, [selectedDistrictId, isMapLoaded, viewMode]);
 
   return (
     <div className="relative w-full min-h-[680px] bg-white rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col overflow-hidden text-slate-800 font-sans">
