@@ -169,7 +169,6 @@ export const MapboxView: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const clusterMarkersRef = useRef<mapboxgl.Marker[]>([]);
-  const complaintMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const orbitAnimRef = useRef<number | null>(null);
 
   const {
@@ -703,125 +702,7 @@ export const MapboxView: React.FC = () => {
     };
   }, [hotspotClusters]);
 
-  // 2b. Render Interactive 3D Complaint Pin Badges (Matching Department Portal Map style!)
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    complaintMarkersRef.current.forEach((m) => m.remove());
-    complaintMarkersRef.current = [];
-
-    // Filter active complaints (exclude RESOLVED and REJECTED)
-    const activeComplaints = liveComplaints.filter(
-      (c) => c.status !== "RESOLVED" && c.status !== "REJECTED"
-    );
-
-    // Limit to top 80 to guarantee high framerate on 3D Mapbox
-    activeComplaints.slice(0, 80).forEach((comp, idx) => {
-      const coords = getComplaintCoords(comp);
-      const isSelected = Boolean(
-        focusedTrackingId &&
-          (focusedTrackingId === comp.tracking_id ||
-            focusedTrackingId === comp.id ||
-            (comp.tracking_id && focusedTrackingId.includes(comp.tracking_id.slice(-6))))
-      );
-
-      const prio = comp.priority || "MEDIUM";
-      const prioColor =
-        prio === "CRITICAL"
-          ? "#ef4444"
-          : prio === "HIGH"
-          ? "#f59e0b"
-          : prio === "MEDIUM"
-          ? "#eab308"
-          : "#10b981";
-
-      const icon = getCategoryIcon(comp.category);
-      const shortTag = comp.tracking_id?.slice(-6) || comp.id?.slice(-6) || `P-${idx + 1}`;
-      const safeTitle = escapeHtml(comp.title || "Civic Complaint");
-
-      const el = document.createElement("div");
-      el.className = `relative cursor-pointer select-none transition-all duration-300 ${
-        isSelected ? "scale-125 z-40" : "hover:scale-115 hover:z-30 z-20"
-      }`;
-
-      el.innerHTML = `
-        <div style="position:relative; display:flex; flex-direction:column; align-items:center;">
-          ${
-            isSelected
-              ? `<div style="position:absolute; width:48px; height:48px; border-radius:9999px; background:rgba(6,182,212,0.35); pointer-events:none; animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>`
-              : ""
-          }
-
-          ${
-            isSelected
-              ? `
-            <div style="position:absolute; bottom:100%; margin-bottom:8px; pointer-events:none; z-index:50; white-space:nowrap;">
-              <div style="padding:5px 10px; border-radius:8px; background:rgba(9,14,28,0.96); border:1px solid #38bdf8; box-shadow:0 8px 24px rgba(0,0,0,0.85); display:flex; align-items:center; gap:6px; font-family:monospace; font-size:11px; color:#fff;">
-                <span style="width:7px; height:7px; border-radius:9999px; background:${prioColor};"></span>
-                <span style="font-weight:800; color:#38bdf8;">${escapeHtml(comp.tracking_id || shortTag)}</span>
-                <span style="color:#e2e8f0; font-weight:600; max-width:180px; overflow:hidden; text-overflow:ellipsis;">${safeTitle}</span>
-              </div>
-              <div style="width:8px; height:8px; background:rgba(9,14,28,0.96); border-right:1px solid #38bdf8; border-bottom:1px solid #38bdf8; transform:rotate(45deg); margin:-4px auto 0 auto;"></div>
-            </div>
-            `
-              : ""
-          }
-
-          <div style="
-            padding: 3px 8px;
-            border-radius: 9999px;
-            background: ${isSelected ? "#0284c7" : prioColor};
-            border: 2px solid #ffffff;
-            box-shadow: ${
-              isSelected
-                ? "0 0 20px rgba(56,189,248,0.8), 0 4px 12px rgba(0,0,0,0.6)"
-                : "0 4px 14px rgba(0,0,0,0.6)"
-            };
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            color: #ffffff;
-            font-family: monospace;
-            font-weight: 800;
-            font-size: 10px;
-            letter-spacing: -0.02em;
-            transition: all 0.2s ease;
-          ">
-            <span style="font-size:11px; line-height:1;">${icon}</span>
-            <span>${shortTag}</span>
-          </div>
-        </div>
-      `;
-
-      el.addEventListener("click", (ev) => {
-        ev.stopPropagation();
-        setFocusedTrackingId(comp.tracking_id || comp.id);
-        const incObj = complaintToIncident(comp, coords);
-        selectIncident(incObj as any);
-        map.flyTo({
-          center: coords,
-          zoom: 15.8,
-          pitch: 62,
-          bearing: -18,
-          duration: 1300,
-        });
-      });
-
-      const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
-        .setLngLat(coords)
-        .addTo(map);
-
-      complaintMarkersRef.current.push(marker);
-    });
-
-    return () => {
-      complaintMarkersRef.current.forEach((m) => m.remove());
-      complaintMarkersRef.current = [];
-    };
-  }, [liveComplaints, focusedTrackingId]);
-
-  // 2c. Auto-focus complaint when tracking_id is provided in URL (?tracking_id=...)
+  // 2b. Auto-focus complaint when tracking_id is provided in URL (?tracking_id=...)
   useEffect(() => {
     if (!urlTrackingId || liveComplaints.length === 0 || !mapRef.current) return;
 
