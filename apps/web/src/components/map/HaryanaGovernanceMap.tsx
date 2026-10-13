@@ -1308,151 +1308,116 @@ export const HaryanaGovernanceMap: React.FC<{
       )}
 
       {/* 4. MAIN MAP CANVAS VIEW */}
-      <div className="relative flex-1 bg-slate-100/70 overflow-hidden flex flex-col justify-center items-center">
+      <div className="relative flex-1 bg-slate-100 overflow-hidden flex flex-col min-h-[560px]">
         {viewMode === "map" ? (
-          <div className="relative w-full h-[520px] max-w-5xl mx-auto overflow-hidden flex items-center justify-center p-4">
-            {/* Tactical Grid Overlay */}
-            <div
-              className="absolute inset-0 opacity-25 pointer-events-none"
-              style={{
-                backgroundImage: `radial-gradient(circle, #94a3b8 1px, transparent 1px)`,
-                backgroundSize: "28px 28px",
-              }}
-            />
+          <div className="relative w-full h-[560px] overflow-hidden select-none">
+            {/* The Real Interactive Mapbox GL Map Container */}
+            <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
 
-            {/* Haryana State Geographic Map Surface Container */}
-            <div className="relative w-full h-full max-w-4xl max-h-[500px] rounded-2xl bg-gradient-to-b from-blue-50/90 via-slate-50 to-blue-50/40 border border-slate-200 shadow-xs overflow-hidden">
-              {/* Map Title Watermark */}
-              <div className="absolute top-3 left-4 pointer-events-none z-0">
-                <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase block font-bold">
-                  GEOSPATIAL COMMAND • HARYANA STATE
-                </span>
-                <span className="text-xs font-bold text-slate-500">
-                  LAT 27.5°N - 31.1°N • LNG 74.3°E - 77.8°E
-                </span>
-              </div>
+            {/* Map Title Watermark (Top Left) */}
+            <div className="absolute top-3 left-4 pointer-events-none z-10 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200/90 shadow-sm">
+              <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase block font-bold">
+                GEOSPATIAL COMMAND • HARYANA STATE
+              </span>
+              <span className="text-xs font-bold text-slate-700">
+                LAT 27.5°N - 31.1°N • LNG 74.3°E - 77.8°E
+              </span>
+            </div>
 
-              {/* District Hub Centroid Markers (Stylized Haryana Map Backdrop) */}
-              {HARYANA_DISTRICTS.map((d) => {
-                const pos = getCoordinatesPercent(d.lat, d.lng);
-                return (
-                  <div
-                    key={d.id}
-                    style={{ left: `${pos.left}%`, top: `${pos.top}%` }}
-                    className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none flex flex-col items-center opacity-45"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                    <span className="text-[8px] font-mono text-slate-500 font-bold whitespace-nowrap mt-0.5">
-                      {d.name}
-                    </span>
-                  </div>
-                );
-              })}
+            {/* Floating Map Controls & Style Switcher (Top Right) */}
+            <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 bg-white/95 backdrop-blur-md p-1 rounded-xl border border-slate-200 shadow-sm text-xs font-mono">
+              <button
+                onClick={() => setMapStyle("mapbox://styles/mapbox/light-v11")}
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  mapStyle.includes("light")
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+                title="Light Administrative Map"
+              >
+                Light
+              </button>
+              <button
+                onClick={() => setMapStyle("mapbox://styles/mapbox/streets-v12")}
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  mapStyle.includes("streets")
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+                title="Streets & Road Corridors"
+              >
+                Streets
+              </button>
+              <button
+                onClick={() => setMapStyle("mapbox://styles/mapbox/satellite-streets-v12")}
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  mapStyle.includes("satellite")
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+                title="Satellite Imagery"
+              >
+                Satellite
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedDistrictId("ALL");
+                  mapRef.current?.flyTo({ center: [76.85, 29.20], zoom: 7.6, duration: 1000 });
+                }}
+                className="px-2 py-1 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors ml-1 border-l border-slate-200 pl-2"
+                title="Reset to Full Haryana Overview"
+              >
+                ↺ Overview
+              </button>
+            </div>
 
-              {/* LIVE INCIDENT PINS PLOTTED ACROSS HARYANA */}
-              {filteredIncidents.map((inc, index) => {
-                const pos = getCoordinatesPercent(inc.latitude, inc.longitude);
-                const isSelected = selectedPin?.id === inc.id;
-                const isHovered = hoveredPin?.id === inc.id;
-                const isCrit = inc.priority === "CRITICAL";
-                const isHigh = inc.priority === "HIGH";
-                const cfg = INCIDENT_CATEGORIES_CONFIG[inc.category] || INCIDENT_CATEGORIES_CONFIG.URBAN_FLOODING;
+            {/* Floating Zoom Buttons (Bottom Right) */}
+            <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-1 bg-white/95 backdrop-blur-md p-1 rounded-xl border border-slate-200 shadow-sm text-xs font-mono">
+              <button
+                onClick={() => mapRef.current?.zoomIn()}
+                className="w-7 h-7 flex items-center justify-center font-bold text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                title="Zoom In"
+              >
+                +
+              </button>
+              <button
+                onClick={() => mapRef.current?.zoomOut()}
+                className="w-7 h-7 flex items-center justify-center font-bold text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                title="Zoom Out"
+              >
+                −
+              </button>
+            </div>
 
-                return (
-                  <div
-                    key={`${inc.id}-${inc.tracking_id}-${index}`}
-                    style={{ left: `${pos.left}%`, top: `${pos.top}%` }}
-                    className="absolute -translate-x-1/2 -translate-y-1/2 z-10 transition-transform duration-200"
-                  >
-                    {/* Pulsing Ripple Aura for Critical / High incidents */}
-                    {(isCrit || isHigh) && (
-                      <span
-                        className={`absolute -inset-2 rounded-full ${
-                          isCrit ? "bg-rose-500/30" : "bg-amber-500/25"
-                        } animate-ping pointer-events-none`}
-                      />
-                    )}
-
-                    {/* Interactive Pin Marker */}
-                    <button
-                      onClick={() => setSelectedPin(inc)}
-                      onMouseEnter={() => setHoveredPin(inc)}
-                      onMouseLeave={() => setHoveredPin(null)}
-                      className={`relative flex items-center justify-center p-1.5 rounded-full transition-all duration-200 shadow-md ${
-                        isSelected
-                          ? "scale-125 ring-2 ring-blue-500 z-30 bg-blue-600 text-white shadow-blue-500/40"
-                          : isHovered
-                          ? "scale-110 ring-1 ring-blue-400 bg-slate-50"
-                          : "bg-white border border-slate-200 hover:border-blue-400"
-                      }`}
-                      title={`${inc.tracking_id}: ${inc.title}`}
-                    >
-                      <span className="text-xs leading-none">{cfg.icon}</span>
-
-                      {/* Small Status Indicator Dot */}
-                      <span
-                        className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-white ${
-                          isCrit ? "bg-rose-500" : isHigh ? "bg-amber-500" : "bg-emerald-500"
-                        }`}
-                      />
-                    </button>
-
-                    {/* Tooltip on Hover */}
-                    {(isHovered || isSelected) && (
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 rounded-xl bg-white border border-slate-200 text-left shadow-xl z-40 pointer-events-none animate-in fade-in">
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className="font-mono font-bold text-blue-700">{inc.tracking_id}</span>
-                          <span
-                            className={`px-1.5 py-0.2 rounded font-bold text-[9px] ${
-                              isCrit ? "bg-rose-100 text-rose-800" : "bg-slate-100 text-slate-700"
-                            }`}
-                          >
-                            {inc.priority}
-                          </span>
-                        </div>
-                        <p className="text-xs font-bold text-slate-900 mt-1 line-clamp-2 leading-tight">
-                          {inc.title}
-                        </p>
-                        <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1.5 pt-1 border-t border-slate-100">
-                          <span className="font-medium text-slate-700">{inc.district_name}</span>
-                          <span className="font-mono font-bold text-emerald-600">{inc.status}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-
-              {/* Map Legend (Bottom Left) */}
-              <div className="absolute bottom-3 left-3 bg-white/95 border border-slate-200 rounded-xl p-2.5 text-[10px] space-y-1.5 shadow-md z-10 hidden sm:block">
-                <span className="font-bold text-slate-700 uppercase tracking-wider block text-[9px]">
-                  Incident Legend
-                </span>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-slate-600 font-medium">
-                  <div className="flex items-center gap-1.5">
-                    <span>🌊</span>
-                    <span>Waterlogging</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span>⚡</span>
-                    <span>Electrical</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span>🕳️</span>
-                    <span>Road Crater</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span>🦟</span>
-                    <span>Health / Dengue</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span>🚰</span>
-                    <span>Sewer Burst</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span>🌉</span>
-                    <span>Civil Infra</span>
-                  </div>
+            {/* Map Legend (Bottom Left) */}
+            <div className="absolute bottom-3 left-3 bg-white/95 border border-slate-200/90 rounded-xl p-2.5 text-[10px] space-y-1.5 shadow-md z-10 hidden sm:block backdrop-blur-md">
+              <span className="font-bold text-slate-700 uppercase tracking-wider block text-[9px]">
+                Incident Legend ({filteredIncidents.length} plotted)
+              </span>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-slate-600 font-medium">
+                <div className="flex items-center gap-1.5">
+                  <span>🌊</span>
+                  <span>Waterlogging</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span>⚡</span>
+                  <span>Electrical</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span>🕳️</span>
+                  <span>Road Crater</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span>🦟</span>
+                  <span>Health / Dengue</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span>🚰</span>
+                  <span>Sewer Burst</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span>🌉</span>
+                  <span>Civil Infra</span>
                 </div>
               </div>
             </div>
