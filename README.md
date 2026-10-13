@@ -1,4 +1,4 @@
-# TRINETRA (त्रिनेत्र) — State Governance Intelligence & Spatial Operational Command
+# TRINETRA (त्रिनेत्र) —--- State Governance Intelligence & Spatial Operational Command
 
 > **TRINETRA** *(The Third Eye of Governance)* is an end-to-end operational intelligence platform and spatial digital twin deployed for the State of Haryana, India. It unifies citizen grievances, municipal infrastructure monitoring, emergency services (Dial 112, CM Window, Antyodaya Saral), multimodal AI evidence corroboration, counterfactual what-if simulations, and closed-loop field verification across all 22 districts.
 
