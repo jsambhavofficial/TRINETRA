@@ -5,6 +5,11 @@ import "mapbox-gl/dist/mapbox-gl.css";
 export const metadata: Metadata = {
   title: "TRINETRA — State Governance Intelligence & Response Platform",
   description: "State Governance Intelligence & Response Platform for Haryana, India. Spatial digital twin, multimodal evidence fusion, and role-based operational response.",
+  icons: {
+    icon: "/trinetra_logo.png",
+    shortcut: "/trinetra_logo.png",
+    apple: "/trinetra_logo.png",
+  },
 };
 
 export default function RootLayout({

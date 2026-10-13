@@ -668,20 +668,13 @@ function DepartmentPortalContent() {
           {/* Left Brand & Tabs */}
           <div className="flex items-center gap-4">
             <Link href="/world" className="flex items-center gap-2.5 select-none shrink-0">
-              <div className="w-9 h-9 relative flex items-center justify-center">
-                <svg viewBox="0 0 44 44" className="w-full h-full drop-shadow-sm" fill="none">
-                  <path
-                    d="M22 2.5L38.5 9V22.5C38.5 32.5 31.5 39.5 22 42C12.5 39.5 5.5 32.5 5.5 22.5V9L22 2.5Z"
-                    fill="#0F172A"
-                    stroke="#2563EB"
-                    strokeWidth="1.8"
-                  />
-                  <path d="M11 18.5Q22 16.5 33 18.5" stroke="#38BDF8" strokeWidth="1.4" strokeLinecap="round" />
-                  <path d="M9 22.5Q22 20.5 35 22.5" stroke="#F59E0B" strokeWidth="1.4" strokeLinecap="round" />
-                  <path d="M11 26.5Q22 24.5 33 26.5" stroke="#38BDF8" strokeWidth="1.4" strokeLinecap="round" />
-                  <circle cx="22" cy="22.5" r="3.5" fill="#38BDF8" />
-                  <circle cx="22" cy="22.5" r="1.5" fill="#0F172A" />
-                </svg>
+              <div className="w-10 h-10 relative flex items-center justify-center shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/trinetra_logo.png"
+                  alt="TRINETRA Logo"
+                  className="w-full h-full object-cover rounded-xl shadow-md border border-slate-700/60 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)]"
+                />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5 leading-tight">
