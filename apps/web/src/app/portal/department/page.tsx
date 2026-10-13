@@ -1380,6 +1380,15 @@ function DepartmentPortalContent() {
                                   </button>
                                 )}
                                 <button
+                                  type="button"
+                                  onClick={() => handleFocusOnMap(c)}
+                                  className="px-2.5 py-1 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 font-bold text-[11px] inline-flex items-center gap-1 transition-colors"
+                                  title="मैप पर देखें / View on Map"
+                                >
+                                  <MapPin className="w-3 h-3 text-sky-600" />
+                                  <span>मैप</span>
+                                </button>
+                                <button
                                   onClick={() => setEscalatingTarget(c)}
                                   className="px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 font-bold text-[11px]"
                                 >
@@ -1399,21 +1408,34 @@ function DepartmentPortalContent() {
 
           {/* ==================== RIGHT COLUMN: Map & Activity Widgets ==================== */}
           <div className="lg:col-span-4 space-y-4">
-            {/* Card 1: Cases on Map (Matches Screenshot) */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4.5 space-y-3.5">
+            {/* Card 1: Cases on Map (Dynamic Interactive Widget) */}
+            <div id="cases-map-widget" className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4.5 space-y-3.5 scroll-mt-24">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                <h3 className="font-extrabold text-sm text-slate-900">Cases on Map</h3>
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+                      <span>Cases on Map</span>
+                      <span className="px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold">
+                        {filteredComplaints.length}
+                      </span>
+                    </h3>
+                    <p className="text-[10px] text-slate-400">विभागीय समस्याओं का वास्तविक लोकेशन दृश्य</p>
+                  </div>
+                </div>
                 <Link
-                  href="/world"
+                  href={selectedMapCase ? `/world?tracking_id=${selectedMapCase.tracking_id || selectedMapCase.clusterId || ""}` : "/world"}
                   className="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1"
                 >
-                  <span>View Full Map</span>
+                  <span>3D Digital Twin</span>
                   <ExternalLink className="w-3 h-3" />
                 </Link>
               </div>
 
-              {/* Visual Mapbox / Canvas Simulation with Gurugram Hub */}
-              <div className="relative h-64 rounded-xl overflow-hidden border border-slate-200 bg-[#E8ECEF] flex items-center justify-center">
+              {/* Visual Mapbox / Canvas Simulation with Interactive Markers */}
+              <div className="relative h-72 rounded-xl overflow-hidden border border-slate-200 bg-[#E8ECEF] select-none">
                 {/* Map tiles texture simulation */}
                 <svg className="absolute inset-0 w-full h-full opacity-40" xmlns="http://www.w3.org/2000/svg">
                   <pattern id="road-grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -1423,89 +1445,215 @@ function DepartmentPortalContent() {
                   <rect width="100%" height="100%" fill="url(#road-grid)" />
                 </svg>
 
-                {/* Road labels */}
-                <div className="absolute top-8 left-4 text-[9px] font-bold text-slate-400 uppercase tracking-widest pointer-events-none">
-                  SECTOR 23
+                {/* Road and Sector Labels */}
+                <div className="absolute top-4 left-4 text-[9px] font-bold text-slate-400 uppercase tracking-widest pointer-events-none">
+                  SECTOR 23 • GURUGRAM
                 </div>
-                <div className="absolute top-14 right-8 text-[9px] font-bold text-slate-400 uppercase tracking-widest pointer-events-none">
-                  CYBER CITY
+                <div className="absolute top-8 right-6 text-[9px] font-bold text-slate-400 uppercase tracking-widest pointer-events-none">
+                  NH-48 CORRIDOR
                 </div>
-                <div className="absolute bottom-10 left-12 text-[9px] font-bold text-slate-400 uppercase tracking-widest pointer-events-none">
-                  SECTOR 38
-                </div>
-
-                {/* Center Cluster Circle Pin: 12 */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-blue-500/20 animate-ping absolute" />
-                  <div className="w-12 h-12 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-lg border-2 border-white z-10">
-                    12
-                  </div>
-                  <span className="absolute -bottom-5 text-[10px] font-extrabold text-slate-800 whitespace-nowrap bg-white/90 px-1.5 py-0.2 rounded shadow-2xs">
-                    Gurugram
-                  </span>
+                <div className="absolute bottom-6 left-6 text-[9px] font-bold text-slate-400 uppercase tracking-widest pointer-events-none">
+                  SUB-DIVISION SOUTH
                 </div>
 
-                {/* Scattered Map Pins around Gurugram */}
-                {/* Pin 1: Critical (Red) */}
-                <div className="absolute top-6 left-16 flex flex-col items-center">
-                  <div className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md border border-white text-[10px]">
-                    📍
+                {/* Dynamic Markers from Filtered Complaints */}
+                {filteredComplaints.slice(0, 8).map((c, idx) => {
+                  const isSelected = Boolean(
+                    selectedMapCase &&
+                      (selectedMapCase.id === c.id ||
+                        selectedMapCase.tracking_id === c.tracking_id ||
+                        selectedMapCase.clusterId === c.incident_id)
+                  );
+                  const coords = [
+                    { top: "30%", left: "28%" },
+                    { top: "24%", left: "68%" },
+                    { top: "66%", left: "30%" },
+                    { top: "58%", left: "74%" },
+                    { top: "45%", left: "48%" },
+                    { top: "78%", left: "55%" },
+                    { top: "18%", left: "46%" },
+                    { top: "68%", left: "14%" },
+                  ][idx % 8];
+
+                  const prioDot =
+                    c.priority === "CRITICAL"
+                      ? "bg-rose-500"
+                      : c.priority === "HIGH"
+                      ? "bg-amber-500"
+                      : c.priority === "MEDIUM"
+                      ? "bg-yellow-500"
+                      : "bg-emerald-500";
+
+                  return (
+                    <div
+                      key={c.id || idx}
+                      style={{ top: coords.top, left: coords.left }}
+                      onClick={() => setSelectedMapCase(c)}
+                      className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 z-20 ${
+                        isSelected ? "scale-125 z-30" : "hover:scale-110"
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="w-12 h-12 rounded-full bg-blue-500/30 animate-ping absolute -inset-2 pointer-events-none" />
+                      )}
+                      <div
+                        className={`px-2 py-1 rounded-full text-white font-extrabold text-[10px] flex items-center gap-1 shadow-md border-2 border-white transition-all ${
+                          isSelected
+                            ? "bg-blue-600 ring-4 ring-blue-300/60"
+                            : `${prioDot} hover:ring-2 hover:ring-slate-400`
+                        }`}
+                      >
+                        <MapPin className="w-3 h-3 shrink-0" />
+                        <span className="font-mono text-[9px]">{c.tracking_id?.slice(-6) || `P-${idx + 1}`}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* If a case is selected, show floating callout tooltip */}
+                {selectedMapCase && (
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 bg-slate-900/90 text-white backdrop-blur-xs px-3 py-1.5 rounded-full shadow-lg border border-slate-700 text-[11px] flex items-center gap-2 max-w-[90%] truncate">
+                    <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse shrink-0" />
+                    <span className="font-mono font-bold text-sky-300">
+                      {selectedMapCase.tracking_id || selectedMapCase.clusterId}
+                    </span>
+                    <span className="truncate text-slate-200">
+                      {selectedMapCase.title || selectedMapCase.representativeTitle}
+                    </span>
                   </div>
-                </div>
-                {/* Pin 2: Critical (Red) */}
-                <div className="absolute top-16 right-16 flex flex-col items-center">
-                  <div className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md border border-white text-[10px]">
-                    📍
-                  </div>
-                </div>
-                {/* Pin 3: High (Amber) */}
-                <div className="absolute bottom-12 left-10 flex flex-col items-center">
-                  <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-md border border-white text-[10px]">
-                    📍
-                  </div>
-                </div>
-                {/* Pin 4: Low (Green) */}
-                <div className="absolute top-20 left-8 flex flex-col items-center">
-                  <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md border border-white text-[10px]">
-                    📍
-                  </div>
-                </div>
-                {/* Pin 5: High (Amber) */}
-                <div className="absolute bottom-16 right-12 flex flex-col items-center">
-                  <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-md border border-white text-[10px]">
-                    📍
-                  </div>
-                </div>
+                )}
 
                 {/* Map Controls */}
-                <div className="absolute right-2.5 bottom-2.5 flex flex-col gap-1 bg-white rounded-lg shadow-md border border-slate-200 p-0.5">
-                  <button className="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded">
+                <div className="absolute right-2.5 bottom-2.5 flex flex-col gap-1 bg-white rounded-lg shadow-md border border-slate-200 p-0.5 z-20">
+                  <button
+                    type="button"
+                    onClick={() => setMapZoom((prev) => Math.min(prev + 0.2, 2))}
+                    className="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded"
+                    title="Zoom in"
+                  >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
-                  <button className="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded">
+                  <button
+                    type="button"
+                    onClick={() => setMapZoom((prev) => Math.max(prev - 0.2, 0.8))}
+                    className="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded"
+                    title="Zoom out"
+                  >
                     <Minus className="w-3.5 h-3.5" />
                   </button>
-                  <button className="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (filteredComplaints[0]) setSelectedMapCase(filteredComplaints[0]);
+                    }}
+                    className="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded"
+                    title="Center first problem"
+                  >
                     <Crosshair className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
               {/* Map Legend */}
-              <div className="flex items-center justify-between text-[11px] text-slate-600 font-semibold pt-1">
+              <div className="flex items-center justify-between text-[11px] text-slate-600 font-semibold pt-1 border-b border-slate-100 pb-2">
                 <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-rose-500" /> Critical (5)
+                  <span className="w-2 h-2 rounded-full bg-rose-500" /> Critical
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-amber-500" /> High (8)
+                  <span className="w-2 h-2 rounded-full bg-amber-500" /> High
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-yellow-500" /> Medium (12)
+                  <span className="w-2 h-2 rounded-full bg-yellow-500" /> Medium
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" /> Low (7)
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" /> Low
                 </span>
               </div>
+
+              {/* Problem Spotlight Card: Shows the selected problem on the map! */}
+              {selectedMapCase ? (
+                <div className="p-3.5 rounded-xl bg-gradient-to-br from-blue-50/90 to-sky-50/60 border border-blue-200 text-xs space-y-3 animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-11 h-11 rounded-lg overflow-hidden shrink-0 border border-blue-200 bg-white shadow-2xs">
+                        <img
+                          src={getCategoryMeta(selectedMapCase.category, selectedMapCase.title, selectedMapCase.photos).thumb}
+                          alt="Case Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 font-mono">
+                          <span className="font-extrabold text-blue-700 text-xs">
+                            {selectedMapCase.tracking_id || selectedMapCase.clusterId}
+                          </span>
+                          <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold border ${getPriorityBadge(selectedMapCase.priority).bg}`}>
+                            {selectedMapCase.priority}
+                          </span>
+                        </div>
+                        <p className="font-bold text-slate-900 truncate mt-0.5">
+                          {selectedMapCase.title || selectedMapCase.representativeTitle}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMapCase(null)}
+                      className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-blue-100/50 transition-colors"
+                      title="हटाएं"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[11px] bg-white/90 p-2.5 rounded-lg border border-blue-100 shadow-2xs">
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">स्थान / Location:</span>
+                      <p className="font-semibold text-slate-700 truncate">
+                        {selectedMapCase.address || selectedMapCase.districtName || selectedMapCase.district_name || "Gurugram, Haryana"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">विभाग / Status:</span>
+                      <p className="font-bold text-blue-700 truncate">
+                        {selectedMapCase.status}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <Link
+                      href={`/world?tracking_id=${selectedMapCase.tracking_id || selectedMapCase.clusterId || ""}`}
+                      className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-center text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>3D डिजिटल ट्विन पर खोलें</span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (selectedMapCase.complaints) {
+                          setAssigningCluster(selectedMapCase);
+                        } else {
+                          setAssigningComplaint(selectedMapCase);
+                        }
+                      }}
+                      className="py-2 px-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-xs shadow-2xs transition-colors"
+                    >
+                      Assign
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-center space-y-1">
+                  <p className="text-xs font-semibold text-slate-600">
+                    💡 किसी भी शिकायत के सामने <span className="text-sky-700 font-bold">"मैप पर देखें"</span> बटन दबाएं
+                  </p>
+                  <p className="text-[10px] text-slate-400">
+                    वह समस्या तुरंत इस मैप पर पिन होकर 3D ट्विन लिंक के साथ दिखाई देगी
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Card 2: Recent Department Activity (Matches Screenshot) */}
