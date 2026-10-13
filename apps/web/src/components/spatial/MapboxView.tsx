@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useWorldStore } from "@/store/useWorldStore";
@@ -18,6 +19,9 @@ import {
   Play,
   RotateCcw,
   AlertTriangle,
+  MapPin,
+  X,
+  ExternalLink,
 } from "lucide-react";
 import { MapDisplayMode } from "../../../../../packages/shared-types";
 
@@ -26,10 +30,146 @@ const MAPBOX_TOKEN =
   process.env.NEXT_PUBLIC_MAPBOX_TOKEN ||
   "pk.eyJ1IjoianNhbWJoYXYiLCJhIjoiY211NWxpZjh0MDJhdTJ3czdhOHVoZmNzaCJ9.LVqTGSLBaee5wmHeovxU9g";
 
+// Haryana District Geolocation Centers
+const HARYANA_DISTRICT_COORDS: Record<string, [number, number]> = {
+  "gurugram": [77.0266, 28.4595],
+  "faridabad": [77.3178, 28.4089],
+  "panipat": [76.9635, 29.3909],
+  "sonipat": [77.0151, 28.9931],
+  "karnal": [76.9905, 29.6857],
+  "rohtak": [76.6066, 28.8955],
+  "ambala": [76.7794, 30.3782],
+  "hisar": [75.7217, 29.1492],
+  "sirsa": [75.0367, 29.5349],
+  "bhiwani": [76.1320, 28.7830],
+  "kurukshetra": [76.8783, 29.9695],
+  "kaithal": [76.3996, 29.8015],
+  "yamunanagar": [77.2989, 30.1727],
+  "panchkula": [76.8606, 30.6942],
+  "jhajjar": [76.6565, 28.6063],
+  "rewari": [76.6191, 28.1920],
+  "palwal": [77.3260, 28.1487],
+  "nuh": [77.0050, 28.1070],
+  "fatehabad": [75.4510, 29.5152],
+  "jind": [76.3197, 29.3160],
+  "mahendragarh": [76.1548, 28.2777],
+  "charkhi dadri": [76.2654, 28.5921],
+};
+
+function getComplaintCoords(comp: any): [number, number] {
+  if (comp.longitude && comp.latitude && !isNaN(Number(comp.longitude)) && !isNaN(Number(comp.latitude))) {
+    return [Number(comp.longitude), Number(comp.latitude)];
+  }
+  // Lookup by district name or id
+  const rawDist = (comp.district_name || comp.district_id || "").toLowerCase().replace(/^hr-/, "").trim();
+  let baseCoords = HARYANA_DISTRICT_COORDS[rawDist];
+  if (!baseCoords) {
+    for (const [key, coords] of Object.entries(HARYANA_DISTRICT_COORDS)) {
+      if (rawDist.includes(key) || key.includes(rawDist)) {
+        baseCoords = coords;
+        break;
+      }
+    }
+  }
+  if (!baseCoords) {
+    baseCoords = [76.90, 28.95]; // Haryana center
+  }
+
+  // Deterministic jitter based on string hash so complaints in the same district spread nicely
+  const str = String(comp.id || comp.tracking_id || "hash");
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  const angle = (Math.abs(hash) % 360) * (Math.PI / 180);
+  const radius = 0.008 + ((Math.abs(hash >> 3) % 100) / 100) * 0.025; // ~800m - 3.5km natural urban spread
+  return [
+    baseCoords[0] + Math.cos(angle) * radius,
+    baseCoords[1] + Math.sin(angle) * radius,
+  ];
+}
+
+function getCategoryIcon(category?: string): string {
+  switch (category?.toUpperCase()) {
+    case "FIRE":
+    case "FIRE_SAFETY":
+      return "🔥";
+    case "WATER_SUPPLY":
+    case "DRAINAGE":
+    case "FLOODING":
+      return "💧";
+    case "ELECTRICAL":
+    case "POWER_OUTAGE":
+      return "⚡";
+    case "CIVIL_INFRASTRUCTURE":
+    case "ROADS":
+    case "ROAD_DAMAGE":
+      return "🛣️";
+    case "SEWAGE":
+    case "SEWAGE_LEAKAGE":
+      return "🚰";
+    case "SOLID_WASTE":
+    case "SANITATION":
+      return "🗑️";
+    case "HEALTH_HAZARD":
+      return "☣️";
+    default:
+      return "📍";
+  }
+}
+
+function escapeHtml(str: string): string {
+  if (!str) return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function complaintToIncident(comp: any, coords: [number, number]) {
+  return {
+    id: comp.id,
+    incidentNumber: comp.tracking_id || comp.id,
+    title: comp.title,
+    description: comp.description || comp.title,
+    summary: comp.description || comp.title,
+    severity: comp.priority || "MEDIUM",
+    status: comp.status || "SUBMITTED",
+    incidentType: comp.category || "CIVIC_GRIEVANCE",
+    geometry: { longitude: coords[0], latitude: coords[1] },
+    evidenceCount: comp.attachments?.length || 1,
+    confidence: 0.96,
+    epistemicStatus: "OBSERVED",
+    createdAt: comp.created_at || new Date().toISOString(),
+    assignedUnitId: comp.assigned_unit_id,
+    tracking_id: comp.tracking_id,
+    citizen_name: comp.citizen_name,
+    citizen_phone: comp.citizen_phone,
+    address: comp.address,
+    district_name: comp.district_name,
+    district_id: comp.district_id,
+    department_name: comp.department_name,
+    department_id: comp.department_id,
+    priority: comp.priority,
+    category: comp.category,
+    sop_checklist: comp.sop_checklist,
+    ai_triage: comp.ai_triage,
+    attachments: comp.attachments,
+    rawComplaint: comp,
+  };
+}
+
 export const MapboxView: React.FC = () => {
+  const searchParams = useSearchParams();
+  const urlTrackingId = searchParams.get("tracking_id");
+
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const clusterMarkersRef = useRef<mapboxgl.Marker[]>([]);
+  const complaintMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const orbitAnimRef = useRef<number | null>(null);
 
   const {
@@ -41,9 +181,11 @@ export const MapboxView: React.FC = () => {
     selectIncident,
     flyToTarget,
     toggleLayer,
+    clearSelection,
   } = useWorldStore();
 
   const [liveComplaints, setLiveComplaints] = useState<any[]>([]);
+  const [focusedTrackingId, setFocusedTrackingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isOrbiting, setIsOrbiting] = useState(false);
   const [pitchMode, setPitchMode] = useState<"3D" | "2D">("3D");
@@ -155,28 +297,27 @@ export const MapboxView: React.FC = () => {
     // 2. Real citizen complaints submitted to the system (ACTIVE ONLY - removed if RESOLVED)
     liveComplaints.forEach((comp) => {
       if (comp.status === "RESOLVED" || comp.status === "REJECTED") return;
-      if (comp.longitude && comp.latitude) {
-        features.push({
-          type: "Feature",
+      const coords = getComplaintCoords(comp);
+      features.push({
+        type: "Feature",
+        id: comp.id,
+        properties: {
           id: comp.id,
-          properties: {
-            id: comp.id,
-            title: comp.title,
-            incidentNumber: comp.tracking_id || comp.id,
-            severity: comp.priority || "MEDIUM",
-            incidentType: comp.category || "CIVIC_GRIEVANCE",
-            status: comp.status || "SUBMITTED",
-            departmentName: comp.department_name || comp.department_id || "Civil Administration",
-            address: comp.address || comp.district_name || "Haryana",
-            weight: comp.priority === "CRITICAL" ? 1.0 : comp.priority === "HIGH" ? 0.75 : 0.45,
-            isMaster: true,
-          },
-          geometry: {
-            type: "Point",
-            coordinates: [comp.longitude, comp.latitude],
-          },
-        });
-      }
+          title: comp.title,
+          incidentNumber: comp.tracking_id || comp.id,
+          severity: comp.priority || "MEDIUM",
+          incidentType: comp.category || "CIVIC_GRIEVANCE",
+          status: comp.status || "SUBMITTED",
+          departmentName: comp.department_name || comp.department_id || "Civil Administration",
+          address: comp.address || comp.district_name || "Haryana",
+          weight: comp.priority === "CRITICAL" ? 1.0 : comp.priority === "HIGH" ? 0.75 : 0.45,
+          isMaster: true,
+        },
+        geometry: {
+          type: "Point",
+          coordinates: coords,
+        },
+      });
     });
 
     return {
@@ -184,6 +325,19 @@ export const MapboxView: React.FC = () => {
       features,
     };
   }, [snapshot?.incidents, liveComplaints]);
+
+  // Find currently focused complaint object
+  const focusedComplaint = useMemo(() => {
+    if (!focusedTrackingId) return null;
+    return (
+      liveComplaints.find(
+        (c) =>
+          c.tracking_id === focusedTrackingId ||
+          c.id === focusedTrackingId ||
+          (c.tracking_id && focusedTrackingId.includes(c.tracking_id.slice(-6)))
+      ) || null
+    );
+  }, [focusedTrackingId, liveComplaints]);
 
   // Identify top clusters for real floating badges (NO fake rods!)
   const hotspotClusters = useMemo(() => {
@@ -417,11 +571,13 @@ export const MapboxView: React.FC = () => {
           }
         }
         if (inc) {
+          setFocusedTrackingId((inc as any).tracking_id || (inc as any).incidentNumber || inc.id);
           selectIncident(inc);
           map.flyTo({
             center: coords,
-            zoom: 15.2,
-            pitch: 58,
+            zoom: 15.8,
+            pitch: 62,
+            bearing: -18,
             duration: 1200,
           });
         }
@@ -547,6 +703,156 @@ export const MapboxView: React.FC = () => {
     };
   }, [hotspotClusters]);
 
+  // 2b. Render Interactive 3D Complaint Pin Badges (Matching Department Portal Map style!)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    complaintMarkersRef.current.forEach((m) => m.remove());
+    complaintMarkersRef.current = [];
+
+    // Filter active complaints (exclude RESOLVED and REJECTED)
+    const activeComplaints = liveComplaints.filter(
+      (c) => c.status !== "RESOLVED" && c.status !== "REJECTED"
+    );
+
+    // Limit to top 80 to guarantee high framerate on 3D Mapbox
+    activeComplaints.slice(0, 80).forEach((comp, idx) => {
+      const coords = getComplaintCoords(comp);
+      const isSelected = Boolean(
+        focusedTrackingId &&
+          (focusedTrackingId === comp.tracking_id ||
+            focusedTrackingId === comp.id ||
+            (comp.tracking_id && focusedTrackingId.includes(comp.tracking_id.slice(-6))))
+      );
+
+      const prio = comp.priority || "MEDIUM";
+      const prioColor =
+        prio === "CRITICAL"
+          ? "#ef4444"
+          : prio === "HIGH"
+          ? "#f59e0b"
+          : prio === "MEDIUM"
+          ? "#eab308"
+          : "#10b981";
+
+      const icon = getCategoryIcon(comp.category);
+      const shortTag = comp.tracking_id?.slice(-6) || comp.id?.slice(-6) || `P-${idx + 1}`;
+      const safeTitle = escapeHtml(comp.title || "Civic Complaint");
+
+      const el = document.createElement("div");
+      el.className = `relative cursor-pointer select-none transition-all duration-300 ${
+        isSelected ? "scale-125 z-40" : "hover:scale-115 hover:z-30 z-20"
+      }`;
+
+      el.innerHTML = `
+        <div style="position:relative; display:flex; flex-direction:column; align-items:center;">
+          ${
+            isSelected
+              ? `<div style="position:absolute; width:48px; height:48px; border-radius:9999px; background:rgba(6,182,212,0.35); pointer-events:none; animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>`
+              : ""
+          }
+
+          ${
+            isSelected
+              ? `
+            <div style="position:absolute; bottom:100%; margin-bottom:8px; pointer-events:none; z-index:50; white-space:nowrap;">
+              <div style="padding:5px 10px; border-radius:8px; background:rgba(9,14,28,0.96); border:1px solid #38bdf8; box-shadow:0 8px 24px rgba(0,0,0,0.85); display:flex; align-items:center; gap:6px; font-family:monospace; font-size:11px; color:#fff;">
+                <span style="width:7px; height:7px; border-radius:9999px; background:${prioColor};"></span>
+                <span style="font-weight:800; color:#38bdf8;">${escapeHtml(comp.tracking_id || shortTag)}</span>
+                <span style="color:#e2e8f0; font-weight:600; max-width:180px; overflow:hidden; text-overflow:ellipsis;">${safeTitle}</span>
+              </div>
+              <div style="width:8px; height:8px; background:rgba(9,14,28,0.96); border-right:1px solid #38bdf8; border-bottom:1px solid #38bdf8; transform:rotate(45deg); margin:-4px auto 0 auto;"></div>
+            </div>
+            `
+              : ""
+          }
+
+          <div style="
+            padding: 3px 8px;
+            border-radius: 9999px;
+            background: ${isSelected ? "#0284c7" : prioColor};
+            border: 2px solid #ffffff;
+            box-shadow: ${
+              isSelected
+                ? "0 0 20px rgba(56,189,248,0.8), 0 4px 12px rgba(0,0,0,0.6)"
+                : "0 4px 14px rgba(0,0,0,0.6)"
+            };
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #ffffff;
+            font-family: monospace;
+            font-weight: 800;
+            font-size: 10px;
+            letter-spacing: -0.02em;
+            transition: all 0.2s ease;
+          ">
+            <span style="font-size:11px; line-height:1;">${icon}</span>
+            <span>${shortTag}</span>
+          </div>
+        </div>
+      `;
+
+      el.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        setFocusedTrackingId(comp.tracking_id || comp.id);
+        const incObj = complaintToIncident(comp, coords);
+        selectIncident(incObj as any);
+        map.flyTo({
+          center: coords,
+          zoom: 15.8,
+          pitch: 62,
+          bearing: -18,
+          duration: 1300,
+        });
+      });
+
+      const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
+        .setLngLat(coords)
+        .addTo(map);
+
+      complaintMarkersRef.current.push(marker);
+    });
+
+    return () => {
+      complaintMarkersRef.current.forEach((m) => m.remove());
+      complaintMarkersRef.current = [];
+    };
+  }, [liveComplaints, focusedTrackingId]);
+
+  // 2c. Auto-focus complaint when tracking_id is provided in URL (?tracking_id=...)
+  useEffect(() => {
+    if (!urlTrackingId || liveComplaints.length === 0 || !mapRef.current) return;
+
+    const matched = liveComplaints.find(
+      (c) =>
+        c.tracking_id === urlTrackingId ||
+        c.id === urlTrackingId ||
+        (c.tracking_id && urlTrackingId && (c.tracking_id.includes(urlTrackingId) || urlTrackingId.includes(c.tracking_id))) ||
+        (c.tracking_id && urlTrackingId && urlTrackingId.includes(c.tracking_id.slice(-6)))
+    );
+
+    if (matched) {
+      setFocusedTrackingId(matched.tracking_id || matched.id);
+      const coords = getComplaintCoords(matched);
+      const incObj = complaintToIncident(matched, coords);
+      selectIncident(incObj as any);
+
+      const timer = setTimeout(() => {
+        mapRef.current?.flyTo({
+          center: coords,
+          zoom: 16.0,
+          pitch: 62,
+          bearing: -18,
+          duration: 1500,
+        });
+      }, 400);
+
+      return () => clearTimeout(timer);
+    }
+  }, [urlTrackingId, liveComplaints]);
+
   // 3. Handle FlyToTarget from Store
   useEffect(() => {
     const map = mapRef.current;
@@ -619,6 +925,31 @@ export const MapboxView: React.FC = () => {
     if (!searchQuery.trim() || !mapRef.current) return;
     const query = searchQuery.toLowerCase();
 
+    // 1. Search live citizen complaints first
+    const compMatch = liveComplaints.find(
+      (c) =>
+        (c.title && c.title.toLowerCase().includes(query)) ||
+        (c.tracking_id && c.tracking_id.toLowerCase().includes(query)) ||
+        (c.district_name && c.district_name.toLowerCase().includes(query)) ||
+        (c.citizen_name && c.citizen_name.toLowerCase().includes(query))
+    );
+
+    if (compMatch) {
+      const coords = getComplaintCoords(compMatch);
+      setFocusedTrackingId(compMatch.tracking_id || compMatch.id);
+      const incObj = complaintToIncident(compMatch, coords);
+      selectIncident(incObj as any);
+      mapRef.current.flyTo({
+        center: coords,
+        zoom: 16.0,
+        pitch: 62,
+        bearing: -18,
+        duration: 1200,
+      });
+      return;
+    }
+
+    // 2. Search snapshot incidents
     const incMatch = snapshot?.incidents.find(
       (i) => i.title.toLowerCase().includes(query) || String(i.incidentNumber).includes(query)
     );
@@ -757,6 +1088,54 @@ export const MapboxView: React.FC = () => {
           <span className="text-slate-400">Haryana Redressal</span>
         </div>
       </div>
+
+      {/* TOP FOCUSED COMPLAINT HUD BANNER (When any 3D complaint pin is clicked or opened from URL) */}
+      {focusedComplaint && (
+        <div className="absolute top-16 right-3 z-20 pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-3 px-3.5 py-2 rounded-xl bg-[#090e1c]/95 border border-cyan-400/60 backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.85)] text-xs font-mono">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-cyan-300">{focusedComplaint.tracking_id || focusedComplaint.id}</span>
+                <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                  focusedComplaint.priority === "CRITICAL"
+                    ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                    : focusedComplaint.priority === "HIGH"
+                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                    : "bg-sky-500/20 text-sky-300 border border-sky-500/40"
+                }`}>
+                  {focusedComplaint.priority || "ACTIVE"}
+                </span>
+                <span className="text-slate-400 text-[10px]">• {focusedComplaint.district_name || "Haryana"}</span>
+              </div>
+              <span className="text-slate-200 font-semibold max-w-xs truncate">{focusedComplaint.title}</span>
+            </div>
+            <div className="flex items-center gap-1.5 ml-2 border-l border-slate-700/80 pl-2.5">
+              <button
+                onClick={() => {
+                  const coords = getComplaintCoords(focusedComplaint);
+                  mapRef.current?.flyTo({ center: coords, zoom: 16.2, pitch: 64, bearing: -20, duration: 1100 });
+                }}
+                className="px-2.5 py-1 rounded-lg bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-400/40 text-cyan-200 text-[11px] font-bold transition-all"
+                title="3D Cinematic Focus"
+              >
+                3D Focus
+              </button>
+              <button
+                onClick={() => {
+                  setFocusedTrackingId(null);
+                  clearSelection();
+                  mapRef.current?.flyTo({ center: [76.90, 28.95], zoom: 9.8, pitch: 52, bearing: -15, duration: 1200 });
+                }}
+                className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all"
+                title="Clear Focus & Reset View"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* BOTTOM-LEFT INCIDENT DENSITY LEGEND CARD */}
       <div className="absolute bottom-6 left-3 z-10 pointer-events-auto">

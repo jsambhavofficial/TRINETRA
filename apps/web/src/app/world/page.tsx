@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useWorldStore } from "@/store/useWorldStore";
 import { Header } from "@/components/command-center/Header";
 import { LeftRail } from "@/components/command-center/LeftRail";
@@ -28,7 +28,7 @@ const NexusViewer = dynamic(
   }
 );
 
-export default function WorldPage() {
+function WorldContent() {
   const {
     fetchSnapshot,
     selectedIncident,
@@ -113,5 +113,24 @@ export default function WorldPage() {
       {/* 5. Voice Intelligence & Spoken Command Center */}
       <VoiceAssistantModal />
     </div>
+  );
+}
+
+export default function WorldPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen w-screen items-center justify-center bg-space-950 text-slate-400">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
+            <span className="font-mono text-xs tracking-wider text-slate-300">
+              CONNECTING 3D DIGITAL TWIN SPATIAL ENGINE...
+            </span>
+          </div>
+        </div>
+      }
+    >
+      <WorldContent />
+    </Suspense>
   );
 }
