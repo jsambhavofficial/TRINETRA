@@ -81,19 +81,9 @@ function formatHindiDate(isoStr?: string) {
 }
 
 function getCategoryMeta(cat: string, title?: string, userPhotos?: string[]) {
-  // 1. If complaint has genuine photo uploaded, prioritize it (skip if monitor placeholder)
-  if (userPhotos && userPhotos.length > 0 && userPhotos[0] && !userPhotos[0].includes("1581094794329")) {
-    return {
-      label: cat ? cat.replace(/_/g, " ") : "Civil Grievance",
-      icon: "📸",
-      badge: "bg-blue-50 text-blue-700 border-blue-200",
-      thumb: userPhotos[0],
-    };
-  }
-
   const text = `${cat || ""} ${title || ""}`.toLowerCase();
 
-  // 2. Water Supply / Pipeline / Drinking Water ("pani nahi aa raha", "pipeline", "tap", "nal", "water supply")
+  // 1. Water Supply / Pipeline / Drinking Water ("pani nahi aa raha", "pipeline", "tap", "nal", "water supply", "leakage")
   if (
     text.includes("pani nahi") ||
     text.includes("drinking water") ||
@@ -101,6 +91,7 @@ function getCategoryMeta(cat: string, title?: string, userPhotos?: string[]) {
     text.includes("water supply") ||
     text.includes("pipeline") ||
     text.includes("pipe") ||
+    text.includes("leakage") ||
     text.includes("tap") ||
     text.includes("tanki") ||
     text.includes("water") ||
@@ -110,11 +101,11 @@ function getCategoryMeta(cat: string, title?: string, userPhotos?: string[]) {
       label: "Water Supply & Pipeline",
       icon: "🚰",
       badge: "bg-sky-50 text-sky-700 border-sky-200",
-      thumb: "https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=600",
+      thumb: "/pipe_leakage.png",
     };
   }
 
-  // 3. Flooding / Waterlogging / Drainage ("jalbharav", "waterlog", "drain", "flood", "barsat")
+  // 2. Flooding / Waterlogging / Drainage ("jalbharav", "waterlog", "drain", "flood", "barsat")
   if (
     cat === "URBAN_FLOODING" ||
     text.includes("mughal canal") ||
@@ -134,6 +125,23 @@ function getCategoryMeta(cat: string, title?: string, userPhotos?: string[]) {
       thumb: "/drainage_choke.png",
     };
   }
+
+  // 3. If complaint has genuine photo uploaded, prioritize it (skip if placeholder/stock photo)
+  if (
+    userPhotos &&
+    userPhotos.length > 0 &&
+    userPhotos[0] &&
+    !userPhotos[0].includes("1581094794329") &&
+    !userPhotos[0].includes("1584438784894")
+  ) {
+    return {
+      label: cat ? cat.replace(/_/g, " ") : "Civil Grievance",
+      icon: "📸",
+      badge: "bg-blue-50 text-blue-700 border-blue-200",
+      thumb: userPhotos[0],
+    };
+  }
+
 
   // 4. Sewerage Overflow / Sanitation / Dirty Water ("sewer", "naali", "ganda pani", "gutter")
   if (
