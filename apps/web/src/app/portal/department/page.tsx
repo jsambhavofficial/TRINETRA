@@ -45,6 +45,7 @@ import {
   TrendingUp,
   TrendingDown,
   FileText,
+  X,
 } from "lucide-react";
 import { AuthorityRoleSwitcher } from "@/components/command-center/AuthorityRoleSwitcher";
 
@@ -319,6 +320,18 @@ function DepartmentPortalContent() {
   const [submittingAction, setSubmittingAction] = useState(false);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [assignedTaskInfo, setAssignedTaskInfo] = useState<{ trackingId: string; unitId: string } | null>(null);
+
+  // Dynamic Map Spotlight State
+  const [selectedMapCase, setSelectedMapCase] = useState<any>(null);
+  const [mapZoom, setMapZoom] = useState(1);
+
+  const handleFocusOnMap = (item: any) => {
+    setSelectedMapCase(item);
+    const el = document.getElementById("cases-map-widget");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   useEffect(() => {
     try {
@@ -1203,6 +1216,16 @@ function DepartmentPortalContent() {
                             <span>Escalate</span>
                           </button>
 
+                          <button
+                            type="button"
+                            onClick={() => handleFocusOnMap(cluster.complaints?.[0] || cluster)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 font-bold text-xs shadow-2xs transition-all"
+                            title="मैप पर देखें / View on Map"
+                          >
+                            <MapPin className="w-3.5 h-3.5 text-sky-600" />
+                            <span>मैप पर देखें</span>
+                          </button>
+
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() =>
@@ -1252,8 +1275,19 @@ function DepartmentPortalContent() {
                                     </div>
                                     <p className="text-[11px] text-slate-800 truncate font-semibold">{c.title}</p>
                                     <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-200/60">
-                                      <span>Citizen: {c.citizen_name || "Public"}</span>
-                                      <span className="text-amber-700 font-semibold">{c.status}</span>
+                                      <span className="truncate">Citizen: {c.citizen_name || "Public"}</span>
+                                      <div className="flex items-center gap-2 shrink-0">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleFocusOnMap(c)}
+                                          className="text-sky-700 font-bold hover:underline inline-flex items-center gap-0.5"
+                                          title="मैप पर देखें"
+                                        >
+                                          <MapPin className="w-2.5 h-2.5" />
+                                          <span>मैप</span>
+                                        </button>
+                                        <span className="text-amber-700 font-semibold">{c.status}</span>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>

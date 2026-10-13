@@ -63,6 +63,23 @@ function FieldOfficerPortalContent() {
   );
   const [locationConfirmed, setLocationConfirmed] = useState(true);
 
+  // Hidden File Input Refs for Direct Photo Upload
+  const beforeFileInputRef = useRef<HTMLInputElement>(null);
+  const afterFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDirectFileUpload = (e: React.ChangeEvent<HTMLInputElement>, target: "BEFORE" | "AFTER") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result) {
+        if (target === "BEFORE") setBeforePhoto(reader.result as string);
+        else setAfterPhoto(reader.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const [submitting, setSubmitting] = useState(false);
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
 
@@ -586,40 +603,167 @@ function FieldOfficerPortalContent() {
                 </div>
 
                 <form onSubmit={handleSubmitProof} className="space-y-4 text-xs">
-                  <div>
-                    <label className="block text-slate-700 font-bold mb-1">
-                      1. Before Work Photo URL:
-                    </label>
+                  {/* Hidden File Inputs for Direct Camera / File Upload */}
+                  <input
+                    type="file"
+                    ref={beforeFileInputRef}
+                    onChange={(e) => handleDirectFileUpload(e, "BEFORE")}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <input
+                    type="file"
+                    ref={afterFileInputRef}
+                    onChange={(e) => handleDirectFileUpload(e, "AFTER")}
+                    accept="image/*"
+                    className="hidden"
+                  />
+
+                  {/* 1. Before Work Photo */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-slate-800 font-bold">
+                        1. Before Work Photo (कार्य से पहले की फोटो):
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => beforeFileInputRef.current?.click()}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[11px] border border-blue-200 transition-colors"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>फोटो अपलोड करें / Choose File</span>
+                      </button>
+                    </div>
+
                     <input
                       type="text"
                       value={beforePhoto}
                       onChange={(e) => setBeforePhoto(e.target.value)}
+                      placeholder="Paste Photo URL or click Upload above..."
                       className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs outline-none"
                     />
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={beforePhoto}
-                      alt="Before Work Preview"
-                      className="mt-2 w-full h-32 object-cover rounded-xl border border-slate-200"
-                    />
+
+                    {beforePhoto ? (
+                      <div className="relative mt-2 w-full h-36 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={beforePhoto}
+                          alt="Before Work Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = "https://images.unsplash.com/photo-1544717305-2782549b5136?w=800";
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => beforeFileInputRef.current?.click()}
+                          className="absolute inset-0 bg-black/40 text-white font-bold text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 backdrop-blur-2xs"
+                        >
+                          <Camera className="w-4 h-4" />
+                          <span>फोटो बदलें (Change Photo)</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => beforeFileInputRef.current?.click()}
+                        className="mt-2 w-full h-28 rounded-xl border-2 border-dashed border-slate-300 hover:border-blue-400 bg-slate-50 flex flex-col items-center justify-center gap-1 text-slate-500 cursor-pointer transition-colors"
+                      >
+                        <Camera className="w-6 h-6 text-slate-400" />
+                        <span className="font-semibold text-xs text-slate-700">क्लिक कर कार्य से पहले की फोटो चुनें</span>
+                        <span className="text-[10px] text-slate-400">JPG, PNG या कैमरा से सीधे अपलोड करें</span>
+                      </div>
+                    )}
                   </div>
 
-                  <div>
-                    <label className="block text-slate-700 font-bold mb-1">
-                      2. After Remediation Proof Photo URL:
-                    </label>
+                  {/* 2. After Remediation Proof Photo */}
+                  <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                    <div className="flex items-center justify-between">
+                      <label className="text-slate-800 font-bold">
+                        2. After Remediation Proof Photo (समाधान के बाद प्रमाण फोटो):
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => afterFileInputRef.current?.click()}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-[11px] border border-emerald-200 transition-colors"
+                      >
+                        <Camera className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>प्रमाण फोटो अपलोड करें / Choose File</span>
+                      </button>
+                    </div>
+
                     <input
                       type="text"
                       value={afterPhoto}
                       onChange={(e) => setAfterPhoto(e.target.value)}
+                      placeholder="Paste Photo URL or click Upload above..."
                       className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs outline-none"
                     />
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={afterPhoto}
-                      alt="After Remediation Preview"
-                      className="mt-2 w-full h-32 object-cover rounded-xl border border-slate-200"
-                    />
+
+                    {/* Quick Proof Photo Presets */}
+                    <div className="flex items-center gap-1.5 pt-1 overflow-x-auto pb-1">
+                      <span className="text-[10px] text-slate-400 font-bold shrink-0">त्वरित प्रमाण:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAfterPhoto("https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=800");
+                          setProofNote("जलभराव पूरी तरह साफ किया गया। सड़क यातायात के लिए सुचारू रूप से चालू।");
+                        }}
+                        className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold hover:bg-blue-100 whitespace-nowrap"
+                      >
+                        💧 जल निकासी पूर्ण
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAfterPhoto("https://images.unsplash.com/photo-1584463699042-30ff4cf374fc?w=800");
+                          setProofNote("सड़क का गड्ढा डामर और गिट्टी से भर दिया गया है। पेचवर्क पूरा।");
+                        }}
+                        className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200 text-[10px] font-bold hover:bg-slate-200 whitespace-nowrap"
+                      >
+                        🛣️ सड़क पेचवर्क पूर्ण
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAfterPhoto("https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800");
+                          setProofNote("टूटा हुआ बिजली का तार जोड़कर इंसुलेशन कर दिया गया है। बिजली चालू।");
+                        }}
+                        className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold hover:bg-amber-100 whitespace-nowrap"
+                      >
+                        ⚡ बिजली तार ठीक
+                      </button>
+                    </div>
+
+                    {afterPhoto ? (
+                      <div className="relative mt-1 w-full h-36 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={afterPhoto}
+                          alt="After Remediation Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=800";
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => afterFileInputRef.current?.click()}
+                          className="absolute inset-0 bg-black/40 text-white font-bold text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 backdrop-blur-2xs"
+                        >
+                          <Camera className="w-4 h-4" />
+                          <span>प्रमाण फोटो बदलें (Change Photo)</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => afterFileInputRef.current?.click()}
+                        className="mt-1 w-full h-28 rounded-xl border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/50 flex flex-col items-center justify-center gap-1 text-emerald-700 cursor-pointer transition-colors"
+                      >
+                        <Camera className="w-6 h-6 text-emerald-600" />
+                        <span className="font-bold text-xs">क्लिक कर कार्य समाप्ति की प्रमाण फोटो अपलोड करें</span>
+                        <span className="text-[10px] text-emerald-600/80">सीधे कैमरा या गैलरी से फोटो जोड़ें</span>
+                      </div>
+                    )}
                   </div>
 
                   <div>

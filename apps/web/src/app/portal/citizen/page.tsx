@@ -2,8 +2,11 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   User,
+  LogOut,
+  LogIn,
   FilePlus2,
   Search,
   Clock,
@@ -182,10 +185,23 @@ function getStatusBadge(status: string) {
 }
 
 export default function CitizenPortal() {
+  const router = useRouter();
   const [authUser, setAuthUser] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
   const [complaints, setComplaints] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/v1/auth/logout", { method: "POST" });
+    } catch (e) {}
+    localStorage.removeItem("trinetra_user");
+    localStorage.removeItem("trinetra_token");
+    localStorage.removeItem("token");
+    setAuthUser(null);
+    setToken(null);
+    router.push("/login");
+  };
 
   // Quick Tracker
   const [trackQuery, setTrackQuery] = useState("");
@@ -575,12 +591,21 @@ export default function CitizenPortal() {
       setLodgeSuccess(created);
       setShowLodgeModal(false);
 
-      // Save tracking_id to local citizen session
+      // Save tracking_id and full created object to local citizen session
       try {
         const stored = JSON.parse(localStorage.getItem("trinetra_my_grievances") || "[]");
         if (!stored.includes(created.tracking_id)) stored.unshift(created.tracking_id);
+        if (created.id && !stored.includes(created.id)) stored.unshift(created.id);
         localStorage.setItem("trinetra_my_grievances", JSON.stringify(stored));
+
+        // Save to full cache for instant persistence across reloads
+        const cached = JSON.parse(localStorage.getItem("trinetra_my_complaints_cache") || "[]");
+        const updatedCache = [created, ...cached.filter((x: any) => x.tracking_id !== created.tracking_id)];
+        localStorage.setItem("trinetra_my_complaints_cache", JSON.stringify(updatedCache));
       } catch (e) {}
+
+      // Immediately prepend to state so citizen sees it instantly in My Grievances table
+      setComplaints((prev) => [created, ...prev.filter((c) => c.tracking_id !== created.tracking_id)]);
 
       // Reset fields
       setTitle("");
@@ -780,6 +805,9 @@ export default function CitizenPortal() {
 
           {/* Right Controls */}
           <div className="flex items-center gap-3">
+            {/* AUTHORITY ROLE SWITCHER */}
+            <AuthorityRoleSwitcher />
+
             {/* Language toggle */}
             <button
               onClick={() => setSpeechLang(speechLang === "hi-IN" ? "en-IN" : "hi-IN")}
@@ -790,8 +818,8 @@ export default function CitizenPortal() {
               <ChevronDown className="w-3 h-3 text-slate-400" />
             </button>
 
-            {/* User Profile Pill */}
-            <div className="flex items-center gap-2 pl-1 border-l border-slate-200">
+            {/* User Profile Pill & Logout */}
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
               <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
                 {authUser?.display_name ? authUser.display_name.slice(0, 2).toUpperCase() : "RV"}
               </div>
@@ -803,7 +831,15 @@ export default function CitizenPortal() {
                   {authUser?.district_name ? `नागरिक, ${authUser.district_name}` : "नागरिक, गुरुग्राम"}
                 </span>
               </div>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
+              <button
+                type="button"
+                onClick={handleLogout}
+                title="लॉगआउट / Logout"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-colors cursor-pointer ml-1 shadow-2xs"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">लॉगआउट</span>
+              </button>
             </div>
           </div>
         </div>
