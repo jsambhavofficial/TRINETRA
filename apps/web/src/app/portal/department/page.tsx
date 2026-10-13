@@ -1231,22 +1231,34 @@ function DepartmentPortalContent() {
                             <span>AI Unified these {cluster.reportsCount} citizen submissions into this master ticket:</span>
                           </p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                            {cluster.complaints.map((c: any) => (
-                              <div
-                                key={c.id}
-                                className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs space-y-1"
-                              >
-                                <div className="flex items-center justify-between font-mono">
-                                  <span className="font-bold text-blue-700 text-[11px]">{c.tracking_id}</span>
-                                  <span className="text-[10px] text-slate-500">{c.district_name || c.district_id}</span>
+                            {cluster.complaints.map((c: any) => {
+                              const childMeta = getCategoryMeta(c.category, c.title, c.photos);
+                              return (
+                                <div
+                                  key={c.id}
+                                  className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs space-y-1.5 flex gap-2.5 items-start"
+                                >
+                                  <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100 mt-0.5">
+                                    <img
+                                      src={childMeta.thumb}
+                                      alt="Evidence photo"
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between font-mono">
+                                      <span className="font-bold text-blue-700 text-[11px]">{c.tracking_id}</span>
+                                      <span className="text-[10px] text-slate-500">{c.district_name || c.district_id}</span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-800 truncate font-semibold">{c.title}</p>
+                                    <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-200/60">
+                                      <span>Citizen: {c.citizen_name || "Public"}</span>
+                                      <span className="text-amber-700 font-semibold">{c.status}</span>
+                                    </div>
+                                  </div>
                                 </div>
-                                <p className="text-[11px] text-slate-800 truncate font-semibold">{c.title}</p>
-                                <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-200/60">
-                                  <span>Citizen: {c.citizen_name || "Public"}</span>
-                                  <span className="text-amber-700 font-semibold">{c.status}</span>
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       )}
@@ -1262,7 +1274,7 @@ function DepartmentPortalContent() {
                     <thead>
                       <tr className="bg-slate-50 text-slate-500 border-b border-slate-200 font-bold uppercase tracking-wider text-[11px]">
                         <th className="py-3 px-4">Tracking ID</th>
-                        <th className="py-3 px-4">Title & Category</th>
+                        <th className="py-3 px-4">Photo & Issue Description</th>
                         <th className="py-3 px-4">District</th>
                         <th className="py-3 px-4">Assigned Unit</th>
                         <th className="py-3 px-4">Status</th>
@@ -1272,15 +1284,26 @@ function DepartmentPortalContent() {
                     <tbody className="divide-y divide-slate-100">
                       {filteredComplaints.map((c) => {
                         const statBadge = getStatusBadge(c.status);
-                        const catMeta = getCategoryMeta(c.category);
+                        const catMeta = getCategoryMeta(c.category, c.title, c.photos);
                         return (
                           <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                             <td className="py-3 px-4 font-mono font-bold text-blue-600">
                               {c.tracking_id}
                             </td>
                             <td className="py-3 px-4">
-                              <div className="font-bold text-slate-900 truncate max-w-xs">{c.title}</div>
-                              <div className="text-[11px] text-slate-500">{catMeta.label}</div>
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
+                                  <img
+                                    src={catMeta.thumb}
+                                    alt="Complaint Evidence"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="font-bold text-slate-900 truncate max-w-xs">{c.title}</div>
+                                  <div className="text-[11px] text-slate-500">{catMeta.label}</div>
+                                </div>
+                              </div>
                             </td>
                             <td className="py-3 px-4 text-slate-600">
                               {c.district_name || c.district_id}

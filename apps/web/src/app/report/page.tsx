@@ -447,6 +447,22 @@ export default function ReportPage() {
         </div>
       </header>
 
+      {/* Department Reports Quick Switch Banner */}
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-4">
+        <div className="p-3 rounded-xl bg-blue-950/60 border border-blue-500/40 text-blue-200 text-xs flex items-center justify-between gap-3 shadow-md">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-white">Looking for Official Department Performance & SLA Reports?</span>
+            <span className="text-slate-300">विभागीय रिपोर्ट एवं नागरिक शिकायत ऑडिट के लिए आधिकारिक पोर्टल देखें।</span>
+          </div>
+          <Link
+            href="/portal/department/reports"
+            className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shrink-0 transition-colors"
+          >
+            Go to Department Reports Center →
+          </Link>
+        </div>
+      </div>
+
       {/* Main Content Area */}
       <main className="relative z-10 max-w-5xl mx-auto px-4 py-8 pb-36">
         {/* Title & One-Click Hackathon Presets */}
