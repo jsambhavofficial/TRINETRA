@@ -1,106 +1,27 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useWorldStore } from "@/store/useWorldStore";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Activity,
-  Building2,
-  ChevronDown,
-  Globe2,
-  Mic,
-  Truck,
-  User,
   LogOut,
   LogIn,
-  Landmark,
+  Mic,
   ShieldCheck,
-  Check,
-  Bell,
   Home,
-  FileText,
   Search,
 } from "lucide-react";
 import Link from "next/link";
 import { AegisLogo } from "@/components/ui/AegisLogo";
+import { AuthorityRoleSwitcher, AUTHORITY_ROLES } from "./AuthorityRoleSwitcher";
 
-export const AUTHORITY_ROLES = [
-  {
-    roleKey: "STATE_LEADERSHIP",
-    label: "State Leadership",
-    shortLabel: "Apex / CM",
-    icon: Landmark,
-    path: "/portal/state-leadership",
-    email: "leadership@trinetra.gov.in",
-    pass: "Leadership@2026",
-    badgeColor: "text-amber-700 bg-amber-50 border-amber-200",
-    desc: "CM Office & Apex Statewide Governance",
-  },
-  {
-    roleKey: "DISTRICT_ADMIN",
-    label: "District Magistrate",
-    shortLabel: "DC Gurugram",
-    icon: Building2,
-    path: "/portal/district-admin",
-    email: "dc.gurugram@trinetra.gov.in",
-    pass: "District@2026",
-    badgeColor: "text-emerald-700 bg-emerald-50 border-emerald-200",
-    desc: "District Coordination & SLA Tracking",
-  },
-  {
-    roleKey: "DEPARTMENT",
-    label: "Department Head",
-    shortLabel: "Department",
-    icon: Activity,
-    path: "/portal/department",
-    email: "pwd.lead@trinetra.gov.in",
-    pass: "Department@2026",
-    badgeColor: "text-blue-700 bg-blue-50 border-blue-200",
-    desc: "Line Dept Ops & Clustered Missions",
-  },
-  {
-    roleKey: "FIELD_OFFICER",
-    label: "Field Unit Officer",
-    shortLabel: "Field Ops",
-    icon: Truck,
-    path: "/portal/field-officer",
-    email: "field.amb01@trinetra.gov.in",
-    pass: "Field@2026",
-    badgeColor: "text-cyan-700 bg-cyan-50 border-cyan-200",
-    desc: "Ground Response & Photo Proof SOP",
-  },
-  {
-    roleKey: "SPATIAL_TWIN",
-    label: "3D Spatial Twin",
-    shortLabel: "3D Twin",
-    icon: Globe2,
-    path: "/world",
-    email: "leadership@trinetra.gov.in",
-    pass: "Leadership@2026",
-    badgeColor: "text-sky-700 bg-sky-50 border-sky-200",
-    desc: "Digital Twin 3D Operational View",
-  },
-];
+export { AUTHORITY_ROLES };
 
 export const Header: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { toggleVoiceModal } = useWorldStore();
   const [authUser, setAuthUser] = useState<any>(null);
-  const [switchingRole, setSwitchingRole] = useState(false);
-  const [showRoleMenu, setShowRoleMenu] = useState(false);
-  const roleMenuRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (roleMenuRef.current && !roleMenuRef.current.contains(e.target as Node)) {
-        setShowRoleMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Check current session from localStorage / backend
   useEffect(() => {
@@ -129,33 +50,8 @@ export const Header: React.FC = () => {
     router.push("/login");
   };
 
-  const handleSwitchAuthorityRole = async (roleObj: typeof AUTHORITY_ROLES[0]) => {
-    setSwitchingRole(true);
-    setShowRoleMenu(false);
-    try {
-      const res = await fetch("/api/v1/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: roleObj.email, password: roleObj.pass }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        localStorage.setItem("token", data.access_token);
-        localStorage.setItem("trinetra_token", data.access_token);
-        localStorage.setItem("trinetra_user", JSON.stringify(data.user));
-        setAuthUser(data.user);
-      }
-    } catch (err) {
-      console.error("Role switch error:", err);
-    } finally {
-      setSwitchingRole(false);
-    }
-    router.push(roleObj.path);
-  };
-
   const isWorld = pathname === "/world";
   const isCitizenPortal = pathname === "/portal/citizen" || pathname === "/track" || pathname === "/report";
-  const currentRoleMatch = AUTHORITY_ROLES.find((r) => r.path === pathname) || AUTHORITY_ROLES[2];
 
   // -------------------------------------------------------------
   // 1. CITIZEN PORTAL / PUBLIC HEADER (Light government theme)
@@ -215,8 +111,10 @@ export const Header: React.FC = () => {
           </Link>
         </div>
 
-        {/* Citizen Session Status & Logout */}
-        <div className="flex items-center gap-2">
+        {/* Right Controls: Role Switcher & Citizen Session Status */}
+        <div className="flex items-center gap-2.5">
+          <AuthorityRoleSwitcher />
+
           {authUser ? (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
               <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-2xs">
@@ -237,10 +135,10 @@ export const Header: React.FC = () => {
           ) : (
             <Link
               href="/login"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs"
             >
               <LogIn className="w-3.5 h-3.5" />
-              <span>Citizen Sign In</span>
+              <span>Sign In</span>
             </Link>
           )}
         </div>
@@ -264,12 +162,7 @@ export const Header: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0">
-          <Link
-            href="/portal/department"
-            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow"
-          >
-            Department Portal
-          </Link>
+          <AuthorityRoleSwitcher />
           <button
             onClick={() => toggleVoiceModal(true)}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-sky-500/20 border border-sky-400/60 hover:bg-sky-500/30 text-sky-200 text-xs font-bold font-mono tracking-wider"
@@ -333,62 +226,8 @@ export const Header: React.FC = () => {
 
       {/* Right Controls: Role Switcher Dropdown, Voice Ops, Profile & Logout */}
       <div className="flex items-center gap-2.5 shrink-0">
-        {/* AUTHORITY ROLE SWITCHER DROPDOWN */}
-        <div className="relative" ref={roleMenuRef}>
-          <button
-            onClick={() => setShowRoleMenu(!showRoleMenu)}
-            disabled={switchingRole}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-2xs ${currentRoleMatch.badgeColor} hover:brightness-95 cursor-pointer`}
-            title="Click to Switch Authority Command Role"
-          >
-            <currentRoleMatch.icon className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden sm:inline">{currentRoleMatch.label}</span>
-            <span className="sm:hidden">{currentRoleMatch.shortLabel}</span>
-            <ChevronDown
-              className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                showRoleMenu ? "rotate-180" : ""
-              }`}
-            />
-          </button>
-
-          {showRoleMenu && (
-            <div className="absolute right-0 top-full mt-1.5 w-68 rounded-2xl bg-white border border-slate-200 shadow-xl p-2 z-50 animate-in fade-in">
-              <div className="px-2.5 py-1.5 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
-                <span>Switch Authority Role</span>
-                <span className="text-blue-600 font-mono">5 ROLES</span>
-              </div>
-              <div className="space-y-1 mt-1.5">
-                {AUTHORITY_ROLES.map((roleObj) => {
-                  const Icon = roleObj.icon;
-                  const isActive = pathname === roleObj.path;
-                  return (
-                    <button
-                      key={roleObj.roleKey}
-                      onClick={() => handleSwitchAuthorityRole(roleObj)}
-                      disabled={switchingRole}
-                      className={`w-full px-2.5 py-2 rounded-xl text-left text-xs font-semibold flex items-center justify-between transition-colors ${
-                        isActive
-                          ? "bg-blue-50 text-blue-800 font-bold border border-blue-200"
-                          : "text-slate-700 hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Icon className="w-4 h-4 text-slate-500 shrink-0" />
-                        <div>
-                          <div className="text-xs font-bold">{roleObj.label}</div>
-                          <div className="text-[10px] text-slate-400 font-normal leading-tight">
-                            {roleObj.desc}
-                          </div>
-                        </div>
-                      </div>
-                      {isActive && <Check className="w-3.5 h-3.5 text-blue-600 shrink-0 ml-1" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* AUTHORITY ROLE SWITCHER */}
+        <AuthorityRoleSwitcher />
 
         {/* Voice Ops Button */}
         <button
@@ -435,3 +274,4 @@ export const Header: React.FC = () => {
     </header>
   );
 };
+

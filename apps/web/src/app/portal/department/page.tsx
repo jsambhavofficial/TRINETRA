@@ -46,6 +46,7 @@ import {
   TrendingDown,
   FileText,
 } from "lucide-react";
+import { AuthorityRoleSwitcher } from "@/components/command-center/AuthorityRoleSwitcher";
 
 const HARYANA_DEPARTMENTS_LIST = [
   { id: "ALL", name: "All Departments (सभी विभाग — Consolidated View)" },
@@ -78,45 +79,176 @@ function formatHindiDate(isoStr?: string) {
   }
 }
 
-function getCategoryMeta(cat: string) {
-  switch (cat) {
-    case "URBAN_FLOODING":
-      return {
-        label: "Waterlogging / Drainage",
-        icon: "💧",
-        badge: "bg-blue-50 text-blue-700 border-blue-200",
-        thumb: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=400",
-      };
-    case "ELECTRICAL_HAZARD":
-    case "POWER_OUTAGE":
-      return {
-        label: "Live Wire / Power",
-        icon: "⚡",
-        badge: "bg-amber-50 text-amber-700 border-amber-200",
-        thumb: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=400",
-      };
-    case "ROAD_BLOCKAGE":
-      return {
-        label: "Road Damage / Pothole",
-        icon: "🛣️",
-        badge: "bg-slate-100 text-slate-700 border-slate-200",
-        thumb: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=400",
-      };
-    case "SEWERAGE_OVERFLOW":
-      return {
-        label: "Sewer Overflow / Sanitation",
-        icon: "🚰",
-        badge: "bg-sky-50 text-sky-700 border-sky-200",
-        thumb: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400",
-      };
-    default:
-      return {
-        label: cat.replace(/_/g, " "),
-        icon: "⚠️",
-        badge: "bg-purple-50 text-purple-700 border-purple-200",
-        thumb: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=400",
-      };
+function getCategoryMeta(cat: string, title?: string, userPhotos?: string[]) {
+  // 1. If complaint has genuine photo uploaded, prioritize it (skip if monitor placeholder)
+  if (userPhotos && userPhotos.length > 0 && userPhotos[0] && !userPhotos[0].includes("1581094794329")) {
+    return {
+      label: cat ? cat.replace(/_/g, " ") : "Civil Grievance",
+      icon: "📸",
+      badge: "bg-blue-50 text-blue-700 border-blue-200",
+      thumb: userPhotos[0],
+    };
   }
+
+  const text = `${cat || ""} ${title || ""}`.toLowerCase();
+
+  // 2. Water Supply / Pipeline / Drinking Water ("pani nahi aa raha", "pipeline", "tap", "nal", "water supply")
+  if (
+    text.includes("pani nahi") ||
+    text.includes("drinking water") ||
+    text.includes("peeyjal") ||
+    text.includes("water supply") ||
+    text.includes("pipeline") ||
+    text.includes("pipe") ||
+    text.includes("tap") ||
+    text.includes("tanki") ||
+    text.includes("water") ||
+    text.includes("जल")
+  ) {
+    return {
+      label: "Water Supply & Pipeline",
+      icon: "🚰",
+      badge: "bg-sky-50 text-sky-700 border-sky-200",
+      thumb: "https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=600",
+    };
+  }
+
+  // 3. Flooding / Waterlogging / Drainage ("jalbharav", "waterlog", "drain", "flood", "barsat")
+  if (
+    cat === "URBAN_FLOODING" ||
+    text.includes("flood") ||
+    text.includes("waterlog") ||
+    text.includes("jalbharav") ||
+    text.includes("drainage") ||
+    text.includes("pani bhar") ||
+    text.includes("जलभराव")
+  ) {
+    return {
+      label: "Waterlogging / Drainage",
+      icon: "💧",
+      badge: "bg-blue-50 text-blue-700 border-blue-200",
+      thumb: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=600",
+    };
+  }
+
+  // 4. Sewerage Overflow / Sanitation / Dirty Water ("sewer", "naali", "ganda pani", "gutter")
+  if (
+    cat === "SEWERAGE_OVERFLOW" ||
+    text.includes("sewer") ||
+    text.includes("naali") ||
+    text.includes("ganda") ||
+    text.includes("gutter") ||
+    text.includes("नाला")
+  ) {
+    return {
+      label: "Sewer Overflow / Drainage",
+      icon: "🚽",
+      badge: "bg-amber-50 text-amber-700 border-amber-200",
+      thumb: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600",
+    };
+  }
+
+  // 5. Road Damage / Potholes / Asphalt ("road", "sadak", "pothole", "gaddha", "asphalt", "highway")
+  if (
+    cat === "ROAD_BLOCKAGE" ||
+    text.includes("road") ||
+    text.includes("sadak") ||
+    text.includes("pothole") ||
+    text.includes("gaddha") ||
+    text.includes("asphalt") ||
+    text.includes("blockage") ||
+    text.includes("सड़क") ||
+    text.includes("गड्ढा")
+  ) {
+    return {
+      label: "Road Damage / Pothole",
+      icon: "🛣️",
+      badge: "bg-slate-100 text-slate-700 border-slate-200",
+      thumb: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600",
+    };
+  }
+
+  // 6. Electrical Hazard / Live Wire / Transformer / Power Outage ("electric", "bijli", "wire", "taar", "transformer", "khamba")
+  if (
+    cat === "ELECTRICAL_HAZARD" ||
+    cat === "POWER_OUTAGE" ||
+    text.includes("electric") ||
+    text.includes("bijli") ||
+    text.includes("wire") ||
+    text.includes("taar") ||
+    text.includes("transformer") ||
+    text.includes("khamba") ||
+    text.includes("power") ||
+    text.includes("बिजली")
+  ) {
+    return {
+      label: "Live Wire / Power Hazard",
+      icon: "⚡",
+      badge: "bg-amber-50 text-amber-700 border-amber-200",
+      thumb: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=600",
+    };
+  }
+
+  // 7. Solid Waste / Garbage / Cleanliness ("garbage", "kooda", "kachra", "waste", "safai")
+  if (
+    cat === "SOLID_WASTE" ||
+    text.includes("garbage") ||
+    text.includes("kooda") ||
+    text.includes("kachra") ||
+    text.includes("waste") ||
+    text.includes("safai") ||
+    text.includes("कूड़ा") ||
+    text.includes("सफाई")
+  ) {
+    return {
+      label: "Solid Waste / Sanitation",
+      icon: "🗑️",
+      badge: "bg-stone-50 text-stone-700 border-stone-200",
+      thumb: "https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=600",
+    };
+  }
+
+  // 8. Public Health / Hospital / Medical
+  if (
+    cat === "HEALTH_HAZARD" ||
+    text.includes("health") ||
+    text.includes("hospital") ||
+    text.includes("swasthya") ||
+    text.includes("medical") ||
+    text.includes("अस्पताल")
+  ) {
+    return {
+      label: "Public Health / Medical",
+      icon: "🏥",
+      badge: "bg-rose-50 text-rose-700 border-rose-200",
+      thumb: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=600",
+    };
+  }
+
+  // 9. Civil Infrastructure / Bridge / Building / Construction
+  if (
+    cat === "CIVIL_INFRASTRUCTURE" ||
+    text.includes("infra") ||
+    text.includes("bridge") ||
+    text.includes("pul") ||
+    text.includes("footpath") ||
+    text.includes("building")
+  ) {
+    return {
+      label: "Civil Infrastructure",
+      icon: "🏗️",
+      badge: "bg-purple-50 text-purple-700 border-purple-200",
+      thumb: "https://images.unsplash.com/photo-1541888946425-d0fbb186156f?w=600",
+    };
+  }
+
+  // Fallback: Real civic public works construction / road maintenance site (NOT a computer monitor!)
+  return {
+    label: (cat || "Civic Hazard").replace(/_/g, " "),
+    icon: "⚠️",
+    badge: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    thumb: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600",
+  };
 }
 
 function getPriorityBadge(priority: string) {
@@ -573,7 +705,7 @@ function DepartmentPortalContent() {
                 <span>Map View</span>
               </Link>
               <Link
-                href="/report"
+                href="/portal/department/reports"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition-colors"
               >
                 <Activity className="w-3.5 h-3.5" />
@@ -591,6 +723,9 @@ function DepartmentPortalContent() {
 
           {/* Right Controls */}
           <div className="flex items-center gap-2.5">
+            {/* AUTHORITY ROLE SWITCHER */}
+            <AuthorityRoleSwitcher />
+
             {/* Department Dropdown */}
             <div className="relative">
               <select
@@ -954,7 +1089,11 @@ function DepartmentPortalContent() {
             {viewMode === "AI_CLUSTERED" ? (
               <div className="space-y-3">
                 {clusters.map((cluster, idx) => {
-                  const catMeta = getCategoryMeta(cluster.category);
+                  const catMeta = getCategoryMeta(
+                    cluster.category,
+                    cluster.representativeTitle,
+                    cluster.complaints?.[0]?.photos
+                  );
                   const prioBadge = getPriorityBadge(cluster.priority);
                   const statBadge = getStatusBadge(cluster.status);
                   const isExpanded = Boolean(expandedClusters[cluster.clusterId]);
