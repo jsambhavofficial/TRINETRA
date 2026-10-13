@@ -7,15 +7,13 @@ export const metadata: Metadata = {
   description: "State Governance Intelligence & Response Platform for Haryana, India. Spatial digital twin, multimodal evidence fusion, and role-based operational response.",
 };
 
-import { JudgeDemoController } from "@/components/command-center/JudgeDemoController";
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="light">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -29,9 +27,8 @@ export default function RootLayout({
           href="https://cesium.com/downloads/cesiumjs/releases/1.121/Build/Cesium/Widgets/widgets.css"
         />
       </head>
-      <body className="antialiased bg-space-950 text-slate-100 min-h-screen overflow-x-hidden overflow-y-auto">
+      <body className="antialiased bg-[#F8FAFC] text-slate-800 min-h-screen overflow-x-hidden overflow-y-auto font-sans">
         {children}
-        <JudgeDemoController />
       </body>
     </html>
   );

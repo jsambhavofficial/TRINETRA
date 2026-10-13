@@ -675,28 +675,60 @@ async def update_field_progress(
     complaint_workflow.check_object_scope(complaint, actor)
 
     # Update tactical status if supplied (e.g. EN_ROUTE, ON_SCENE, IN_PROGRESS)
-    if payload.status:
+    effective_status = payload.status or payload.status_override
+    if effective_status:
         complaint.status = "IN_PROGRESS"
 
     from sqlalchemy.orm.attributes import flag_modified
 
+    # Ensure baseline SOP checklist exists
+    if not complaint.sop_checklist:
+        complaint.sop_checklist = complaint_workflow.get_default_sop(complaint.category)
+
     # Update SOP step
     if payload.sop_step_id:
         steps = [dict(s) for s in (complaint.sop_checklist or [])]
+        sop_done = payload.sop_completed if payload.sop_completed is not None else payload.completed
+        found = False
         for step in steps:
             if step.get("id") == payload.sop_step_id:
-                step["completed"] = bool(payload.sop_completed)
+                step["completed"] = bool(sop_done)
                 step["completed_at"] = datetime.now(timezone.utc).isoformat()
                 step["completed_by"] = actor.display_name
+                found = True
+                break
+        
+        # If not found by exact ID, attempt index match (e.g. "sop-1" -> index 0)
+        if not found and payload.sop_step_id.startswith("sop-"):
+            try:
+                idx = int(payload.sop_step_id.split("-")[1]) - 1
+                if 0 <= idx < len(steps):
+                    steps[idx]["completed"] = bool(sop_done)
+                    steps[idx]["completed_at"] = datetime.now(timezone.utc).isoformat()
+                    steps[idx]["completed_by"] = actor.display_name
+                    found = True
+            except Exception:
+                pass
+
+        if not found:
+            steps.append({
+                "id": payload.sop_step_id,
+                "title": f"Protocol task: {payload.sop_step_id}",
+                "completed": bool(sop_done),
+                "completed_at": datetime.now(timezone.utc).isoformat(),
+                "completed_by": actor.display_name,
+            })
+
         complaint.sop_checklist = steps
         flag_modified(complaint, "sop_checklist")
 
     # Add field note
-    if payload.note:
+    effective_note = payload.note or payload.field_note
+    if effective_note:
         notes = [dict(n) for n in (complaint.field_notes or [])]
         notes.append({
             "author": actor.display_name,
-            "text": payload.note,
+            "text": effective_note,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "unit_id": actor.unit_id or complaint.assigned_unit_id,
         })

@@ -123,9 +123,12 @@ class AssignmentRequest(BaseModel):
 
 class FieldProgressRequest(BaseModel):
     status: Optional[str] = Field(None, description="EN_ROUTE, ON_SCENE, or IN_PROGRESS")
+    status_override: Optional[str] = None
     sop_step_id: Optional[str] = None
     sop_completed: Optional[bool] = None
+    completed: Optional[bool] = None
     note: Optional[str] = None
+    field_note: Optional[str] = None
 
 
 class ProofSubmissionRequest(BaseModel):

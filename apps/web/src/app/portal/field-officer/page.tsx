@@ -125,7 +125,23 @@ function FieldOfficerPortalContent() {
 
   const handleToggleSop = async (stepId: string, currentStatus: boolean) => {
     if (!activeTask) return;
-    setSubmitting(true);
+    const newStatus = !currentStatus;
+
+    // 1. Instant Optimistic State Update
+    const currentSteps = activeTask.sop_checklist?.length
+      ? activeTask.sop_checklist
+      : [
+          { id: "sop-1", title: "Site safety perimeter secured and traffic diversion signboards established", completed: false },
+          { id: "sop-2", title: "Physical remediation and defect clearance executed by assigned technicians", completed: false },
+          { id: "sop-3", title: "Secondary line testing and civic safety parameters certified clean", completed: false },
+          { id: "sop-4", title: "Final geotagged photographic verification captured for supervisor approval", completed: false },
+        ];
+
+    const updatedSop = currentSteps.map((s: any) =>
+      s.id === stepId ? { ...s, completed: newStatus } : s
+    );
+    setActiveTask({ ...activeTask, sop_checklist: updatedSop });
+
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -135,25 +151,35 @@ function FieldOfficerPortalContent() {
         headers,
         body: JSON.stringify({
           sop_step_id: stepId,
-          completed: !currentStatus,
+          sop_completed: newStatus,
+          completed: newStatus,
         }),
       });
       if (res.ok) {
         const updated = await res.json();
         setActiveTask(updated);
-        loadTasks();
       }
     } catch (e) {
       console.error(e);
-    } finally {
-      setSubmitting(false);
     }
   };
 
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeTask || !fieldNote.trim()) return;
-    setSubmitting(true);
+    const noteText = fieldNote.trim();
+    setFieldNote("");
+
+    // Optimistic append
+    const existingNotes = activeTask.field_notes || [];
+    const newNoteObj = {
+      author: authUser?.name || "Field Officer",
+      text: noteText,
+      created_at: new Date().toISOString(),
+      unit_id: selectedUnit,
+    };
+    setActiveTask({ ...activeTask, field_notes: [...existingNotes, newNoteObj] });
+
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -162,25 +188,24 @@ function FieldOfficerPortalContent() {
         method: "POST",
         headers,
         body: JSON.stringify({
-          field_note: fieldNote.trim(),
+          note: noteText,
+          field_note: noteText,
         }),
       });
       if (res.ok) {
         const updated = await res.json();
         setActiveTask(updated);
-        setFieldNote("");
-        loadTasks();
       }
     } catch (e) {
       console.error(e);
-    } finally {
-      setSubmitting(false);
     }
   };
 
   const handleStatusChange = async (newStatus: "EN_ROUTE" | "ON_SCENE" | "IN_PROGRESS") => {
     if (!activeTask) return;
-    setSubmitting(true);
+    setActiveTask({ ...activeTask, tactical_status: newStatus, status: "IN_PROGRESS" });
+    setSuccessBanner(`Operational status updated to ${newStatus.replace("_", " ")}`);
+
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -189,20 +214,19 @@ function FieldOfficerPortalContent() {
         method: "POST",
         headers,
         body: JSON.stringify({
-          status_override: newStatus === "IN_PROGRESS" ? "IN_PROGRESS" : undefined,
+          status: newStatus,
+          status_override: newStatus,
+          note: `Unit status updated to: ${newStatus.replace("_", " ")}`,
           field_note: `Unit status updated to: ${newStatus.replace("_", " ")}`,
         }),
       });
       if (res.ok) {
-        setSuccessBanner(`Operational status updated to ${newStatus}`);
         const updated = await res.json();
         setActiveTask(updated);
         loadTasks();
       }
     } catch (e) {
       console.error(e);
-    } finally {
-      setSubmitting(false);
     }
   };
 
