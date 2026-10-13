@@ -433,29 +433,43 @@ function FieldOfficerPortalContent() {
 
                 {/* Tactical Status Switcher */}
                 <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                  <span className="text-xs font-bold text-slate-700">Set Tactical Execution Status:</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">Set Tactical Execution Status:</span>
+                    <span className="text-[10px] font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                      Current: {activeTask.tactical_status || activeTask.status}
+                    </span>
+                  </div>
                   <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
-                      disabled={submitting}
                       onClick={() => handleStatusChange("EN_ROUTE")}
-                      className="py-2.5 px-3 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors"
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all shadow-2xs ${
+                        (activeTask.tactical_status === "EN_ROUTE")
+                          ? "bg-blue-600 text-white ring-2 ring-blue-500/30"
+                          : "bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700"
+                      }`}
                     >
                       En Route
                     </button>
                     <button
                       type="button"
-                      disabled={submitting}
                       onClick={() => handleStatusChange("ON_SCENE")}
-                      className="py-2.5 px-3 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors"
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all shadow-2xs ${
+                        (activeTask.tactical_status === "ON_SCENE")
+                          ? "bg-blue-600 text-white ring-2 ring-blue-500/30"
+                          : "bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700"
+                      }`}
                     >
                       On Scene
                     </button>
                     <button
                       type="button"
-                      disabled={submitting}
                       onClick={() => handleStatusChange("IN_PROGRESS")}
-                      className="py-2.5 px-3 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors"
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all shadow-2xs ${
+                        (!activeTask.tactical_status || activeTask.tactical_status === "IN_PROGRESS" || activeTask.status === "IN_PROGRESS")
+                          ? "bg-blue-600 text-white ring-2 ring-blue-500/30"
+                          : "bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700"
+                      }`}
                     >
                       Executing Work
                     </button>
