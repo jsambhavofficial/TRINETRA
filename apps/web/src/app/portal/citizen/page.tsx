@@ -49,6 +49,7 @@ import {
   COMPLAINT_CATEGORIES,
   findNearestHaryanaDistrict,
 } from "@/lib/haryana";
+import { AuthorityRoleSwitcher } from "@/components/command-center/AuthorityRoleSwitcher";
 
 const QUICK_PRESETS = [
   {
@@ -271,26 +272,62 @@ export default function CitizenPortal() {
       const headers: Record<string, string> = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const res = await fetch("/api/v1/complaints", { headers });
-      if (res.ok) {
-        const allData = await res.json();
-        let myIds: string[] = [];
-        try {
-          myIds = JSON.parse(localStorage.getItem("trinetra_my_grievances") || "[]");
-        } catch (e) {}
+      let myIds: string[] = [];
+      try {
+        myIds = JSON.parse(localStorage.getItem("trinetra_my_grievances") || "[]");
+      } catch (e) {}
 
-        const myFiltered = allData.filter((c: any) => {
-          if (authUser && (c.citizen_id === authUser.id || (authUser.phone && c.citizen_phone === authUser.phone))) {
+      // Retrieve locally submitted grievances cache
+      let localCached: any[] = [];
+      try {
+        localCached = JSON.parse(localStorage.getItem("trinetra_my_complaints_cache") || "[]");
+      } catch (e) {}
+
+      const trackingQuery = myIds.length > 0
+        ? `?tracking_ids=${encodeURIComponent(myIds.join(","))}&limit=100`
+        : `?limit=100`;
+
+      let res = await fetch(`/api/v1/complaints${trackingQuery}`, { headers }).catch(() => null);
+
+      // If token expired / 401, clear invalid token and retry
+      if (!res || res.status === 401) {
+        localStorage.removeItem("trinetra_token");
+        localStorage.removeItem("token");
+        res = await fetch(`/api/v1/complaints${trackingQuery}`).catch(() => null);
+      }
+
+      if (res && res.ok) {
+        const allData = await res.json();
+
+        // Merge: localCached + allData with deduplication by tracking_id
+        const combinedMap = new Map<string, any>();
+        // Add allData first
+        if (Array.isArray(allData)) {
+          allData.forEach((c: any) => combinedMap.set(c.tracking_id || c.id, c));
+        }
+        // Overlay localCached on top so freshly submitted citizen complaints are guaranteed
+        localCached.forEach((c: any) => combinedMap.set(c.tracking_id || c.id, c));
+
+        const combinedList = Array.from(combinedMap.values());
+
+        // Prioritize citizen's personal complaints
+        const myPersonal = combinedList.filter((c: any) => {
+          if (myIds.includes(c.tracking_id) || myIds.includes(c.id)) {
             return true;
           }
-          if (myIds.includes(c.tracking_id) || myIds.includes(c.id)) {
+          if (authUser && (c.citizen_id === authUser.id || (authUser.phone && c.citizen_phone === authUser.phone))) {
             return true;
           }
           return false;
         });
 
-        // If citizen has personal complaints show them, otherwise show recent Haryana complaints
-        setComplaints(myFiltered.length > 0 ? myFiltered : allData.slice(0, 10));
+        // Other complaints
+        const others = combinedList.filter((c: any) => !myPersonal.some((m) => m.tracking_id === c.tracking_id));
+
+        // Show personal complaints first, followed by others
+        setComplaints([...myPersonal, ...others]);
+      } else if (localCached.length > 0) {
+        setComplaints(localCached);
       }
     } catch (e) {
       console.error(e);

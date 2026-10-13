@@ -257,6 +257,7 @@ async def list_complaints(
     category: Optional[str] = Query(None, description="Filter by category"),
     priority: Optional[str] = Query(None, description="Filter by priority"),
     search: Optional[str] = Query(None, description="Search tracking_id or title"),
+    tracking_ids: Optional[str] = Query(None, description="Comma-separated tracking IDs to ensure in results"),
     limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
@@ -295,7 +296,14 @@ async def list_complaints(
             # Citizen or guest previewing field operational queue
             pass
         else:
-            stmt = stmt.where(ComplaintModel.citizen_id == user.id)
+            conds = [ComplaintModel.citizen_id == user.id]
+            if getattr(user, "phone", None):
+                conds.append(ComplaintModel.citizen_phone == user.phone)
+            if tracking_ids:
+                t_list = [t.strip() for t in tracking_ids.split(",") if t.strip()]
+                if t_list:
+                    conds.append(ComplaintModel.tracking_id.in_(t_list))
+            stmt = stmt.where(or_(*conds))
     elif user.role == "FIELD_OFFICER":
         if unit_id:
             # Already handled above
@@ -350,7 +358,26 @@ async def list_complaints(
     # Prioritize live citizen reports (is_demo=False) at the top, then newest created_at
     stmt = stmt.order_by(ComplaintModel.is_demo.asc(), desc(ComplaintModel.created_at)).offset(offset).limit(limit)
     result = await db.execute(stmt)
-    items = result.scalars().all()
+    items = list(result.scalars().all())
+
+    # If tracking_ids were requested, ensure they are placed at the beginning of the list
+    if tracking_ids:
+        t_list = [t.strip() for t in tracking_ids.split(",") if t.strip()]
+        if t_list:
+            t_stmt = select(ComplaintModel).where(ComplaintModel.tracking_id.in_(t_list))
+            t_res = await db.execute(t_stmt)
+            tracked_items = list(t_res.scalars().all())
+            seen_ids = set()
+            merged = []
+            for t in tracked_items:
+                seen_ids.add(t.id)
+                merged.append(t)
+            for item in items:
+                if item.id not in seen_ids:
+                    seen_ids.add(item.id)
+                    merged.append(item)
+            items = merged
+
     return [serialize_complaint_response(c, user) for c in items]
 
 
