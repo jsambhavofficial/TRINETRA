@@ -53,7 +53,7 @@ function FieldOfficerPortalContent() {
 
   // Photographic Proof State
   const [beforePhoto, setBeforePhoto] = useState<string>(
-    "https://images.unsplash.com/photo-1544717305-2782549b5136?w=800"
+    "/drainage_choke.png"
   );
   const [afterPhoto, setAfterPhoto] = useState<string>(
     "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=800"
@@ -651,7 +651,7 @@ function FieldOfficerPortalContent() {
                           alt="Before Work Preview"
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            e.currentTarget.src = "https://images.unsplash.com/photo-1544717305-2782549b5136?w=800";
+                            e.currentTarget.src = "/drainage_choke.png";
                           }}
                         />
                         <button

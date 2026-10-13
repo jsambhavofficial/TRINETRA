@@ -117,10 +117,13 @@ function getCategoryMeta(cat: string, title?: string, userPhotos?: string[]) {
   // 3. Flooding / Waterlogging / Drainage ("jalbharav", "waterlog", "drain", "flood", "barsat")
   if (
     cat === "URBAN_FLOODING" ||
+    text.includes("mughal canal") ||
+    text.includes("drainage choke") ||
     text.includes("flood") ||
     text.includes("waterlog") ||
     text.includes("jalbharav") ||
     text.includes("drainage") ||
+    text.includes("drain") ||
     text.includes("pani bhar") ||
     text.includes("जलभराव")
   ) {
@@ -128,7 +131,7 @@ function getCategoryMeta(cat: string, title?: string, userPhotos?: string[]) {
       label: "Waterlogging / Drainage",
       icon: "💧",
       badge: "bg-blue-50 text-blue-700 border-blue-200",
-      thumb: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=600",
+      thumb: "/drainage_choke.png",
     };
   }
 
